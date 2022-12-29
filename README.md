@@ -1,0 +1,2 @@
+# newwares-bot
+discord bot
