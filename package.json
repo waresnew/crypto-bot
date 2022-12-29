@@ -2,10 +2,10 @@
   "name": "newwares-bot",
   "version": "1.0.0",
   "description": "All-purpose bot",
-  "main": "build/index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "tsc-watch --onSuccess \"node build/index.js\"",
-    "register": "tsc-watch --onSuccess \"node build/deployCommands.js\""
+    "start": "tsc-watch --onSuccess \"node dist/index.js\"",
+    "register": "tsc-watch --onSuccess \"node dist/deployCommands.js\""
   },
   "keywords": [],
   "author": "newwares",
