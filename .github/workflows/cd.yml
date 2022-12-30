@@ -28,5 +28,5 @@ jobs:
           cd /home/newwares/programs/crypto-bot
           git pull origin master
           git status
-          npm install --only=prod
+          npm install --omit=dev
           sudo systemctl restart crypto-bot
