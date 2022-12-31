@@ -25,8 +25,10 @@ jobs:
         key: ${{ secrets.SSHKEY }}
         port: ${{ secrets.PORT }}
         script: |
+          sudo systemctl stop crypto-bot
           cd /home/newwares/programs/crypto-bot
+          rm -r node-modules
           git pull origin master
           git status
           npm install --omit=dev
-          sudo systemctl restart crypto-bot
+          sudo systemctl start crypto-bot
