@@ -1,2 +1,2 @@
-# newwares-bot
+# crypto-bot
 discord bot

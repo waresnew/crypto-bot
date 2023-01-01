@@ -7,9 +7,8 @@ const node_fs_1 = tslib_1.__importDefault(require("node:fs"));
 const node_path_1 = tslib_1.__importDefault(require("node:path"));
 dotenv_1.default.config();
 const client = new discord_js_1.Client({
-    intents: [discord_js_1.GatewayIntentBits.Guilds]
+    intents: []
 });
-console.log("Starting...");
 const eventsPath = node_path_1.default.join(__dirname, "events");
 const eventFiles = node_fs_1.default.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
 for (const file of eventFiles) {
@@ -24,11 +23,19 @@ for (const file of eventFiles) {
 }
 client.commands = new discord_js_1.Collection();
 const commandsPath = node_path_1.default.join(__dirname, "commands");
-const commandFiles = node_fs_1.default.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
-for (const file of commandFiles) {
-    const filePath = node_path_1.default.join(commandsPath, file);
-    const command = require(filePath);
-    client.commands.set(command.data.name, command);
-}
+registerCommands(commandsPath);
 client.login(process.env["BOT_TOKEN"]);
+function registerCommands(curDir) {
+    const commandFiles = node_fs_1.default.readdirSync(curDir);
+    for (const file of commandFiles) {
+        const filePath = node_path_1.default.join(curDir, file);
+        if (file.endsWith(".js")) {
+            const command = require(filePath);
+            client.commands.set(command.data.name, command);
+        }
+        else if (node_fs_1.default.lstatSync(filePath).isDirectory()) {
+            registerCommands(filePath);
+        }
+    }
+}
 //# sourceMappingURL=index.js.map

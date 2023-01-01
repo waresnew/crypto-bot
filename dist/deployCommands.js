@@ -13,21 +13,28 @@ for (const file of commandFiles) {
     const command = require(node_path_1.default.join(commandPath, file));
     commands.push(command.data.toJSON());
 }
-const rest = new discord_js_1.REST({ version: "10" }).setToken(process.env["BOT_TOKEN"]);
-(() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
-        yield rest.put(discord_js_1.Routes.applicationCommands(process.env["APP_ID"]), { body: [] })
-            .then(() => {
+const devCommands = [];
+const devCommandPath = node_path_1.default.join(__dirname, "commands", "dev");
+const devCommandFiles = node_fs_1.default.readdirSync(devCommandPath).filter(file => file.endsWith(".js"));
+for (const file of devCommandFiles) {
+    const command = require(node_path_1.default.join(devCommandPath, file));
+    devCommands.push(command.data.toJSON());
+}
+registerCommands(devCommands, true);
+registerCommands(commands, false);
+function registerCommands(commands, dev) {
+    return tslib_1.__awaiter(this, void 0, void 0, function* () {
+        const rest = new discord_js_1.REST({ version: "10" }).setToken(process.env["BOT_TOKEN"]);
+        try {
+            console.log(`Started refreshing ${commands.length} application (/) commands.`);
+            yield rest.put(dev ? discord_js_1.Routes.applicationGuildCommands(process.env["APP_ID"], process.env["GUILD_ID"]) : discord_js_1.Routes.applicationCommands(process.env["APP_ID"]), { body: [] });
             console.log("Successfully deleted all application commands.");
-            rest.put(discord_js_1.Routes.applicationCommands(process.env["APP_ID"]), { body: commands }).then(() => {
-                console.log("Successfully reloaded the application (/) commands.");
-            });
-        })
-            .catch(console.error);
-    }
-    catch (error) {
-        console.error(error);
-    }
-}))();
+            yield rest.put(dev ? discord_js_1.Routes.applicationGuildCommands(process.env["APP_ID"], process.env["GUILD_ID"]) : discord_js_1.Routes.applicationCommands(process.env["APP_ID"]), { body: commands });
+            console.log("Successfully reloaded the application (/) commands.");
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
 //# sourceMappingURL=deployCommands.js.map

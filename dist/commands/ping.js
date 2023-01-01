@@ -7,8 +7,13 @@ module.exports = {
         .setDescription("Gets your latency to the bot"),
     execute(interaction) {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
-            const sent = yield interaction.reply({ content: "Pinging...", fetchReply: true, ephemeral: true });
-            interaction.editReply(`Pong! (${sent.createdTimestamp - interaction.createdTimestamp} ms)`);
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor(0x627eea)
+                .setTitle("Pong!")
+                .setFields({ name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true }, { name: "API Latency ⌛", value: "Pinging..." });
+            const first = yield interaction.editReply({ embeds: [embed] });
+            const newEmbed = discord_js_1.EmbedBuilder.from(first.embeds[0]).setFields({ name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true }, { name: "API Latency ⌛", value: `${first.createdTimestamp - interaction.createdTimestamp} ms` });
+            interaction.editReply({ embeds: [newEmbed] });
         });
     }
 };
