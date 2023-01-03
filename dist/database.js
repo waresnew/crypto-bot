@@ -1,14 +1,38 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.db = void 0;
-const tslib_1 = require("tslib");
-const sqlite3_1 = tslib_1.__importDefault(require("sqlite3"));
-const sqlite_1 = require("sqlite");
-const node_path_1 = tslib_1.__importDefault(require("node:path"));
-exports.db = null;
-(() => tslib_1.__awaiter(void 0, void 0, void 0, function* () {
-    if (exports.db == null) {
-        exports.db = yield (0, sqlite_1.open)({ filename: node_path_1.default.join(__dirname, "..", "data", "bot.db"), driver: sqlite3_1.default.Database });
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
+import path from "node:path";
+import { fileURLToPath } from "url";
+import { CryptoApiData, CryptoQuote } from "./api/cmcApi.js";
+export let db = null;
+sqlite3.verbose();
+db = await open({
+    filename: path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data", "bot.db"),
+    driver: sqlite3.Database
+});
+await db.run("begin");
+await db.run("create table if not exists global_stats(id integer primary key, commands_run_ever integer default 0, unique_user integer default 0)");
+db.run("insert or ignore into global_stats(id) values(0)");
+await db.run(genSqlSchema(new CryptoApiData(), "create table if not exists cmc_cache("));
+await db.run(genSqlSchema(new CryptoQuote(), "create table if not exists quote_cache("));
+db.run("create index if not exists name_index on cmc_cache(name)");
+db.run("create index if not exists symbol_index on cmc_cache(symbol)");
+db.run("create index if not exists id_index on quote_cache(reference)");
+await db.run("commit");
+function genSqlSchema(dummy, start) {
+    let ans = start;
+    const keys = Object.keys(dummy).sort();
+    for (let i = 0; i < keys.length; i++) {
+        const prop = keys[i];
+        const type = typeof dummy[prop];
+        let typeString;
+        if (type == "number") {
+            typeString = "double";
+        }
+        else {
+            typeString = "varchar(65535)";
+        }
+        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${prop == "rowid" ? " primary key" : ""}`;
     }
-}))();
+    return ans + ")";
+}
 //# sourceMappingURL=database.js.map

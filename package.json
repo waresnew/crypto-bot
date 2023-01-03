@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "All-purpose bot",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "clean": "rimraf dist && mkdir dist",
     "start": "npm run clean && tsc-watch --onSuccess \"node dist/index.js\"",
@@ -10,15 +11,20 @@
   },
   "keywords": [],
   "author": "newwares",
-  "license": "ISC",
+  "license": "AGPL-3.0-only",
   "dependencies": {
+    "cron": "^2.1.0",
+    "didyoumean": "^1.2.2",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
+    "node-fetch": "^3.3.0",
     "rimraf": "^3.0.2",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4"
   },
   "devDependencies": {
+    "@types/cron": "^2.0.0",
+    "@types/didyoumean": "^1.2.0",
     "@types/node": "^18.11.18",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
