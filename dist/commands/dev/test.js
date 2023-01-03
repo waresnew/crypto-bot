@@ -4,9 +4,7 @@ import fetch from "node-fetch";
 import { CryptoApiData, CryptoQuote } from "../../api/cmcApi.js";
 import { db } from "../../database.js";
 export default {
-    data: new SlashCommandBuilder()
-        .setName("test")
-        .setDescription("Run test commands"),
+    data: new SlashCommandBuilder().setName("test").setDescription("Run test commands"),
     async execute(interaction) {
         const request = await fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
             new URLSearchParams({

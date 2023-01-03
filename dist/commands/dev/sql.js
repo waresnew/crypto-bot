@@ -4,10 +4,7 @@ export default {
     data: new SlashCommandBuilder()
         .setName("sql")
         .setDescription("Evaluates SQL queries using the main database")
-        .addStringOption((option) => option
-        .setName("command")
-        .setDescription("The SQL command")
-        .setRequired(true)),
+        .addStringOption(option => option.setName("command").setDescription("The SQL command").setRequired(true)),
     async execute(interaction) {
         const command = interaction.options.getString("command");
         const embed = new EmbedBuilder().setColor(0x2374ff).setTitle("Result");

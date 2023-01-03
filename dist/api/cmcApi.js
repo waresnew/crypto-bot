@@ -2,14 +2,16 @@ import { CronJob } from "cron";
 import { WebhookClient } from "discord.js";
 import fetch from "node-fetch";
 import { db } from "../database.js";
+import { autocompleteList } from "../commands/coin.js";
 new CronJob("*/5 * * * *", async () => {
-    const request = await fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" + new URLSearchParams({
-        limit: "200"
-    }), {
+    const request = await fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
+        new URLSearchParams({
+            limit: "200"
+        }), {
         method: "get",
         headers: {
             "X-CMC_PRO_API_KEY": process.env["COINMARKETCAP_KEY"],
-            "Accept": "application/json",
+            Accept: "application/json",
             "Accept-Encoding": "deflate, gzip",
             "Content-Type": "application/json"
         }
@@ -22,9 +24,11 @@ new CronJob("*/5 * * * *", async () => {
     await db.run("begin");
     await db.run("delete from cmc_cache");
     await db.run("delete from quote_cache");
+    autocompleteList.length = 0;
     for (let i = 0; i < 200; i++) {
         const data = json.data[i];
         const quote = json.data[i].quote.USD;
+        autocompleteList.push(data.symbol.toLowerCase());
         data.rowid = null;
         genSqlInsertCommand(data, "insert into cmc_cache values(", new CryptoApiData());
         quote.reference = (await db.get("select rowid from cmc_cache where rowid=last_insert_rowid()")).rowid;

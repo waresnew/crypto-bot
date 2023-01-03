@@ -8,21 +8,24 @@ import {
 import { db } from "../database.js";
 import didyoumean from "didyoumean";
 import { CryptoApiData, CryptoQuote } from "../api/cmcApi.js";
-
+export const autocompleteList: string[] = [];
 export default {
     data: new SlashCommandBuilder()
         .setName("coin")
         .setDescription("Gets information about a cryptocurrency")
-        .addStringOption((option) =>
-            option
-                .setName("name")
-                .setDescription("The name/symbol of the coin")
-                .setAutocomplete(true)
+        .addStringOption(option =>
+            option.setName("name").setDescription("The name/symbol of the coin").setAutocomplete(true)
         ),
     async execute(interaction: ChatInputCommandInteraction) {
+
         const input = interaction.options.getString("name");
+        if (!input) {
+            interaction.editReply("Please specify a coin to lookup.");
+            return;
+        }
         const choices: string[] = [];
         let choice: CryptoApiData;
+
         await db.each("select * from cmc_cache", (err, row) => {
             if (err) {
                 throw err;
@@ -30,10 +33,7 @@ export default {
             const data = row as CryptoApiData;
             choices.push(data.name.toLowerCase());
             choices.push(data.symbol.toLowerCase());
-            if (
-                data.name.toLowerCase() == input.toLowerCase() ||
-                data.symbol.toLowerCase() == input.toLowerCase()
-            ) {
+            if (data.name.toLowerCase() == input.toLowerCase() || data.symbol.toLowerCase() == input.toLowerCase()) {
                 choice = data;
             }
         });
@@ -50,20 +50,11 @@ export default {
             );
             return;
         }
-        const quote: CryptoQuote = await db.get(
-            `select * from quote_cache where reference=${choice.rowid}`
-        );
+
+        const quote: CryptoQuote = await db.get(`select * from quote_cache where reference=${choice.rowid}`);
         const embed = new EmbedBuilder()
-            .setThumbnail(
-                `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.id}.png`
-            )
-            .setColor(
-                quote.percent_change_24h < 0
-                    ? 0xed4245
-                    : quote.percent_change_24h > 0
-                        ? 0x3ba55c
-                        : 0xffffff
-            )
+            .setThumbnail(`https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.id}.png`)
+            .setColor(quote.percent_change_24h < 0 ? 0xed4245 : quote.percent_change_24h > 0 ? 0x3ba55c : 0xffffff)
             .setTitle(`${choice.name} (${choice.symbol}-USD)`)
             .setURL(`https://coinmarketcap.com/currencies/${choice.slug}`)
             .setAuthor({
@@ -72,35 +63,20 @@ export default {
             })
             .setFields({
                 name: "Price",
-                value: `$${quote.price < 1
-                        ? quote.price.toPrecision(4)
-                        : Math.round(quote.price * 100) / 100
-                    }`
+                value: `$${quote.price < 1 ? quote.price.toPrecision(4) : Math.round(quote.price * 100) / 100}`
             });
         interaction.editReply({ embeds: [embed] });
     },
     async autocomplete(interaction: AutocompleteInteraction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
-        const choices: string[] = [];
-        await db.each(
-            "select * from cmc_cache order by cmc_rank asc",
-            (err, row) => {
-                if (err) {
-                    console.error(err);
-                }
-                choices.push(row.symbol.toLowerCase());
-            }
-        );
         let i = 0;
-        const filtered = choices.filter((choice) => {
+        const filtered = autocompleteList.filter(choice => {
             if (i < 25 && choice.startsWith(focusedValue)) {
                 i++;
                 return true;
             }
             return false;
         });
-        await interaction.respond(
-            filtered.map((choice) => ({ name: choice, value: choice }))
-        );
+        await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
     }
 };

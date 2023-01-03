@@ -5,15 +5,13 @@ import { CryptoApiData, CryptoQuote } from "../../api/cmcApi.js";
 import { db } from "../../database.js";
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("test")
-        .setDescription("Run test commands"),
+    data: new SlashCommandBuilder().setName("test").setDescription("Run test commands"),
     async execute(interaction: ChatInputCommandInteraction) {
         const request = await fetch(
             "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
-            new URLSearchParams({
-                limit: "200"
-            }),
+                new URLSearchParams({
+                    limit: "200"
+                }),
             {
                 method: "get",
                 headers: {
@@ -38,33 +36,17 @@ export default {
             const data = json.data[i] as CryptoApiData;
             const quote = json.data[i].quote.USD as CryptoQuote;
             data.rowid = null;
-            genSqlInsertCommand(
-                data,
-                "insert into cmc_cache values(",
-                new CryptoApiData()
-            );
-            quote.reference = (
-                await db.get(
-                    "select rowid from cmc_cache where rowid=last_insert_rowid()"
-                )
-            ).rowid;
+            genSqlInsertCommand(data, "insert into cmc_cache values(", new CryptoApiData());
+            quote.reference = (await db.get("select rowid from cmc_cache where rowid=last_insert_rowid()")).rowid;
             data.rowid = quote.reference;
-            genSqlInsertCommand(
-                quote,
-                "insert into quote_cache values(",
-                new CryptoQuote()
-            );
+            genSqlInsertCommand(quote, "insert into quote_cache values(", new CryptoQuote());
         }
         await db.run("commit");
         console.log(`Updated caches at ${new Date().toString()}`);
         interaction.editReply("done");
     }
 };
-function genSqlInsertCommand(
-    data: CryptoApiData | CryptoQuote,
-    start: string,
-    dummy: CryptoApiData | CryptoQuote
-) {
+function genSqlInsertCommand(data: CryptoApiData | CryptoQuote, start: string, dummy: CryptoApiData | CryptoQuote) {
     const keys = Object.keys(data).sort();
     const dummyKeys = Object.keys(dummy).sort();
     let ans = start;

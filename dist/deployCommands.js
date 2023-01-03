@@ -6,18 +6,14 @@ import { fileURLToPath, pathToFileURL } from "url";
 dotenv.config();
 const commands = [];
 const commandPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "commands");
-const commandFiles = fs
-    .readdirSync(commandPath)
-    .filter((file) => file.endsWith(".js"));
+const commandFiles = fs.readdirSync(commandPath).filter(file => file.endsWith(".js"));
 for (const file of commandFiles) {
     const command = (await import(path.join(pathToFileURL(commandPath).toString(), file))).default;
     commands.push(command.data.toJSON());
 }
 const devCommands = [];
 const devCommandPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "commands", "dev");
-const devCommandFiles = fs
-    .readdirSync(devCommandPath)
-    .filter((file) => file.endsWith(".js"));
+const devCommandFiles = fs.readdirSync(devCommandPath).filter(file => file.endsWith(".js"));
 for (const file of devCommandFiles) {
     const command = (await import(path.join(pathToFileURL(devCommandPath).toString(), file))).default;
     devCommands.push(command.data.toJSON());

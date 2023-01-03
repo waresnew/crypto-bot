@@ -1,8 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 export default {
-    data: new SlashCommandBuilder()
-        .setName("ping")
-        .setDescription("Gets bot latency"),
+    data: new SlashCommandBuilder().setName("ping").setDescription("Gets bot latency"),
     async execute(interaction) {
         const embed = new EmbedBuilder()
             .setColor(0x2374ff)

@@ -2,39 +2,52 @@ import { CronJob } from "cron";
 import { WebhookClient } from "discord.js";
 import fetch from "node-fetch";
 import { db } from "../database.js";
+import { autocompleteList } from "../commands/coin.js";
 
-new CronJob("*/5 * * * *", async () => {
-    const request = await fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" + new URLSearchParams({
-        limit: "200"
-    }), {
-        method: "get",
-        headers: {
-            "X-CMC_PRO_API_KEY": process.env["COINMARKETCAP_KEY"],
-            "Accept": "application/json",
-            "Accept-Encoding": "deflate, gzip",
-            "Content-Type": "application/json"
+new CronJob(
+    "*/5 * * * *",
+    async () => {
+        const request = await fetch(
+            "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
+            new URLSearchParams({
+                limit: "200"
+            }),
+            {
+                method: "get",
+                headers: {
+                    "X-CMC_PRO_API_KEY": process.env["COINMARKETCAP_KEY"],
+                    Accept: "application/json",
+                    "Accept-Encoding": "deflate, gzip",
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        const json = JSON.parse(await request.text());
+        const errorCode = json.status.error_code;
+        if (errorCode != 0) {
+            new WebhookClient({ url: process.env["LOG_WEBHOOK"] }).send(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
         }
-    });
-    const json = JSON.parse(await request.text());
-    const errorCode = json.status.error_code;
-    if (errorCode != 0) {
-        new WebhookClient({ url: process.env["LOG_WEBHOOK"] }).send(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
-    }
-    await db.run("begin");
-    await db.run("delete from cmc_cache");
-    await db.run("delete from quote_cache");
-    for (let i = 0; i < 200; i++) {
-        const data = json.data[i] as CryptoApiData;
-        const quote = json.data[i].quote.USD as CryptoQuote;
-        data.rowid = null;
-        genSqlInsertCommand(data, "insert into cmc_cache values(", new CryptoApiData());
-        quote.reference = (await db.get("select rowid from cmc_cache where rowid=last_insert_rowid()")).rowid;
-        data.rowid = quote.reference;
-        genSqlInsertCommand(quote, "insert into quote_cache values(", new CryptoQuote());
-    }
-    await db.run("commit");
-    console.log(`Updated caches at ${new Date().toString()}`);
-}, null, true, "America/Toronto");
+        await db.run("begin");
+        await db.run("delete from cmc_cache");
+        await db.run("delete from quote_cache");
+        autocompleteList.length = 0;
+        for (let i = 0; i < 200; i++) {
+            const data = json.data[i] as CryptoApiData;
+            const quote = json.data[i].quote.USD as CryptoQuote;
+            autocompleteList.push(data.symbol.toLowerCase());
+            data.rowid = null;
+            genSqlInsertCommand(data, "insert into cmc_cache values(", new CryptoApiData());
+            quote.reference = (await db.get("select rowid from cmc_cache where rowid=last_insert_rowid()")).rowid;
+            data.rowid = quote.reference;
+            genSqlInsertCommand(quote, "insert into quote_cache values(", new CryptoQuote());
+        }
+        await db.run("commit");
+        console.log(`Updated caches at ${new Date().toString()}`);
+    },
+    null,
+    true,
+    "America/Toronto"
+);
 
 function genSqlInsertCommand(data: CryptoApiData | CryptoQuote, start: string, dummy: CryptoApiData | CryptoQuote) {
     const keys = Object.keys(data).sort();
@@ -72,7 +85,6 @@ export class CryptoApiData {
     slug = "ERROR";
     /**The ticker symbol for this cryptocurrency.*/
     symbol = "ERROR";
-
 }
 
 export class CryptoQuote {
@@ -99,5 +111,4 @@ export class CryptoQuote {
     volume_24h = 0;
     /**24 hour change in the specified currencies volume. */
     volume_change_24h = 0;
-
 }
