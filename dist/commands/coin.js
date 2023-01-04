@@ -84,7 +84,7 @@ export default {
                     .setPlaceholder("20000")
                     .setRequired(true)));
                 await i.showModal(modal);
-                i.awaitModalSubmit({ time: 5000, filter: j => j.user.id == i.user.id }).then(modalResult => {
+                i.awaitModalSubmit({ time: 60000, filter: j => j.user.id == i.user.id }).then(modalResult => {
                     modalResult.reply(`${modalResult.fields.getTextInputValue("alertsmodalstat")}, ${modalResult.fields.getTextInputValue("alertsmodalvalue")}`);
                 }).catch(_err => {
                     i.followUp("Alert form timed out. Did you take more than 1 minute to submit?");
