@@ -16,7 +16,7 @@ export default {
             name: "Uptime",
             value: formatTime(interaction.client.uptime)
         });
-        interaction.editReply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed] });
     }
 };
 function formatTime(milliseconds) {

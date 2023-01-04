@@ -37,7 +37,7 @@ export default {
         }
         await db.run("commit");
         console.log(`Updated caches at ${new Date().toString()}`);
-        interaction.editReply("done");
+        interaction.reply("done");
     }
 };
 function genSqlInsertCommand(data, start, dummy) {

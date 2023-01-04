@@ -21,6 +21,6 @@ export default {
         } catch (err) {
             embed.setDescription(err.toString());
         }
-        interaction.editReply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed] });
     }
 };

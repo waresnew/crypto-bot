@@ -9,9 +9,9 @@ export default {
     async execute(interaction: ChatInputCommandInteraction) {
         const request = await fetch(
             "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
-                new URLSearchParams({
-                    limit: "200"
-                }),
+            new URLSearchParams({
+                limit: "200"
+            }),
             {
                 method: "get",
                 headers: {
@@ -43,7 +43,7 @@ export default {
         }
         await db.run("commit");
         console.log(`Updated caches at ${new Date().toString()}`);
-        interaction.editReply("done");
+        interaction.reply("done");
     }
 };
 function genSqlInsertCommand(data: CryptoApiData | CryptoQuote, start: string, dummy: CryptoApiData | CryptoQuote) {

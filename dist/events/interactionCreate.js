@@ -9,7 +9,6 @@ export default {
                 console.error(`No command matching ${interaction.commandName} was found.`);
                 return;
             }
-            await interaction.deferReply();
             try {
                 await db.run("update global_stats set commands_run_ever = commands_run_ever+1");
                 command.execute(interaction);

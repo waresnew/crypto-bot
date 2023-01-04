@@ -20,7 +20,7 @@ export default {
 
         const input = interaction.options.getString("name");
         if (!input) {
-            interaction.editReply("Please specify a coin to lookup.");
+            interaction.reply("Please specify a coin to lookup.");
             return;
         }
         const choices: string[] = [];
@@ -39,7 +39,7 @@ export default {
         });
         if (!choice) {
             const suggestion = didyoumean(input.toLowerCase(), choices);
-            interaction.editReply(
+            interaction.reply(
                 `Couldn't find a coin called \`${input}\`. ${suggestion != null
                     ? `Did you mean ${chatInputApplicationCommandMention(
                         interaction.commandName,
@@ -65,7 +65,7 @@ export default {
                 name: "Price",
                 value: `$${quote.price < 1 ? quote.price.toPrecision(4) : Math.round(quote.price * 100) / 100}`
             });
-        interaction.editReply({ embeds: [embed] });
+        interaction.reply({ embeds: [embed] });
     },
     async autocomplete(interaction: AutocompleteInteraction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
