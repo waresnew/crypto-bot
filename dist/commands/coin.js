@@ -1,4 +1,4 @@
-import { chatInputApplicationCommandMention, SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { chatInputApplicationCommandMention, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import moment from "moment";
 import { db } from "../database.js";
 import didyoumean from "didyoumean";
@@ -34,7 +34,20 @@ export default {
             iconURL: interaction.client.user.displayAvatarURL()
         })
             .setFields({ name: "Price", value: `$${quote.price < 1 ? quote.price.toPrecision(4) : Math.round(quote.price * 100) / 100} ${quote.percent_change_24h < 0 ? "🔴" : "🟢"}` }, { name: "1h Change", value: `${Math.round(quote.percent_change_1h * 100) / 100}% ${quote.percent_change_1h < 0 ? "🔴" : "🟢"}`, inline: true }, { name: "24h Change", value: `${Math.round(quote.percent_change_24h * 100) / 100}% ${quote.percent_change_24h < 0 ? "🔴" : "🟢"}`, inline: true }, { name: "7d Change", value: `${Math.round(quote.percent_change_7d * 100) / 100}% ${quote.percent_change_7d < 0 ? "🔴" : "🟢"}`, inline: true }, { name: "24h Volume Change", value: `${Math.round(quote.volume_change_24h * 100) / 100}% ${quote.volume_change_24h < 0 ? "🔴" : "🟢"}`, inline: true }, { name: "Market Cap Dominance", value: `${Math.round(quote.market_cap_dominance * 100) / 100}%`, inline: true }, { name: "Last Updated", value: moment(quote.last_updated).format("YYYY-MM-DD @ HH:MM A") });
-        interaction.reply({ embeds: [embed] });
+        const row = new ActionRowBuilder()
+            .addComponents(new ButtonBuilder()
+            .setCustomId("alerts")
+            .setLabel("Add Alert")
+            .setEmoji("🔔")
+            .setStyle(ButtonStyle.Primary));
+        const response = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+        const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+        buttonCollector.on("collect", i => {
+            this.processButtons(interaction, i);
+        });
+        buttonCollector.on("end", _collected => {
+            interaction.editReply({ content: "This message is no longer receiving input.", embeds: [embed], components: [] });
+        });
     },
     async autocomplete(interaction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -47,6 +60,42 @@ export default {
             return false;
         });
         await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
+    },
+    async processButtons(interaction, i) {
+        if (i.user.id == interaction.user.id) {
+            if (i.customId == "alerts") {
+                const modal = new ModalBuilder()
+                    .setCustomId("alertsmodal")
+                    .setTitle("Add Alert")
+                    .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
+                    .setCustomId("alertsmodalstat")
+                    .setLabel("Which stat do you want to track?")
+                    .setStyle(TextInputStyle.Short)
+                    .setMaxLength(20)
+                    .setMinLength(1)
+                    .setPlaceholder("price, 1h%, 24h%, 7d%, volume%, dominance")
+                    .setRequired(true)))
+                    .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder()
+                    .setCustomId("alertsmodalvalue")
+                    .setLabel("At what threshold should you be alerted?")
+                    .setStyle(TextInputStyle.Short)
+                    .setMaxLength(30)
+                    .setMinLength(1)
+                    .setPlaceholder("20000")
+                    .setRequired(true)));
+                await i.showModal(modal);
+                i.awaitModalSubmit({ time: 5000, filter: j => j.user.id == i.user.id }).then(modalResult => {
+                    modalResult.reply(`${modalResult.fields.getTextInputValue("alertsmodalstat")}, ${modalResult.fields.getTextInputValue("alertsmodalvalue")}`);
+                }).catch(_err => {
+                    i.followUp("Alert form timed out. Did you take more than 1 minute to submit?");
+                });
+            }
+        }
+        else {
+            i.reply({ content: "Error: You do not have permission to interact with that.", ephemeral: true });
+        }
+    },
+    async processModals() {
     }
 };
 //# sourceMappingURL=coin.js.map

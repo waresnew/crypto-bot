@@ -3,7 +3,15 @@ import {
     SlashCommandBuilder,
     ChatInputCommandInteraction,
     AutocompleteInteraction,
-    EmbedBuilder
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ComponentType,
+    ButtonInteraction,
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle
 } from "discord.js";
 import moment from "moment";
 import { db } from "../database.js";
@@ -59,7 +67,23 @@ export default {
                 { name: "Market Cap Dominance", value: `${Math.round(quote.market_cap_dominance * 100) / 100}%`, inline: true },
                 { name: "Last Updated", value: moment(quote.last_updated).format("YYYY-MM-DD @ HH:MM A") },
             );
-        interaction.reply({ embeds: [embed] });
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("alerts")
+                    .setLabel("Add Alert")
+                    .setEmoji("🔔")
+                    .setStyle(ButtonStyle.Primary)
+            );
+        const response = await interaction.reply({ embeds: [embed], components: [row], fetchReply: true });
+        const buttonCollector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+        buttonCollector.on("collect", i => {
+            this.processButtons(interaction, i);
+        });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        buttonCollector.on("end", _collected => {
+            interaction.editReply({ content: "This message is no longer receiving input.", embeds: [embed], components: [] });
+        });
     },
     async autocomplete(interaction: AutocompleteInteraction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -72,5 +96,43 @@ export default {
             return false;
         });
         await interaction.respond(filtered.map(choice => ({ name: choice, value: choice })));
+    },
+    async processButtons(interaction: ChatInputCommandInteraction, i: ButtonInteraction) {
+        if (i.user.id == interaction.user.id) {
+            if (i.customId == "alerts") {
+                const modal = new ModalBuilder()
+                    .setCustomId("alertsmodal")
+                    .setTitle("Add Alert")
+                    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+                        .setCustomId("alertsmodalstat")
+                        .setLabel("Which stat do you want to track?")
+                        .setStyle(TextInputStyle.Short)
+                        .setMaxLength(20)
+                        .setMinLength(1)
+                        .setPlaceholder("price, 1h%, 24h%, 7d%, volume%, dominance")
+                        .setRequired(true)))
+                    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+                        .setCustomId("alertsmodalvalue")
+                        .setLabel("At what threshold should you be alerted?")
+                        .setStyle(TextInputStyle.Short)
+                        .setMaxLength(30)
+                        .setMinLength(1)
+                        .setPlaceholder("20000")
+                        .setRequired(true)));
+                await i.showModal(modal);
+                //todo validate response (eg. has to be a number)
+                i.awaitModalSubmit({ time: 60000, filter: j => j.user.id == i.user.id }).then(modalResult => {
+                    modalResult.reply(`${modalResult.fields.getTextInputValue("alertsmodalstat")}, ${modalResult.fields.getTextInputValue("alertsmodalvalue")}`);
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                }).catch(_err => {
+                    i.followUp("Alert form timed out. Did you take more than 1 minute to submit?");
+                });
+            }
+        } else {
+            i.reply({ content: "Error: You do not have permission to interact with that.", ephemeral: true });
+        }
+    },
+    async processModals() {
+
     }
 };

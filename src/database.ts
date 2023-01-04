@@ -44,8 +44,7 @@ function genSqlSchema(dummy: CryptoApiData | CryptoQuote, start: string) {
         } else {
             typeString = "varchar(65535)";
         }
-        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${prop == "rowid" ? " primary key" : ""
-            }`;
+        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${prop == "rowid" ? " primary key" : ""}`;
     }
     return ans + ")";
 }

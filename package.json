@@ -1,7 +1,7 @@
 {
     "name": "crypto-bot",
     "version": "1.0.0",
-    "description": "All-purpose bot",
+    "description": "Crypto bot",
     "main": "dist/index.js",
     "type": "module",
     "scripts": {
