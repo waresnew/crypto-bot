@@ -3,6 +3,7 @@ import { open, Database } from "sqlite";
 import path from "node:path";
 import { fileURLToPath } from "url";
 import { CryptoApiData, CryptoQuote } from "./api/cmcApi.js";
+import { cryptoSymbolList, cryptoNameList } from "./commands/coin.js";
 export let db: Database = null;
 sqlite3.verbose();
 db = await open({
@@ -23,6 +24,13 @@ db.run("create index if not exists name_index on cmc_cache(name)");
 db.run("create index if not exists symbol_index on cmc_cache(symbol)");
 db.run("create index if not exists id_index on quote_cache(reference)");
 await db.run("commit");
+await db.each("select * from cmc_cache", (err, row) => {
+    if (err) {
+        throw err;
+    }
+    cryptoSymbolList.push(row.symbol);
+    cryptoNameList.push(row.name);
+});
 /**assume fields are only type number/string */
 function genSqlSchema(dummy: CryptoApiData | CryptoQuote, start: string) {
     let ans = start;
@@ -36,9 +44,8 @@ function genSqlSchema(dummy: CryptoApiData | CryptoQuote, start: string) {
         } else {
             typeString = "varchar(65535)";
         }
-        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${
-            prop == "rowid" ? " primary key" : ""
-        }`;
+        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${prop == "rowid" ? " primary key" : ""
+            }`;
     }
     return ans + ")";
 }
