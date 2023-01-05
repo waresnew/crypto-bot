@@ -1,12 +1,20 @@
-import { Client, Collection } from "discord.js";
+import { Client, Collection, Partials, GatewayIntentBits } from "discord.js";
 import dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "url";
+import { initApiCrons } from "./api/cmcApi.js";
 dotenv.config();
 const client = new Client({
-    intents: []
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.DirectMessages
+    ],
+    partials: [
+        Partials.Channel
+    ]
 });
+initApiCrons();
 const eventsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "events");
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith(".js"));
 for (const file of eventFiles) {

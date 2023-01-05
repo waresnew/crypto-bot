@@ -2,8 +2,9 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import path from "node:path";
 import { fileURLToPath } from "url";
-import { CryptoApiData, CryptoQuote } from "./api/cmcApi.js";
+import { CryptoApiData } from "./structs/cryptoapidata.js";
 import { cryptoSymbolList, cryptoNameList } from "./commands/coin.js";
+import { UserSetting } from "./structs/usersettings.js";
 export let db = null;
 sqlite3.verbose();
 db = await open({
@@ -13,22 +14,28 @@ db = await open({
 await db.run("begin");
 await db.run("create table if not exists global_stats(id integer primary key, commands_run_ever integer default 0, unique_user integer default 0)");
 db.run("insert or ignore into global_stats(id) values(0)");
-await db.run(genSqlSchema(new CryptoApiData(), "create table if not exists cmc_cache("));
-await db.run(genSqlSchema(new CryptoQuote(), "create table if not exists quote_cache("));
-db.run("create index if not exists name_index on cmc_cache(name)");
-db.run("create index if not exists symbol_index on cmc_cache(symbol)");
-db.run("create index if not exists id_index on quote_cache(reference)");
+await db.run("create table if not exists cmc_cache(dummy bit)");
+await genSqlSchema(new CryptoApiData(), "cmc_cache");
+db.run("create index if not exists cmc_name_index on cmc_cache(name)");
+db.run("create index if not exists cmc_symbol_index on cmc_cache(symbol)");
+db.run("create index if not exists cmc_id_index on cmc_cache(id)");
+await db.run("create table if not exists user_settings(dummy bit)");
+await genSqlSchema(new UserSetting(), "user_settings");
+db.run("create index if not exists settings_id_index on user_settings(id)");
+db.run("create index if not exists settings_type_index on user_settings(type)");
+db.run("create index if not exists alert_token_index on user_settings(alertToken)");
+db.run("create index if not exists alert_stat_index on user_settings(alertStat)");
+db.run("create index if not exists favCrypto_index on user_settings(favouriteCrypto)");
 await db.run("commit");
-await db.each("select * from cmc_cache", (err, row) => {
+await db.each("select symbol,name from cmc_cache", (err, row) => {
     if (err) {
         throw err;
     }
     cryptoSymbolList.push(row.symbol);
     cryptoNameList.push(row.name);
 });
-function genSqlSchema(dummy, start) {
-    let ans = start;
-    const keys = Object.keys(dummy).sort();
+async function genSqlSchema(dummy, table) {
+    const keys = Object.keys(dummy).filter(key => key != "dummy");
     for (let i = 0; i < keys.length; i++) {
         const prop = keys[i];
         const type = typeof dummy[prop];
@@ -39,8 +46,23 @@ function genSqlSchema(dummy, start) {
         else {
             typeString = "varchar(65535)";
         }
-        ans += `${i != 0 ? ", " : ""}${prop} ${prop == "rowid" ? "integer" : typeString}${prop == "rowid" ? " primary key" : ""}`;
+        try {
+            await db.run(`alter table ${table} add ${prop} ${typeString}`);
+        }
+        catch (err) { }
     }
-    return ans + ")";
+}
+export async function genSqlInsertCommand(data, table, dummy) {
+    const dummyKeys = Object.keys(dummy);
+    let keyString = `insert into ${table} (`;
+    let valueString = " values(";
+    const valueParams = [];
+    for (let i = 0; i < dummyKeys.length; i++) {
+        valueString += i != 0 ? ", ?" : "?";
+        keyString += i != 0 ? `, ${dummyKeys[i]}` : dummyKeys[i];
+        const newData = data[dummyKeys[i]];
+        valueParams.push(!newData ? dummy[dummyKeys[i]] : newData);
+    }
+    db.run(keyString + ")" + valueString + ")", valueParams);
 }
 //# sourceMappingURL=database.js.map
