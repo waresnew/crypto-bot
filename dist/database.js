@@ -12,16 +12,13 @@ db = await open({
     driver: sqlite3.Database
 });
 await db.run("begin");
-//init global stats
 await db.run("create table if not exists global_stats(id integer primary key, commands_run_ever integer default 0, unique_user integer default 0)");
 db.run("insert or ignore into global_stats(id) values(0)");
-//init cmc cache
 await db.run("create table if not exists cmc_cache(dummy bit)");
 await genSqlSchema(new CryptoApiData(), "cmc_cache");
 db.run("create index if not exists cmc_name_index on cmc_cache(name)");
 db.run("create index if not exists cmc_symbol_index on cmc_cache(symbol)");
 db.run("create index if not exists cmc_id_index on cmc_cache(id)");
-//init user settings
 await db.run("create table if not exists user_settings(dummy bit)");
 await genSqlSchema(new UserSetting(), "user_settings");
 db.run("create index if not exists settings_id_index on user_settings(id)");
@@ -30,28 +27,30 @@ db.run("create index if not exists alert_token_index on user_settings(alertToken
 db.run("create index if not exists alert_stat_index on user_settings(alertStat)");
 db.run("create index if not exists favCrypto_index on user_settings(favouriteCrypto)");
 await db.run("commit");
-await db.each("select symbol,name from cmc_cache", (err, row)=>{
+await db.each("select symbol,name from cmc_cache", (err, row) => {
     if (err) {
         throw err;
     }
     cryptoSymbolList.push(row.symbol);
     cryptoNameList.push(row.name);
 });
-/**assume fields are only type number/string */ async function genSqlSchema(dummy, table) {
-    const keys = Object.keys(dummy).filter((key)=>key != "dummy");
-    for(let i = 0; i < keys.length; i++){
+async function genSqlSchema(dummy, table) {
+    const keys = Object.keys(dummy).filter(key => key != "dummy");
+    for (let i = 0; i < keys.length; i++) {
         const prop = keys[i];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const type = typeof dummy[prop];
         let typeString;
         if (type == "number") {
             typeString = "double";
-        } else {
+        }
+        else {
             typeString = "varchar(65535)";
         }
         try {
             await db.run(`alter table ${table} add ${prop} ${typeString}`);
-        } catch (err) {}
+        }
+        catch (err) {
+        }
     }
 }
 export async function genSqlInsertCommand(data, table, dummy) {
@@ -59,15 +58,12 @@ export async function genSqlInsertCommand(data, table, dummy) {
     let keyString = `insert into ${table} (`;
     let valueString = " values(";
     const valueParams = [];
-    for(let i = 0; i < dummyKeys.length; i++){
+    for (let i = 0; i < dummyKeys.length; i++) {
         valueString += i != 0 ? ", ?" : "?";
         keyString += i != 0 ? `, ${dummyKeys[i]}` : dummyKeys[i];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const newData = data[dummyKeys[i]];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         valueParams.push(!newData ? dummy[dummyKeys[i]] : newData);
     }
-    db.run(keyString + ")" + valueString + ")", valueParams);
+    await db.run(keyString + ")" + valueString + ")", valueParams);
 }
-
 //# sourceMappingURL=database.js.map

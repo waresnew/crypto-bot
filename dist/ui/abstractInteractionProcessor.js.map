@@ -1,0 +1,1 @@
+{"version":3,"file":"abstractInteractionProcessor.js","sourceRoot":"","sources":["../../src/ui/abstractInteractionProcessor.ts"],"names":[],"mappings":"AAGA,MAAM,OAAgB,oBAAoB;IAEtC,MAAM,CAAC,YAAY,CAAC,YAAoC;QACpD,OAAO,SAAS,CAAC;IACrB,CAAC;IAED,MAAM,CAAC,aAAa,CAAC,YAA+B;QAChD,OAAO,SAAS,CAAC;IACrB,CAAC;IAED,MAAM,CAAC,mBAAmB,CAAC,YAAyC;QAChE,OAAO,SAAS,CAAC;IACrB,CAAC;CACJ"}

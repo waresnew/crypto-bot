@@ -1,10 +1,11 @@
 import sqlite3 from "sqlite3";
-import { open, Database } from "sqlite";
+import {open, Database} from "sqlite";
 import path from "node:path";
-import { fileURLToPath } from "url";
-import { CryptoApiData } from "./structs/cryptoapidata.js";
-import { cryptoSymbolList, cryptoNameList } from "./globals.js";
-import { UserSetting } from "./structs/usersettings.js";
+import {fileURLToPath} from "url";
+import {CryptoApiData} from "./structs/cryptoapidata.js";
+import {cryptoSymbolList, cryptoNameList} from "./globals.js";
+import {UserSetting} from "./structs/usersettings.js";
+
 export let db: Database = null;
 sqlite3.verbose();
 db = await open({
@@ -56,10 +57,12 @@ async function genSqlSchema(dummy: unknown, table: string) {
         }
         try {
             await db.run(`alter table ${table} add ${prop} ${typeString}`);
-        } catch (err) { }
+        } catch (err) {
+        }
     }
 
 }
+
 export async function genSqlInsertCommand(data: unknown, table: string, dummy: unknown) {
     const dummyKeys = Object.keys(dummy);
     let keyString = `insert into ${table} (`;
@@ -74,6 +77,6 @@ export async function genSqlInsertCommand(data: unknown, table: string, dummy: u
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         valueParams.push(!newData ? (dummy as any)[dummyKeys[i]] : newData);
     }
-    db.run(keyString + ")" + valueString + ")", valueParams);
+    await db.run(keyString + ")" + valueString + ")", valueParams);
 }
 

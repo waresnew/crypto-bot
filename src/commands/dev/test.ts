@@ -1,9 +1,9 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import {SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
 
 export default {
     data: new SlashCommandBuilder().setName("test").setDescription("Run test commands"),
     async execute(interaction: ChatInputCommandInteraction) {
-        interaction.reply("crazy");
+        await interaction.reply("crazy");
     }
 };
 
