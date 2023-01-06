@@ -1,6 +1,6 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
-import { db } from "../../database.js";
-import { getEmbedTemplate } from "../../ui/templates.js";
+import {SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
+import {db} from "../../database.js";
+import {getEmbedTemplate} from "../../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -22,6 +22,6 @@ export default {
         } catch (err) {
             embed.setDescription(err.toString());
         }
-        interaction.reply({ embeds: [embed] });
+        await interaction.reply({embeds: [embed]});
     }
 };

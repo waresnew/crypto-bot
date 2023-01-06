@@ -1,5 +1,5 @@
-import { EmbedBuilder, SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
-import { getEmbedTemplate } from "../ui/templates.js";
+import {EmbedBuilder, SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
+import {getEmbedTemplate} from "../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder().setName("ping").setDescription("Gets bot latency"),
@@ -7,14 +7,14 @@ export default {
         const embed = getEmbedTemplate(interaction.client)
             .setTitle("Pong!")
             .setFields(
-                { name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true },
-                { name: "API Latency ⌛", value: "Pinging..." }
+                {name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true},
+                {name: "API Latency ⌛", value: "Pinging..."}
             );
-        const first = await interaction.reply({ embeds: [embed], fetchReply: true });
+        const first = await interaction.reply({embeds: [embed], fetchReply: true});
         const newEmbed = EmbedBuilder.from(first.embeds[0]).setFields(
-            { name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true },
-            { name: "API Latency ⌛", value: `${first.createdTimestamp - interaction.createdTimestamp} ms` }
+            {name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true},
+            {name: "API Latency ⌛", value: `${first.createdTimestamp - interaction.createdTimestamp} ms`}
         );
-        interaction.editReply({ embeds: [newEmbed] });
+        await interaction.editReply({embeds: [newEmbed]});
     }
 };

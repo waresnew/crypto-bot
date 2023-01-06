@@ -1,5 +1,4 @@
 import { BaseInteraction, Client, StringSelectMenuBuilder } from "discord.js";
-import moment from "moment";
 import { db } from "../../database.js";
 import { CryptoApiData } from "../../structs/cryptoapidata.js";
 import { UserSettingType } from "../../structs/usersettings.js";
@@ -7,7 +6,7 @@ import { getEmbedTemplate } from "../templates.js";
 
 export async function genFavouritesMenu(interaction: BaseInteraction) {
     let selectFavs = new StringSelectMenuBuilder()
-        .setCustomId("favCoins")
+        .setCustomId("coin_favCoins")
         .setPlaceholder("Quickly access your favourites...");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const favs = await db.all("select favouriteCrypto from user_settings where type=? and id=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], interaction.user.id);
@@ -41,7 +40,7 @@ export function genCoinEmbed(choice: CryptoApiData, client: Client) {
             { name: "7d Change", value: `${Math.round(choice.percent_change_7d * 100) / 100}% ${choice.percent_change_7d < 0 ? "🔴" : "🟢"}`, inline: true },
             { name: "24h Volume Change", value: `${Math.round(choice.volume_change_24h * 100) / 100}% ${choice.volume_change_24h < 0 ? "🔴" : "🟢"}`, inline: true },
             { name: "Market Cap Dominance", value: `${Math.round(choice.market_cap_dominance * 100) / 100}%`, inline: true },
-            { name: "Last Updated", value: `<t:${new Date(choice.last_updated).getTime}:R>` },
+            { name: "Last Updated", value: `<t:${new Date(choice.last_updated).getTime() / 1000}:R>` },
         );
 }
 

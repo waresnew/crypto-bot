@@ -1,9 +1,11 @@
+// noinspection JSUnusedGlobalSymbols
 /**
  * Wrapper for https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest endpoint
  */
 
 export class CryptoApiData {
     [index: string]: string | number;
+
     /**fill the table */
     dummy = 0;
     /**The cryptocurrency's CoinMarketCap rank by market cap. */

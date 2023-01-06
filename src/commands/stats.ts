@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { db } from "../database.js";
-import { getEmbedTemplate } from "../ui/templates.js";
+import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
+import {db} from "../database.js";
+import {getEmbedTemplate} from "../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder().setName("stats").setDescription("List bot stats"),
@@ -21,9 +21,10 @@ export default {
                     value: formatTime(interaction.client.uptime)
                 }
             );
-        interaction.reply({ embeds: [embed] });
+        await interaction.reply({embeds: [embed]});
     }
 };
+
 function formatTime(milliseconds: number) {
     const days = Math.floor(milliseconds / 86400000);
     const hours = Math.floor((milliseconds % 86400000) / 3600000);
