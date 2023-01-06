@@ -1,17 +1,19 @@
 import { SlashCommandBuilder } from "discord.js";
 import { db } from "../database.js";
+import { UserSettingType } from "../structs/usersettings.js";
+import { getEmbedTemplate } from "../ui/templates.js";
 export default {
     data: new SlashCommandBuilder().setName("managealerts").setDescription("Manage your alerts"),
-    async execute(interaction) {
-        let ans = "";
-        await db.each("select * from user_settings where type=\"ALERT\"", (err, row) => {
+    async execute (interaction) {
+        const alerts = [];
+        await db.each("select alertToken,alertStat,alertThreshold from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row)=>{
             if (err) {
                 throw err;
             }
-            const notif = row;
-            ans += `Token: ${notif.alertToken}, Stat: ${notif.alertStat}, Threshold: ${notif.alertThreshold}\n`;
+            alerts.push(row);
         });
-        interaction.reply(ans);
+        const instructions = getEmbedTemplate(interaction.client);
     }
 };
+
 //# sourceMappingURL=managealerts.js.map

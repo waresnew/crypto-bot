@@ -27,6 +27,12 @@ export default {
             } catch (err) {
                 console.error(err);
             }
+        } else if (interaction.isButton()) {
+
+        } else if (interaction.isStringSelectMenu()) {
+
+        } else if (interaction.isModalSubmit()) {
+
         }
     }
 };

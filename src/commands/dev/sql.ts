@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import { db } from "../../database.js";
+import { getEmbedTemplate } from "../../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -8,7 +9,7 @@ export default {
         .addStringOption(option => option.setName("command").setDescription("The SQL command").setRequired(true)),
     async execute(interaction: ChatInputCommandInteraction) {
         const command = interaction.options.getString("command");
-        const embed = new EmbedBuilder().setColor(0x2374ff).setTitle("Result");
+        const embed = getEmbedTemplate(interaction.client).setTitle("Result");
         try {
             let output = "";
             await db.each(command, (err, row) => {

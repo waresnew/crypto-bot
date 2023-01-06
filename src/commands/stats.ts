@@ -1,11 +1,11 @@
-import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { db } from "../database.js";
+import { getEmbedTemplate } from "../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder().setName("stats").setDescription("List bot stats"),
     async execute(interaction: ChatInputCommandInteraction) {
-        const embed = new EmbedBuilder()
-            .setColor(0x2374ff)
+        const embed = getEmbedTemplate(interaction.client)
             .setTitle("Global Statistics")
             .addFields(
                 {

@@ -1,10 +1,10 @@
 import { EmbedBuilder, SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { getEmbedTemplate } from "../ui/templates.js";
 
 export default {
     data: new SlashCommandBuilder().setName("ping").setDescription("Gets bot latency"),
     async execute(interaction: ChatInputCommandInteraction) {
-        const embed = new EmbedBuilder()
-            .setColor(0x2374ff)
+        const embed = getEmbedTemplate(interaction.client)
             .setTitle("Pong!")
             .setFields(
                 { name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true },

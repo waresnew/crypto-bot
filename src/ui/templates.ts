@@ -1,0 +1,10 @@
+import { Client, EmbedBuilder } from "discord.js";
+
+export function getEmbedTemplate(client: Client) {
+    return new EmbedBuilder()
+        .setFooter({
+            text: client.user.username,
+            iconURL: client.user.displayAvatarURL()
+        })
+        .setColor(0x2374ff);
+}

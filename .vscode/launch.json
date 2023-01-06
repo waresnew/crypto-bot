@@ -8,13 +8,21 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "skipFiles": ["<node_internals>/**", "node_modules/**"],
+            "skipFiles": [
+                "<node_internals>/**",
+                "node_modules/**"
+            ],
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "start"],
+            "runtimeArgs": [
+                "run-script",
+                "start"
+            ],
             "sourceMaps": true,
             "cwd": "${workspaceRoot}",
             "internalConsoleOptions": "openOnSessionStart",
-            "outFiles": ["${workspaceFolder}/**/*.js"]
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js"
+            ]
         }
     ]
 }

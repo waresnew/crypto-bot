@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { WebhookClient } from "discord.js";
 import fetch from "node-fetch";
 import { db, genSqlInsertCommand } from "../database.js";
-import { cryptoSymbolList } from "../commands/coin.js";
+import { cryptoSymbolList } from "../globals.js";
 import { CryptoApiData } from "../structs/cryptoapidata.js";
 export async function initApiCrons() {
     new CronJob(

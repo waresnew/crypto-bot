@@ -3,7 +3,7 @@ import { open, Database } from "sqlite";
 import path from "node:path";
 import { fileURLToPath } from "url";
 import { CryptoApiData } from "./structs/cryptoapidata.js";
-import { cryptoSymbolList, cryptoNameList } from "./commands/coin.js";
+import { cryptoSymbolList, cryptoNameList } from "./globals.js";
 import { UserSetting } from "./structs/usersettings.js";
 export let db: Database = null;
 sqlite3.verbose();
