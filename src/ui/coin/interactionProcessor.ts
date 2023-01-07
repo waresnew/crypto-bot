@@ -48,7 +48,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             setting.id = interaction.user.id;
             setting.type = UserSettingType[UserSettingType.ALERT];
             setting.alertStat = what;
-            setting.alertThreshold = when.substring(1);
+            setting.alertThreshold = Number(when.substring(1));
             setting.alertToken = coin.id;
             setting.alertDirection = when.charAt(0);
             const manageAlertLink = chatInputApplicationCommandMention("alerts", (await interaction.client.application.commands.fetch()).find(command => command.name == "alerts").id);

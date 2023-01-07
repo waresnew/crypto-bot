@@ -1,13 +1,13 @@
 export class UserSetting {
-    dummy = null;
+    dummy = 0;
     id = null;
     type = null;
-    alertToken = null;
+    alertToken = 0;
     alertStat = null;
-    alertThreshold = null;
+    alertThreshold = 0;
     alertDirection = null;
-    alertDisabled = null;
-    favouriteCrypto = null;
+    alertDisabled = 0;
+    favouriteCrypto = 0;
 }
 export var UserSettingType;
 (function (UserSettingType) {

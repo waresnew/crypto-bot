@@ -5,7 +5,7 @@ export default {
     async execute(interaction) {
         const instructions = await makeEmbed([], interaction.client);
         const actions = makeButtons(interaction);
-        await interaction.reply({ embeds: [instructions], components: [actions, await makeAlertsMenu(interaction)] });
+        await interaction.reply({ embeds: [instructions], components: [await makeAlertsMenu(interaction), actions] });
     }
 };
 //# sourceMappingURL=alerts.js.map
