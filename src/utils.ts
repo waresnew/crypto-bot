@@ -1,4 +1,4 @@
-import {InteractionProcessor} from "./ui/abstractInteractionProcessor.js";
+import InteractionProcessor from "./ui/abstractInteractionProcessor.js";
 
 //avoiding circular dependencies
 export const cryptoSymbolList: string[] = [];

@@ -6,13 +6,13 @@ import { db } from "../../database.js";
 import { getEmbedTemplate } from "../templates.js";
 export async function makeAlertsMenu(interaction) {
     const alerts = [];
+    const alertMenuOptions = [];
     await db.each("select * from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
         if (err) {
             throw err;
         }
         alerts.push(row);
     });
-    const alertMenuOptions = [];
     for (const alert of alerts) {
         const fancyStat = whatOptions.get(alert.alertStat);
         alertMenuOptions.push({
@@ -26,7 +26,7 @@ export async function makeAlertsMenu(interaction) {
         .addComponents(new StringSelectMenuBuilder()
         .setCustomId(`alerts_menu_${interaction.user.id}`)
         .setMinValues(1)
-        .setMaxValues(alertMenuOptions.length)
+        .setMaxValues(alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length)
         .setPlaceholder("Select one or more alerts...")
         .setOptions(alertMenuOptions.length > 0 ? alertMenuOptions : [{
             label: "You have no alerts.",
@@ -39,14 +39,19 @@ export async function makeEmbed(values, client) {
     let desc = "Toggle/delete your crypto notifications here. Disabled notifications are marked with an ❌ and enabled notifications are marked with a ✅.";
     const choices = [];
     for (const value of values) {
-        const tokens = value.split("_");
-        const alert = new UserSetting();
-        alert.alertToken = Number(tokens[0]);
-        alert.alertStat = tokens[1];
-        alert.alertThreshold = Number(tokens[2]);
-        alert.alertDirection = tokens[3];
-        alert.alertDisabled = Number(tokens[4]);
-        alert.id = tokens[5];
+        let alert = new UserSetting();
+        if (values.length > 0 && typeof values[0] == "string") {
+            const tokens = value.split("_");
+            alert.alertToken = Number(tokens[0]);
+            alert.alertStat = tokens[1];
+            alert.alertThreshold = Number(tokens[2]);
+            alert.alertDirection = tokens[3];
+            alert.alertDisabled = Number(tokens[4]);
+            alert.id = tokens[5];
+        }
+        else {
+            alert = value;
+        }
         const fancyStat = whatOptions.get(alert.alertStat);
         choices.push(`${alert.alertDisabled ? "❌" : "✅"} When ${fancyStat} of ${(await idToApiData(alert.alertToken)).name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} ${(alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : "")}`);
     }
