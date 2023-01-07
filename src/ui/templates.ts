@@ -1,4 +1,4 @@
-import { Client, EmbedBuilder } from "discord.js";
+import {Client, EmbedBuilder} from "discord.js";
 
 export function getEmbedTemplate(client: Client) {
     return new EmbedBuilder()

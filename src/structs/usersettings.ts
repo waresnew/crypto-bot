@@ -1,21 +1,26 @@
 export class UserSetting {
-    [index: string]: string | number | string[];
+    [index: string]: string;
+
     /**fill the table */
-    dummy = 0;
+    dummy: string = null;
     /**user id */
-    id = "ERROR";
+    id: string = null;
     /**setting type */
-    type = "ERROR";
+    type: string = null;
     ///notifs
     /**token id to track */
-    alertToken = 0;
+    alertToken: string = null;
     /**which stat to listen to */
-    alertStat = "ERROR";
-    /**at what value to trigger notif */
-    alertThreshold = 0;
+    alertStat: string = null;
+    /**at what value to trigger notif (raw num) */
+    alertThreshold: string = null;
+    /** alert direction (> or <) */
+    alertDirection: string = null;
+    /** if alert is disabled (0 or 1) */
+    alertDisabled: string = null;
 
-    //favourite crypto id
-    favouriteCrypto = 0;
+    /** favourite crypto id*/
+    favouriteCrypto: string = null;
 }
 
 export enum UserSettingType {

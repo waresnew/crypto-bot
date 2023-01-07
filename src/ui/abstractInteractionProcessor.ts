@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {ButtonInteraction, ModalSubmitInteraction, StringSelectMenuInteraction} from "discord.js";
 
-export abstract class InteractionProcessor {
+export default abstract class InteractionProcessor {
 
     static processModal(_interaction: ModalSubmitInteraction): Promise<void> {
         return undefined;

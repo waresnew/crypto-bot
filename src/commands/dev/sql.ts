@@ -1,4 +1,4 @@
-import {SlashCommandBuilder, ChatInputCommandInteraction} from "discord.js";
+import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
 import {db} from "../../database.js";
 import {getEmbedTemplate} from "../../ui/templates.js";
 

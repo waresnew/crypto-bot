@@ -9,6 +9,7 @@
       <option name="FORCE_SEMICOLON_STYLE" value="true" />
       <option name="FORCE_QUOTE_STYlE" value="true" />
       <option name="ENFORCE_TRAILING_COMMA" value="Remove" />
+      <option name="USE_EXPLICIT_JS_EXTENSION" value="TRUE" />
     </TypeScriptCodeStyleSettings>
     <codeStyleSettings language="JavaScript">
       <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />

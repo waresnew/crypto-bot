@@ -1,18 +1,14 @@
 import {
-    chatInputApplicationCommandMention,
-    SlashCommandBuilder,
-    ChatInputCommandInteraction,
     AutocompleteInteraction,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    StringSelectMenuBuilder
+    chatInputApplicationCommandMention,
+    ChatInputCommandInteraction,
+    SlashCommandBuilder
 } from "discord.js";
 import {db} from "../database.js";
 import didyoumean from "didyoumean";
 import {CryptoApiData} from "../structs/cryptoapidata.js";
-import {genCoinEmbed, genFavouritesMenu} from "../ui/coin/interfaceCreator.js";
-import {cryptoNameList, cryptoSymbolList} from "../globals.js";
+import {cryptoNameList, cryptoSymbolList} from "../utils.js";
+import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator.js";
 
 export default {
     data: new SlashCommandBuilder()
@@ -23,10 +19,9 @@ export default {
         ),
     async execute(interaction: ChatInputCommandInteraction) {
 
-        const input = interaction.options.getString("name");
+        let input = interaction.options.getString("name");
         if (!input) {
-            await interaction.reply("Please specify a coin to lookup.");
-            return;
+            input = "btc";
         }
 
         const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", input);
@@ -44,25 +39,9 @@ export default {
             return;
         }
 
-        const embed = genCoinEmbed(choice, interaction.client);
-        const favourited = Object.values(await db.get("select exists(select 1 from user_settings where id=? and favouriteCrypto=?)", interaction.user.id, choice.id))[0];
-        const buttons = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId("coin_alerts")
-                    .setLabel("Add alert")
-                    .setEmoji("🔔")
-                    .setStyle(ButtonStyle.Primary)
-            )
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId("coin_setfav")
-                    .setLabel(favourited ? "Unfavourite" : "Favourite")
-                    .setEmoji("⭐")
-                    .setStyle(favourited ? ButtonStyle.Secondary : ButtonStyle.Primary)
-            );
-
-        const favourites = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(await genFavouritesMenu(interaction));
+        const embed = await makeEmbed(choice, interaction.client);
+        const buttons = await makeButtons(choice, interaction);
+        const favourites = await makeFavouritesMenu(interaction);
         await interaction.reply({embeds: [embed], components: [buttons, favourites], fetchReply: true});
     },
     async autocomplete(interaction: AutocompleteInteraction) {

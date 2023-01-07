@@ -1,4 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, Message, MessageActionRowComponentBuilder, StringSelectMenuBuilder, StringSelectMenuComponent } from "discord.js";
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonComponent,
+    Message,
+    MessageActionRowComponentBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuComponent
+} from "discord.js";
 
 /**
  * convenience method that unwraps message components for editing discord message buttons/selectmenus

@@ -6,7 +6,7 @@ export default {
     data: new SlashCommandBuilder().setName("stats").setDescription("List bot stats"),
     async execute(interaction: ChatInputCommandInteraction) {
         const embed = getEmbedTemplate(interaction.client)
-            .setTitle("Global Statistics")
+            .setTitle("Global statistics")
             .addFields(
                 {
                     name: "Server Count",

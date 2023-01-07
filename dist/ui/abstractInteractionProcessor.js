@@ -1,4 +1,4 @@
-export class InteractionProcessor {
+export default class InteractionProcessor {
     static processModal(_interaction) {
         return undefined;
     }

@@ -1,10 +1,10 @@
-import { Client, Collection, Partials, GatewayIntentBits } from "discord.js";
+import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 import dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { initApiCrons } from "./api/cmcApi.js";
-import { interactionProcessors } from "./globals.js";
+import { interactionProcessors } from "./utils.js";
 dotenv.config();
 const client = new Client({
     intents: [

@@ -1,9 +1,9 @@
 import sqlite3 from "sqlite3";
-import {open, Database} from "sqlite";
+import {Database, open} from "sqlite";
 import path from "node:path";
 import {fileURLToPath} from "url";
 import {CryptoApiData} from "./structs/cryptoapidata.js";
-import {cryptoSymbolList, cryptoNameList} from "./globals.js";
+import {cryptoNameList, cryptoSymbolList} from "./utils.js";
 import {UserSetting} from "./structs/usersettings.js";
 
 export let db: Database = null;
@@ -30,9 +30,6 @@ await db.run("create table if not exists user_settings(dummy bit)");
 await genSqlSchema(new UserSetting(), "user_settings");
 db.run("create index if not exists settings_id_index on user_settings(id)");
 db.run("create index if not exists settings_type_index on user_settings(type)");
-db.run("create index if not exists alert_token_index on user_settings(alertToken)");
-db.run("create index if not exists alert_stat_index on user_settings(alertStat)");
-db.run("create index if not exists favCrypto_index on user_settings(favouriteCrypto)");
 await db.run("commit");
 await db.each("select symbol,name from cmc_cache", (err, row) => {
     if (err) {
@@ -51,7 +48,7 @@ async function genSqlSchema(dummy: unknown, table: string) {
         const type = typeof (dummy as any)[prop];
         let typeString: string;
         if (type == "number") {
-            typeString = "double";
+            typeString = "decimal";
         } else {
             typeString = "varchar(65535)";
         }

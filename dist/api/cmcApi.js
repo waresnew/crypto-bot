@@ -2,8 +2,11 @@ import { CronJob } from "cron";
 import { WebhookClient } from "discord.js";
 import fetch from "node-fetch";
 import { db, genSqlInsertCommand } from "../database.js";
-import { cryptoSymbolList } from "../globals.js";
+import { cryptoSymbolList } from "../utils.js";
 import { CryptoApiData } from "../structs/cryptoapidata.js";
+export async function idToApiData(id) {
+    return await db.get("select * from cmc_cache where id=?", id);
+}
 export async function initApiCrons() {
     new CronJob("*/5 * * * *", async () => {
         const request = await fetch("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
