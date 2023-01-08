@@ -9,13 +9,12 @@ import {
     TextInputBuilder,
     TextInputStyle
 } from "discord.js";
-import {whatOptions} from "../../utils.js";
-import {db, genSqlInsertCommand} from "../../database.js";
+import {db, genSqlInsertCommand, idToApiData} from "../../database.js";
 import {CryptoApiData} from "../../structs/cryptoapidata.js";
 import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
 import InteractionProcessor from "../abstractInteractionProcessor.js";
-import {idToApiData} from "../../api/cmcApi.js";
 import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator.js";
+import CryptoStat from "../../structs/cryptoStat.js";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
     static override async processModal(interaction: ModalSubmitInteraction): Promise<void> {
@@ -37,7 +36,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-            if (![...whatOptions.keys()].includes(what)) {
+            if (!CryptoStat.listShorts().includes(what)) {
                 await interaction.reply({
                     content: "The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
                     ephemeral: true
@@ -71,7 +70,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: ButtonInteraction): Promise<void> {
         const coin = await this.getChoiceFromEmbed(interaction.message);
         if (interaction.customId.startsWith("coin_alerts")) {
-            const sortedOptions = [...whatOptions.keys()].sort((a, b) => a.length - b.length);
+            const sortedOptions = CryptoStat.listShorts().sort((a, b) => a.length - b.length);
             const modal = new ModalBuilder()
                 .setCustomId(`coin_alertsmodal_${interaction.user.id}`)
                 .setTitle(`Adding alert for ${coin.name}`)
@@ -87,7 +86,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     .setCustomId(`coin_alertsmodalvalue_${interaction.user.id}`)
                     .setLabel("At what threshold should you be alerted?")
                     .setStyle(TextInputStyle.Short)
-                    .setMaxLength(10)
+                    .setMaxLength(10) //limit so things like float precision don't appear
                     .setMinLength(2)
                     .setPlaceholder("eg. <-20 for less than -20, >10 for greater than 10")
                     .setRequired(true)));

@@ -21,11 +21,7 @@ export default {
                 console.error(`No command matching ${interaction.commandName} was found.`);
                 return;
             }
-            try {
-                await command.autocomplete(interaction);
-            } catch (err) {
-                console.error(err);
-            }
+            await command.autocomplete(interaction);
         } else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
             const origin = interaction.customId.substring(0, interaction.customId.indexOf("_"));
             if (!interaction.customId.endsWith(interaction.user.id.toString())) {
@@ -33,14 +29,14 @@ export default {
                 return;
             }
             if (interaction.isButton()) {
-                // @ts-ignore
-                await interactionProcessors.get(origin).processButton(interaction);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (interactionProcessors.get(origin) as any).processButton(interaction);
             } else if (interaction.isStringSelectMenu()) {
-                // @ts-ignore
-                await interactionProcessors.get(origin).processStringSelect(interaction);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (interactionProcessors.get(origin) as any).processStringSelect(interaction);
             } else if (interaction.isModalSubmit()) {
-                // @ts-ignore
-                await interactionProcessors.get(origin).processModal(interaction);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (interactionProcessors.get(origin) as any).processModal(interaction);
             }
         }
     }

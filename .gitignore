@@ -4,3 +4,4 @@ secrets
 data
 .idea
 dependencies.svg
+coverage

@@ -1,4 +1,4 @@
-export default class InteractionProcessor {
+/* eslint-disable @typescript-eslint/no-unused-vars */ export default class InteractionProcessor {
     static processModal(_interaction) {
         return undefined;
     }
@@ -9,4 +9,5 @@ export default class InteractionProcessor {
         return undefined;
     }
 }
+
 //# sourceMappingURL=abstractInteractionProcessor.js.map

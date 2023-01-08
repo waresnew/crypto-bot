@@ -77,3 +77,6 @@ export async function genSqlInsertCommand(data: unknown, table: string, dummy: u
     await db.run(keyString + ")" + valueString + ")", valueParams);
 }
 
+export async function idToApiData(id: number | string) {
+    return await db.get("select * from cmc_cache where id=?", id) as CryptoApiData;
+}

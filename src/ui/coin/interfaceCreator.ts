@@ -10,6 +10,7 @@ import {db} from "../../database.js";
 import {CryptoApiData} from "../../structs/cryptoapidata.js";
 import {UserSettingType} from "../../structs/usersettings.js";
 import {getEmbedTemplate} from "../templates.js";
+import {scientificNotationToNumber} from "../../utils.js";
 
 export async function makeFavouritesMenu(interaction: BaseInteraction) {
     const selectFavs = new StringSelectMenuBuilder()
@@ -41,7 +42,7 @@ export function makeEmbed(choice: CryptoApiData, client: Client) {
         .setURL(`https://coinmarketcap.com/currencies/${choice.slug}`)
         .setFields({
                 name: "Price",
-                value: `$${choice.price < 1 ? choice.price.toPrecision(4) : Math.round(choice.price * 100) / 100} ${choice.percent_change_24h < 0 ? "🔴" : "🟢"}`
+                value: `$${choice.price < 1 ? scientificNotationToNumber(choice.price.toPrecision(4)) : Math.round(choice.price * 100) / 100} ${choice.percent_change_24h < 0 ? "🔴" : "🟢"}`
             },
             {
                 name: "1h Change",

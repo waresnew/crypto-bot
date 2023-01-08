@@ -46,14 +46,8 @@ export default {
     },
     async autocomplete(interaction: AutocompleteInteraction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
-        let i = 0;
-        const filtered = cryptoSymbolList.filter(choice => {
-            if (i < 25 && choice.toLowerCase().startsWith(focusedValue)) {
-                i++;
-                return true;
-            }
-            return false;
-        });
+        const filtered = cryptoSymbolList.filter(choice => choice.toLowerCase().startsWith(focusedValue));
+        filtered.length = Math.min(filtered.length, 25);
         await interaction.respond(filtered.map(choice => ({name: choice, value: choice})));
     }
 

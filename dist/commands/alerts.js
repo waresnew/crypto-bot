@@ -2,10 +2,19 @@ import { SlashCommandBuilder } from "discord.js";
 import { makeAlertsMenu, makeButtons, makeEmbed } from "../ui/alerts/interfaceCreator.js";
 export default {
     data: new SlashCommandBuilder().setName("alerts").setDescription("Manage your alerts"),
-    async execute(interaction) {
+    async execute (interaction) {
         const instructions = await makeEmbed([], interaction.client);
         const actions = makeButtons(interaction);
-        await interaction.reply({ embeds: [instructions], components: [await makeAlertsMenu(interaction), actions] });
+        await interaction.reply({
+            embeds: [
+                instructions
+            ],
+            components: [
+                await makeAlertsMenu(interaction),
+                actions
+            ]
+        });
     }
 };
+
 //# sourceMappingURL=alerts.js.map

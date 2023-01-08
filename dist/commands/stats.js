@@ -3,10 +3,8 @@ import { db } from "../database.js";
 import { getEmbedTemplate } from "../ui/templates.js";
 export default {
     data: new SlashCommandBuilder().setName("stats").setDescription("List bot stats"),
-    async execute(interaction) {
-        const embed = getEmbedTemplate(interaction.client)
-            .setTitle("Global statistics")
-            .addFields({
+    async execute (interaction) {
+        const embed = getEmbedTemplate(interaction.client).setTitle("Global statistics").addFields({
             name: "Server Count",
             value: interaction.client.guilds.cache.size.toString()
         }, {
@@ -16,14 +14,19 @@ export default {
             name: "Uptime",
             value: formatTime(interaction.client.uptime)
         });
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({
+            embeds: [
+                embed
+            ]
+        });
     }
 };
 function formatTime(milliseconds) {
     const days = Math.floor(milliseconds / 86400000);
-    const hours = Math.floor((milliseconds % 86400000) / 3600000);
-    const minutes = Math.floor((milliseconds % 86400000 % 3600000) / 60000);
-    const seconds = Math.floor((milliseconds % 86400000 % 3600000 % 60000) / 1000);
+    const hours = Math.floor(milliseconds % 86400000 / 3600000);
+    const minutes = Math.floor(milliseconds % 86400000 % 3600000 / 60000);
+    const seconds = Math.floor(milliseconds % 86400000 % 3600000 % 60000 / 1000);
     return `${days} ${days != 1 ? "days" : "day"}, ${hours} ${hours != 1 ? "hours" : "hour"}, ${minutes} ${minutes != 1 ? "minutes" : "minute"}, ${seconds} ${seconds != 1 ? "seconds" : "second"}`;
 }
+
 //# sourceMappingURL=stats.js.map

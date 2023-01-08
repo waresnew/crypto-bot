@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
-import {initApiCrons} from "./api/cmcApi.js";
 import {interactionProcessors} from "./utils.js";
+import {initClient} from "./services/cmcApi.js";
 
 dotenv.config();
 const client = new Client({
@@ -18,8 +18,12 @@ const client = new Client({
     ],
     shards: "auto"
 });
+initClient(client);
 const cwd = path.dirname(fileURLToPath(import.meta.url));
-await initApiCrons();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+await importFromDir(path.join(cwd, "services"), (_module: any) => {
+    return; //importing = running top level stuff
+});
 await importFromDir(path.join(cwd, "events"), (module: any) => {
     const event = module.default;
     if (event.once) {

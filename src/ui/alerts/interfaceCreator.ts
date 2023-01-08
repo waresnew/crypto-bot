@@ -7,11 +7,10 @@ import {
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder
 } from "discord.js";
-import {whatOptions} from "../../utils.js";
-import {idToApiData} from "../../api/cmcApi.js";
 import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
-import {db} from "../../database.js";
+import {db, idToApiData} from "../../database.js";
 import {getEmbedTemplate} from "../templates.js";
+import CryptoStat from "../../structs/cryptoStat.js";
 
 export async function makeAlertsMenu(interaction: BaseInteraction) {
     const alerts: UserSetting[] = [];
@@ -23,7 +22,7 @@ export async function makeAlertsMenu(interaction: BaseInteraction) {
         alerts.push(row as UserSetting);
     });
     for (const alert of alerts) {
-        const fancyStat = whatOptions.get(alert.alertStat);
+        const fancyStat = CryptoStat.shortToLong(alert.alertStat);
         alertMenuOptions.push({
             label: `${alert.alertDisabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await idToApiData(alert.alertToken)).name}`,
             description: (alert.alertDirection == "<" ? "Less than " : "Greater than ") + (alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : ""),
@@ -62,13 +61,14 @@ export async function makeEmbed(values: string[] | UserSetting[], client: Client
         } else {
             alert = value as UserSetting;
         }
-        const fancyStat = whatOptions.get(alert.alertStat);
-        choices.push(`${alert.alertDisabled ? "❌" : "✅"} When ${fancyStat} of ${(await idToApiData(alert.alertToken)).name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} ${(alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : "")}`);
+        choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
     }
 
     choices.sort();
     if (choices.length > 0) {
         desc += "\n\n **Selected:**";
+    } else {
+        desc += "\n\nYou currently have no selected alerts.";
     }
     for (const val of choices) {
         const addition = "\n- " + val;
@@ -96,4 +96,9 @@ export function makeButtons(interaction: BaseInteraction) {
             .setCustomId(`alerts_delete_${interaction.user.id}`)
             .setLabel("Delete selected")
             .setStyle(ButtonStyle.Danger));
+}
+
+export async function formatAlert(alert: UserSetting) {
+    const fancyStat = CryptoStat.shortToLong(alert.alertStat);
+    return `When ${fancyStat} of ${(await idToApiData(alert.alertToken)).name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} ${(alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : "")}`;
 }
