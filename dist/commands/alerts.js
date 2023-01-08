@@ -3,7 +3,7 @@ import { makeAlertsMenu, makeButtons, makeEmbed } from "../ui/alerts/interfaceCr
 export default {
     data: new SlashCommandBuilder().setName("alerts").setDescription("Manage your alerts"),
     async execute (interaction) {
-        const instructions = await makeEmbed([], interaction.client);
+        const instructions = await makeEmbed([], interaction);
         const actions = makeButtons(interaction);
         await interaction.reply({
             embeds: [

@@ -61,7 +61,7 @@ export async function updateCmc() {
 
 async function notifyUsers() {
     const cache: CryptoApiData[] = await db.all("select * from cmc_cache");
-    const alerts: UserSetting[] = await db.all("select * from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
+    const alerts: UserSetting[] = await db.all("select id,alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
     const toDm = new Map<string, string[]>();
     for (const crypto of cache) {
         for (const alert of alerts) {

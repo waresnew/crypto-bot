@@ -24,7 +24,7 @@ export default {
             const origin = interaction.customId.substring(0, interaction.customId.indexOf("_"));
             if (!interaction.customId.endsWith(interaction.user.id.toString())) {
                 interaction.reply({
-                    content: "You do not have permission to interact with this!",
+                    content: "Error: You do not have permission to interact with this!",
                     ephemeral: true
                 });
                 return;

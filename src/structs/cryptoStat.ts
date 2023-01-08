@@ -5,9 +5,9 @@ export default class CryptoStat {
     //end with % if you want % to be displayed
     //db form = percent_change_1h, shortform = 1h%, longform = 1 hour change
     static price = new CryptoStat("price", "price");
-    static percent_change_1h = new CryptoStat("1h%", "1 hour change");
-    static percent_change_24h = new CryptoStat("24h%", "24 hour change");
-    static percent_change_7d = new CryptoStat("7d%", "7 day change");
+    static percent_change_1h = new CryptoStat("1h%", "1 hour price change");
+    static percent_change_24h = new CryptoStat("24h%", "24 hour price change");
+    static percent_change_7d = new CryptoStat("7d%", "7 day price change");
     static volume_24h = new CryptoStat("volume%", "24 hour volume change");
     static market_cap_dominance = new CryptoStat("dominance%", "market cap dominance");
 

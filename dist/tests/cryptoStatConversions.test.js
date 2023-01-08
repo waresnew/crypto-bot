@@ -4,7 +4,7 @@ describe("Test conversions", ()=>{
         expect(CryptoStat.shortToLong("price")).toBe("price");
     });
     test("2", ()=>{
-        expect(CryptoStat.shortToLong("1h%")).toBe("1 hour change");
+        expect(CryptoStat.shortToLong("1h%")).toBe("1 hour price change");
     });
     test("3", ()=>{
         expect(CryptoStat.shortToDb("volume%")).toBe("volume_24h");

@@ -15,14 +15,20 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
         if (interaction.customId.startsWith("alerts_menu")) {
             if (interaction.values[0] == "default") {
                 await interaction.reply({
-                    content: `You have not set any alerts. Please set one with ${chatInputApplicationCommandMention("coin", (await interaction.client.application.commands.fetch()).find(command => command.name == "coin").id)
+                    content: `Error: You have not set any alerts. Please set one with ${chatInputApplicationCommandMention("coin", (await interaction.client.application.commands.fetch()).find(command => command.name == "coin").id)
                     } before proceeding.`,
                     ephemeral: true
                 });
                 return;
             }
-            const instructions = await makeEmbed(interaction.values, interaction.client);
-            await interaction.update({embeds: [instructions], components: interaction.message.components});
+
+            const instructions = await makeEmbed(interaction.values, interaction);
+
+            await interaction.update({
+                embeds: [instructions],
+                components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+            });
+
         }
     }
 
@@ -45,7 +51,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             selected.length = 0;
         }
         await interaction.update({
-            embeds: [await makeEmbed(selected, interaction.client)],
+            embeds: [await makeEmbed(selected, interaction)],
             components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
         });
     }

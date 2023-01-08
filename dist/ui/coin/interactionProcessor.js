@@ -12,42 +12,49 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             const when = interaction.fields.getTextInputValue(`coin_alertsmodalvalue_${interaction.user.id}`);
             if (when.charAt(0) != "<" && when.charAt(0) != ">") {
                 await interaction.reply({
-                    content: "The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
+                    content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
                     ephemeral: true
                 });
                 return;
             }
             if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
                 await interaction.reply({
-                    content: "The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
+                    content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
                     ephemeral: true
                 });
                 return;
             }
             if (!CryptoStat.listShorts().includes(what)) {
                 await interaction.reply({
-                    content: "The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
+                    content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
                     ephemeral: true
                 });
                 return;
             }
-            const setting = new UserSetting();
-            setting.id = interaction.user.id;
-            setting.type = UserSettingType[UserSettingType.ALERT];
-            setting.alertStat = what;
-            setting.alertThreshold = Number(when.substring(1));
-            setting.alertToken = coin.id;
-            setting.alertDirection = when.charAt(0);
+            const alert = new UserSetting();
+            alert.id = interaction.user.id;
+            alert.type = UserSettingType[UserSettingType.ALERT];
+            alert.alertStat = what;
+            alert.alertThreshold = Number(when.substring(1));
+            alert.alertToken = coin.id;
+            alert.alertDirection = when.charAt(0);
             const manageAlertLink = chatInputApplicationCommandMention("alerts", (await interaction.client.application.commands.fetch()).find((command)=>command.name == "alerts").id);
-            if ((await db.get("select count(id) from user_settings where id=? and type=?", setting.id, setting.type))["count(id)"] >= 25) {
+            if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertDirection))[0]) {
+                await interaction.reply({
+                    content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
+                    ephemeral: true
+                });
+                return;
+            }
+            if ((await db.get("select count(id) from user_settings where id=? and type=?", alert.id, alert.type))["count(id)"] >= 25) {
                 //limit to 25 bc stringselectmenus hax a max of 25 entries
                 await interaction.reply({
-                    content: `You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
+                    content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
                     ephemeral: true
                 });
                 return;
             }
-            await genSqlInsertCommand(setting, "user_settings", new UserSetting());
+            await genSqlInsertCommand(alert, "user_settings", new UserSetting());
             await interaction.reply({
                 content: `Done! Added alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
                 ephemeral: true
@@ -63,6 +70,13 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             await interaction.showModal(modal);
         } else if (interaction.customId.startsWith("coin_setfav")) {
             if (interaction.component.label == "Favourite") {
+                if ((await db.get("select count(id) from user_settings where id=? and type=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]))["count(id)"] >= 25) {
+                    await interaction.reply({
+                        content: "Error: You can not have more than 25 favourited cryptos.",
+                        ephemeral: true
+                    });
+                    return;
+                }
                 const setting = new UserSetting();
                 setting.id = interaction.user.id;
                 setting.favouriteCrypto = coin.id;
@@ -82,7 +96,10 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             });
         } else if (interaction.customId.startsWith("coin_refresh")) {
             await interaction.update({
-                components: interaction.message.components,
+                components: [
+                    await makeButtons(await this.getChoiceFromEmbed(interaction.message), interaction),
+                    await makeFavouritesMenu(interaction)
+                ],
                 embeds: [
                     await makeEmbed(coin, interaction.client)
                 ]
@@ -100,7 +117,10 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
         }
         const coin = await idToApiData(selected);
         await interaction.update({
-            components: interaction.message.components,
+            components: [
+                await makeButtons(coin, interaction),
+                await makeFavouritesMenu(interaction)
+            ],
             embeds: [
                 await makeEmbed(coin, interaction.client)
             ]

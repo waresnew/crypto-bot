@@ -49,7 +49,7 @@ export async function updateCmc() {
 }
 async function notifyUsers() {
     const cache = await db.all("select * from cmc_cache");
-    const alerts = await db.all("select * from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
+    const alerts = await db.all("select id,alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
     const toDm = new Map();
     for (const crypto of cache){
         for (const alert of alerts){

@@ -6,7 +6,7 @@ import CryptoStat from "../../structs/cryptoStat.js";
 export async function makeAlertsMenu(interaction) {
     const alerts = [];
     const alertMenuOptions = [];
-    await db.each("select * from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row)=>{
+    await db.each("select alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row)=>{
         if (err) {
             throw err;
         }
@@ -28,24 +28,37 @@ export async function makeAlertsMenu(interaction) {
         }
     ]));
 }
-export async function makeEmbed(values, client) {
-    const instructions = getEmbedTemplate(client).setTitle("Your alerts");
+export function parseAlertId(id) {
+    const alert = new UserSetting();
+    const tokens = id.split("_");
+    alert.alertToken = Number(tokens[0]);
+    alert.alertStat = tokens[1];
+    alert.alertThreshold = Number(tokens[2]);
+    alert.alertDirection = tokens[3];
+    alert.alertDisabled = Number(tokens[4]);
+    alert.id = tokens[5];
+    return alert;
+}
+export async function makeEmbed(values, interaction) {
+    const instructions = getEmbedTemplate(interaction.client).setTitle("Your alerts");
     let desc = "Toggle/delete your crypto notifications here. Disabled notifications are marked with an ❌ and enabled notifications are marked with a ✅.";
     const choices = [];
+    let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values){
         let alert = new UserSetting();
         if (values.length > 0 && typeof values[0] == "string") {
-            const tokens = value.split("_");
-            alert.alertToken = Number(tokens[0]);
-            alert.alertStat = tokens[1];
-            alert.alertThreshold = Number(tokens[2]);
-            alert.alertDirection = tokens[3];
-            alert.alertDisabled = Number(tokens[4]);
-            alert.id = tokens[5];
+            alert = parseAlertId(value);
         } else {
             alert = value;
         }
-        choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
+        if (!Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=? and alertDisabled=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection, alert.alertDisabled))[0]) {
+            removed += "\n- " + await formatAlert(alert);
+        } else {
+            choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
+        }
+    }
+    if (removed != "\n\nThe following alerts no longer exist. They will not be processed.\n") {
+        desc += removed;
     }
     choices.sort();
     if (choices.length > 0) {

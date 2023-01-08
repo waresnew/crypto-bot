@@ -3,7 +3,6 @@ import {
     BaseInteraction,
     ButtonBuilder,
     ButtonStyle,
-    Client,
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder
 } from "discord.js";
@@ -15,7 +14,7 @@ import CryptoStat from "../../structs/cryptoStat.js";
 export async function makeAlertsMenu(interaction: BaseInteraction) {
     const alerts: UserSetting[] = [];
     const alertMenuOptions: SelectMenuComponentOptionData[] = [];
-    await db.each("select * from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
+    await db.each("select alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
         if (err) {
             throw err;
         }
@@ -42,28 +41,41 @@ export async function makeAlertsMenu(interaction: BaseInteraction) {
             }]));
 }
 
-export async function makeEmbed(values: string[] | UserSetting[], client: Client) {
-    const instructions = getEmbedTemplate(client)
+export function parseAlertId(id: string) {
+    const alert = new UserSetting();
+    const tokens = id.split("_");
+    alert.alertToken = Number(tokens[0]);
+    alert.alertStat = tokens[1];
+    alert.alertThreshold = Number(tokens[2]);
+    alert.alertDirection = tokens[3];
+    alert.alertDisabled = Number(tokens[4]);
+    alert.id = tokens[5];
+    return alert;
+}
+
+export async function makeEmbed(values: string[] | UserSetting[], interaction: BaseInteraction) {
+    const instructions = getEmbedTemplate(interaction.client)
         .setTitle("Your alerts");
     let desc = "Toggle/delete your crypto notifications here. Disabled notifications are marked with an ❌ and enabled notifications are marked with a ✅.";
     const choices: string[] = [];
-
+    let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values) {
         let alert = new UserSetting();
         if (values.length > 0 && typeof values[0] == "string") {
-            const tokens = (value as string).split("_");
-            alert.alertToken = Number(tokens[0]);
-            alert.alertStat = tokens[1];
-            alert.alertThreshold = Number(tokens[2]);
-            alert.alertDirection = tokens[3];
-            alert.alertDisabled = Number(tokens[4]);
-            alert.id = tokens[5];
+            alert = parseAlertId(value as string);
         } else {
             alert = value as UserSetting;
         }
-        choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
-    }
+        if (!Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=? and alertDisabled=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection, alert.alertDisabled))[0]) {
+            removed += "\n- " + await formatAlert(alert);
+        } else {
+            choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
+        }
 
+    }
+    if (removed != "\n\nThe following alerts no longer exist. They will not be processed.\n") {
+        desc += removed;
+    }
     choices.sort();
     if (choices.length > 0) {
         desc += "\n\n **Selected:**";
