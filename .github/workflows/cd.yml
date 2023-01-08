@@ -23,5 +23,5 @@ jobs:
             git status
             npm install --omit=dev
             npm run register
-            sudo chmod -R 777 crypto-bot
+            sudo chmod -R 777 $(pwd)
             sudo systemctl start crypto-bot
