@@ -5,3 +5,4 @@ data
 .idea
 dependencies.svg
 coverage
+dist
