@@ -22,8 +22,9 @@ for (const file of devCommandFiles) {
     const command = (await import(path.join(pathToFileURL(devCommandPath).toString(), file))).default;
     devCommands.push(command.data.toJSON());
 }
-registerCommands(devCommands, true);
-registerCommands(commands, false);
+await registerCommands(devCommands, true);
+await registerCommands(commands, false);
+process.exit();
 
 async function registerCommands(commands: Command[], dev: boolean) {
     const rest = new REST({version: "10"}).setToken(process.env["BOT_TOKEN"] as string);
