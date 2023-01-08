@@ -56,6 +56,9 @@ async function notifyUsers() {
             if (alert.alertToken != crypto.id) {
                 continue;
             }
+            if (alert.alertDisabled) {
+                continue;
+            }
             const expr = crypto[CryptoStat.shortToDb(alert.alertStat)] + alert.alertDirection + alert.alertThreshold;
             if (!new RegExp(/^[\d-.e<>]+$/).test(expr)) {
                 await alertDevs(`Potentially malicious code almost ran: \`${expr}\``);
