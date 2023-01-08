@@ -2,4 +2,6 @@ node_modules
 .env
 secrets
 data
-.history
+.idea
+dependencies.svg
+coverage
