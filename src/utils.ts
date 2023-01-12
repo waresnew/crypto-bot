@@ -1,11 +1,19 @@
 import InteractionProcessor from "./ui/abstractInteractionProcessor.js";
-import {WebhookClient} from "discord.js";
+import {APIUser} from "discord-api-types/v10.js";
 
 //avoiding circular dependencies
 export const cryptoSymbolList: string[] = [];
 export const cryptoNameList: string[] = [];
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
+export let client: APIUser;
+export const commandIds = new Map<string, string>();
+export let startTime = Infinity;
+
+export function initClient(input: APIUser) {
+    client = input;
+    startTime = Date.now();
+}
 
 /** only accepts <1*/
 export function scientificNotationToNumber(input: string): string {
@@ -25,5 +33,12 @@ export interface Indexable {
 }
 
 export async function alertDevs(message: string) {
-    await new WebhookClient({url: process.env["LOG_WEBHOOK"]}).send(message);
+    await fetch(process.env["LOG_WEBHOOK"], {
+        method: "post",
+        body: `content: ${message}`,
+        headers: {
+            "User-Agent": "DiscordBot (http, 1.0)"
+        }
+    });
 }
+

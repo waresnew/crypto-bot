@@ -1,19 +1,20 @@
-import {
-    ActionRowBuilder,
-    BaseInteraction,
-    ButtonBuilder,
-    ButtonStyle,
-    SelectMenuComponentOptionData,
-    StringSelectMenuBuilder
-} from "discord.js";
 import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
 import {db, idToApiData} from "../../database.js";
 import {getEmbedTemplate} from "../templates.js";
 import CryptoStat from "../../structs/cryptoStat.js";
+import {
+    APIActionRowComponent,
+    APIInteraction,
+    APISelectMenuComponent,
+    APISelectMenuOption,
+    ButtonStyle,
+    ComponentType
+} from "discord-api-types/v10.js";
+import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel.js";
 
-export async function makeAlertsMenu(interaction: BaseInteraction) {
+export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: UserSetting[] = [];
-    const alertMenuOptions: SelectMenuComponentOptionData[] = [];
+    const alertMenuOptions: APISelectMenuOption[] = [];
     await db.each("select alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
         if (err) {
             throw err;
@@ -29,16 +30,21 @@ export async function makeAlertsMenu(interaction: BaseInteraction) {
         });
     }
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
-    return new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(new StringSelectMenuBuilder()
-            .setCustomId(`alerts_menu_${interaction.user.id}`)
-            .setMinValues(1)
-            .setMaxValues(alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length)
-            .setPlaceholder("Select one or more alerts...")
-            .setOptions(alertMenuOptions.length > 0 ? alertMenuOptions : [{
-                label: "You have no alerts.",
-                value: "default"
-            }]));
+    return <APIActionRowComponent<APISelectMenuComponent>>{
+        components: [
+            {
+                custom_id: `alerts_menu_${interaction.user.id}`,
+                min_values: 1,
+                max_values: alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length,
+                placeholder: "Select one or more alerts...",
+                options: alertMenuOptions.length > 0 ? alertMenuOptions : [{
+                    label: "You have no alerts.",
+                    value: "default"
+                }]
+            }
+        ]
+    };
+
 }
 
 export function parseAlertId(id: string) {
@@ -53,9 +59,9 @@ export function parseAlertId(id: string) {
     return alert;
 }
 
-export async function makeEmbed(values: string[] | UserSetting[], interaction: BaseInteraction) {
-    const instructions = getEmbedTemplate(interaction.client)
-        .setTitle("Your alerts");
+export async function makeEmbed(values: string[] | UserSetting[], interaction: APIInteraction) {
+    const instructions = getEmbedTemplate();
+    instructions.title = "Your alerts";
     let desc = "Toggle/delete your crypto notifications here. Disabled notifications are marked with an ❌ and enabled notifications are marked with a ✅.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
@@ -90,24 +96,31 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: B
         }
         desc += addition;
     }
-    instructions.setDescription(desc);
+    instructions.description = desc;
     return instructions;
 }
 
-export function makeButtons(interaction: BaseInteraction) {
-    return new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(new ButtonBuilder()
-            .setCustomId(`alerts_enable_${interaction.user.id}`)
-            .setLabel("Enable selected")
-            .setStyle(ButtonStyle.Success))
-        .addComponents(new ButtonBuilder()
-            .setCustomId(`alerts_disable_${interaction.user.id}`)
-            .setLabel("Disable selected")
-            .setStyle(ButtonStyle.Secondary))
-        .addComponents(new ButtonBuilder()
-            .setCustomId(`alerts_delete_${interaction.user.id}`)
-            .setLabel("Delete selected")
-            .setStyle(ButtonStyle.Danger));
+export function makeButtons(interaction: APIInteraction) {
+    return <APIActionRowComponent<APIButtonComponentWithCustomId>>{
+        type: ComponentType.ActionRow,
+        components: [
+            {
+                custom_id: `alerts_enable_${interaction.user.id}`,
+                label: "Enable selected",
+                style: ButtonStyle.Success
+            },
+            {
+                custom_id: `alerts_disable_${interaction.user.id}`,
+                label: "Disable selected",
+                style: ButtonStyle.Secondary
+            },
+            {
+                custom_id: `alerts_delete_${interaction.user.id}`,
+                label: "Delete selected",
+                style: ButtonStyle.Danger
+            }
+        ]
+    };
 }
 
 export async function formatAlert(alert: UserSetting) {

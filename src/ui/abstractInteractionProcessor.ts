@@ -1,17 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {ButtonInteraction, ModalSubmitInteraction, StringSelectMenuInteraction} from "discord.js";
+import {FastifyReply} from "fastify";
+import {
+    APIMessageComponentButtonInteraction,
+    APIMessageComponentSelectMenuInteraction,
+    APIModalSubmitInteraction
+} from "discord-api-types/v10.js";
 
 export default abstract class InteractionProcessor {
 
-    static processModal(_interaction: ModalSubmitInteraction): Promise<void> {
+    static processModal(_interaction: APIModalSubmitInteraction, _http: FastifyReply): Promise<void> {
         return undefined;
     }
 
-    static processButton(_interaction: ButtonInteraction): Promise<void> {
+    static processButton(_interaction: APIMessageComponentButtonInteraction, _http: FastifyReply): Promise<void> {
         return undefined;
     }
 
-    static processStringSelect(_interaction: StringSelectMenuInteraction): Promise<void> {
+    static processStringSelect(_interaction: APIMessageComponentSelectMenuInteraction, _http: FastifyReply): Promise<void> {
         return undefined;
     }
 }

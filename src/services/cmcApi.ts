@@ -1,19 +1,14 @@
 import {CronJob} from "cron";
-import {chatInputApplicationCommandMention, Client} from "discord.js";
 import fetch from "node-fetch";
 import {db, genSqlInsertCommand} from "../database.js";
-import {alertDevs, cryptoSymbolList} from "../utils.js";
+import {alertDevs, commandIds, cryptoSymbolList} from "../utils.js";
 import {CryptoApiData} from "../structs/cryptoapidata.js";
 import {UserSetting, UserSettingType} from "../structs/usersettings.js";
 import CryptoStat from "../structs/cryptoStat.js";
 import {formatAlert} from "../ui/alerts/interfaceCreator.js";
 import {getEmbedTemplate} from "../ui/templates.js";
-
-let client: Client;
-
-export function initClient(c: Client) {
-    client = c;
-}
+import {sendDm} from "../requests.js";
+import {APIMessage} from "discord-api-types/v10.js";
 
 new CronJob(
     "*/5 * * * *",
@@ -87,13 +82,14 @@ async function notifyUsers() {
     }
     for (const user of toDm.keys()) {
         const notifs = toDm.get(user);
-        const message = getEmbedTemplate(client).setTitle(`⚠️ Alert${notifs.length > 1 ? "s" : ""} triggered!`);
+        const message = getEmbedTemplate();
+        message.title = `⚠️ Alert${notifs.length > 1 ? "s" : ""} triggered!`;
         let desc = `The following alert${notifs.length > 1 ? "s have" : " has"} been triggered:\n`;
-        notifs.forEach((line) => {
+        notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at ${chatInputApplicationCommandMention("alerts", (await client.application.commands.fetch()).find(command => command.name == "alerts").id)}.\n\nHappy trading!`;
-        message.setDescription(desc);
-        await (await client.users.fetch(user)).send({embeds: [message]});
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
+        message.description = desc;
+        await sendDm(user, {embeds: [message]} as APIMessage);
     }
 }

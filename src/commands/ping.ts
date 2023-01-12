@@ -1,20 +1,23 @@
-import {ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder} from "discord.js";
 import {getEmbedTemplate} from "../ui/templates.js";
+import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10.js";
+import {FastifyReply} from "fastify";
+import {
+    APIChatInputApplicationCommandInteraction
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
 
-export default {
-    data: new SlashCommandBuilder().setName("ping").setDescription("Gets bot latency"),
-    async execute(interaction: ChatInputCommandInteraction) {
-        const embed = getEmbedTemplate(interaction.client)
-            .setTitle("Pong!")
-            .setFields(
-                {name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true},
-                {name: "API Latency ⌛", value: "Pinging..."}
-            );
-        const first = await interaction.reply({embeds: [embed], fetchReply: true});
-        const newEmbed = EmbedBuilder.from(first.embeds[0]).setFields(
-            {name: "Websocket Heartbeat 💓", value: `${interaction.client.ws.ping} ms`, inline: true},
-            {name: "API Latency ⌛", value: `${first.createdTimestamp - interaction.createdTimestamp} ms`}
-        );
-        await interaction.editReply({embeds: [newEmbed]});
+export default <APIApplicationCommand>{
+    name: "ping",
+    description: "Gets bot latency",
+    async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
+        const embed = getEmbedTemplate();
+        embed.title = "Pong!";
+        embed.fields = [{
+            name: "API Latency ⌛",
+            value: "Pinging..."
+        }];
+        await http.send({
+            type: InteractionResponseType.ChannelMessageWithSource,
+            data: {embeds: [embed]}
+        });
     }
 };

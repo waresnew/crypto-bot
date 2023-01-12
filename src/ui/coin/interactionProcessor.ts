@@ -1,45 +1,54 @@
-import {
-    ActionRowBuilder,
-    ButtonInteraction,
-    chatInputApplicationCommandMention,
-    Message,
-    ModalBuilder,
-    ModalSubmitInteraction,
-    StringSelectMenuInteraction,
-    TextInputBuilder,
-    TextInputStyle
-} from "discord.js";
 import {db, genSqlInsertCommand, idToApiData} from "../../database.js";
 import {CryptoApiData} from "../../structs/cryptoapidata.js";
 import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
 import InteractionProcessor from "../abstractInteractionProcessor.js";
 import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator.js";
 import CryptoStat from "../../structs/cryptoStat.js";
+import {
+    APIMessage,
+    APIMessageComponentButtonInteraction,
+    APIMessageComponentSelectMenuInteraction,
+    APIModalSubmitInteraction,
+    ComponentType,
+    InteractionResponseType,
+    MessageFlags,
+    TextInputStyle
+} from "discord-api-types/v10.js";
+import {FastifyReply} from "fastify";
+import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses.js";
+import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel.js";
+import {commandIds} from "../../utils.js";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
-    static override async processModal(interaction: ModalSubmitInteraction): Promise<void> {
+    static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
         const coin = await this.getChoiceFromEmbed(interaction.message);
-        if (interaction.customId.startsWith("coin_alertsmodal")) {
-            const what = interaction.fields.getTextInputValue(`coin_alertsmodalstat_${interaction.user.id}`).toLowerCase();
-            const when = interaction.fields.getTextInputValue(`coin_alertsmodalvalue_${interaction.user.id}`);
+        if (interaction.data.custom_id.startsWith("coin_alertsmodal")) {
+            const what = interaction.data.components[0].components.find(entry => entry.custom_id == `coin_alertsmodalstat_${interaction.user.id}`).value.toLowerCase();
+            const when = interaction.data.components[0].components.find(entry => entry.custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).value;
             if (when.charAt(0) != "<" && when.charAt(0) != ">") {
-                await interaction.reply({
-                    content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
-                    ephemeral: true
+                await http.send({
+                    type: InteractionResponseType.Modal, data: {
+                        content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
             if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
-                await interaction.reply({
-                    content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
-                    ephemeral: true
+                await http.send({
+                    type: InteractionResponseType.Modal, data: {
+                        content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
             if (!CryptoStat.listShorts().includes(what)) {
-                await interaction.reply({
-                    content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
-                    ephemeral: true
+                await http.send({
+                    type: InteractionResponseType.Modal, data: {
+                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
@@ -50,60 +59,79 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             alert.alertThreshold = Number(when.substring(1));
             alert.alertToken = coin.id;
             alert.alertDirection = when.charAt(0);
-            const manageAlertLink = chatInputApplicationCommandMention("alerts", (await interaction.client.application.commands.fetch()).find(command => command.name == "alerts").id);
+            const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
             if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertDirection))[0]) {
-                await interaction.reply({
-                    content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
-                    ephemeral: true
+                await http.send({
+                    type: InteractionResponseType.Modal, data: {
+                        content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
             if ((await db.get("select count(id) from user_settings where id=? and type=?", alert.id, alert.type))["count(id)"] >= 25) {
                 //limit to 25 bc stringselectmenus hax a max of 25 entries
-                await interaction.reply({
-                    content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
-                    ephemeral: true
+                await http.send({
+                    type: InteractionResponseType.Modal, data: {
+                        content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
             await genSqlInsertCommand(alert, "user_settings", new UserSetting());
-            await interaction.reply({
-                content: `Done! Added alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
-                ephemeral: true
+            await http.send({
+                type: InteractionResponseType.Modal, data: {
+                    content: `Done! Added alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
+                    flags: MessageFlags.Ephemeral
+                }
             });
         }
     }
 
-    static override async processButton(interaction: ButtonInteraction): Promise<void> {
+    static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
         const coin = await this.getChoiceFromEmbed(interaction.message);
-        if (interaction.customId.startsWith("coin_alerts")) {
+        if (interaction.data.custom_id.startsWith("coin_alerts")) {
             const sortedOptions = CryptoStat.listShorts().sort((a, b) => a.length - b.length);
-            const modal = new ModalBuilder()
-                .setCustomId(`coin_alertsmodal_${interaction.user.id}`)
-                .setTitle(`Adding alert for ${coin.name}`)
-                .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-                    .setCustomId(`coin_alertsmodalstat_${interaction.user.id}`)
-                    .setLabel("Which stat do you want to track?")
-                    .setStyle(TextInputStyle.Short)
-                    .setMaxLength(sortedOptions[sortedOptions.length - 1].length)
-                    .setMinLength(sortedOptions[0].length)
-                    .setPlaceholder(sortedOptions.join(", "))
-                    .setRequired(true)))
-                .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-                    .setCustomId(`coin_alertsmodalvalue_${interaction.user.id}`)
-                    .setLabel("At what threshold should you be alerted?")
-                    .setStyle(TextInputStyle.Short)
-                    .setMaxLength(10) //limit so things like float precision don't appear
-                    .setMinLength(2)
-                    .setPlaceholder("eg. <-20 for less than -20, >10 for greater than 10")
-                    .setRequired(true)));
-            await interaction.showModal(modal);
-        } else if (interaction.customId.startsWith("coin_setfav")) {
-            if (interaction.component.label == "Favourite") {
+            const modal: APIModalInteractionResponseCallbackData = {
+                custom_id: `coin_alertsmodal_${interaction.user.id}`,
+                title: `Adding alert for ${coin.name}`,
+                components: [{
+                    type: ComponentType.ActionRow,
+                    components: [
+                        {
+                            type: ComponentType.TextInput,
+                            label: "Which stat do you want to track?",
+                            custom_id: `coin_alertsmodalstat_${interaction.user.id}`,
+                            style: TextInputStyle.Short,
+                            max_length: sortedOptions[sortedOptions.length - 1].length,
+                            min_length: sortedOptions[0].length,
+                            placeholder: sortedOptions.join(", "),
+                            required: true
+                        },
+                        {
+                            type: ComponentType.TextInput,
+                            custom_id: `coin_alertsmodalvalue_${interaction.user.id}`,
+                            label: "At what threshold should you be alerted?",
+                            style: TextInputStyle.Short,
+                            max_length: 10,
+                            min_length: 2,
+                            placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
+                            required: true
+                        }
+                    ]
+                }
+                ]
+            };
+            await http.send({type: InteractionResponseType.Modal, data: modal});
+        } else if (interaction.data.custom_id.startsWith("coin_setfav")) {
+            if ((interaction.message.components[0].components.find(c => c.type == ComponentType.Button && (c as APIButtonComponentWithCustomId).custom_id == interaction.data.custom_id) as APIButtonComponentWithCustomId).label == "Favourite") {
                 if ((await db.get("select count(id) from user_settings where id=? and type=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]))["count(id)"] >= 25) {
-                    await interaction.reply({
-                        content: "Error: You can not have more than 25 favourited cryptos.",
-                        ephemeral: true
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: "Error: You can not have more than 25 favourited cryptos.",
+                            flags: MessageFlags.Ephemeral
+                        }
                     });
                     return;
                 }
@@ -117,31 +145,41 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             }
             const newButtons = await makeButtons(coin, interaction);
             const newMenu = await makeFavouritesMenu(interaction);
-            await interaction.update({embeds: interaction.message.embeds, components: [newButtons, newMenu]});
-        } else if (interaction.customId.startsWith("coin_refresh")) {
-            await interaction.update({
-                components: [await makeButtons(await this.getChoiceFromEmbed(interaction.message), interaction), await makeFavouritesMenu(interaction)],
-                embeds: [await makeEmbed(coin, interaction.client)]
+            await http.send({
+                type: InteractionResponseType.UpdateMessage,
+                data: {embeds: interaction.message.embeds, components: [newButtons, newMenu]}
+            });
+        } else if (interaction.data.custom_id.startsWith("coin_refresh")) {
+            await http.send({
+                type: InteractionResponseType.UpdateMessage, data: {
+                    components: [await makeButtons(await this.getChoiceFromEmbed(interaction.message), interaction), await makeFavouritesMenu(interaction)],
+                    embeds: [await makeEmbed(coin)]
+                }
             });
         }
     }
 
-    static override async processStringSelect(interaction: StringSelectMenuInteraction): Promise<void> {
+    static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply): Promise<void> {
 
-        const selected = interaction.values[0];
+        const selected = interaction.data.values[0];
         if (selected == "default") {
-            await interaction.reply({content: "Favourite a coin to add it to the list!", ephemeral: true});
+            await http.send({
+                type: InteractionResponseType.ChannelMessageWithSource,
+                data: {content: "Favourite a coin to add it to the list!", flags: MessageFlags.Ephemeral}
+            });
             return;
         }
         const coin = await idToApiData(selected);
-        await interaction.update({
-            components: [await makeButtons(coin, interaction), await makeFavouritesMenu(interaction)],
-            embeds: [await makeEmbed(coin, interaction.client)]
+        await http.send({
+            type: InteractionResponseType.UpdateMessage, data: {
+                components: [await makeButtons(coin, interaction), await makeFavouritesMenu(interaction)],
+                embeds: [await makeEmbed(coin)]
+            }
         });
     }
 
-    static async getChoiceFromEmbed(message: Message): Promise<CryptoApiData> {
-        const pictureUrl = message.embeds[0].data.thumbnail.url;
+    static async getChoiceFromEmbed(message: APIMessage): Promise<CryptoApiData> {
+        const pictureUrl = message.embeds[0].thumbnail.url;
         const firstToken = "https://s2.coinmarketcap.com/static/img/coins/128x128/", secondToken = ".png";
         const id = pictureUrl.substring(pictureUrl.indexOf(firstToken) + firstToken.length, pictureUrl.indexOf(secondToken));
         return await idToApiData(id);
