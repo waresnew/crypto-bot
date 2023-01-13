@@ -17,7 +17,7 @@
   "dependencies": {
     "cron": "^2.2.0",
     "didyoumean": "^1.2.2",
-    "discord-api-types": "^0.37.27",
+    "discord-api-types": "^0.37.28",
     "dotenv": "^16.0.3",
     "fastify": "^4.11.0",
     "fastify-raw-body": "^4.2.0",
