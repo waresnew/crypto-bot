@@ -1,11 +1,12 @@
 import {db} from "../database.js";
 import {getEmbedTemplate} from "../ui/templates.js";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10.js";
+import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
 import {FastifyReply} from "fastify";
 import {startTime} from "../utils.js";
+import {discordRequest} from "../requests.js";
 
 export default <APIApplicationCommand>{
     name: "stats",
@@ -15,7 +16,7 @@ export default <APIApplicationCommand>{
         embed.title = "Global statistics";
         embed.fields = [{
             name: "Server Count",
-            value: "interaction.client.guilds.cache.size.toString()" //todo fix
+            value: await JSON.parse(await (await discordRequest("https://discord.com/api/v10/users/@me/guilds")).text()).length
         },
             {
                 name: "Total Commands Ran",

@@ -4,7 +4,7 @@ import {
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
     APIModalSubmitInteraction
-} from "discord-api-types/v10.js";
+} from "discord-api-types/v10";
 
 export default abstract class InteractionProcessor {
 

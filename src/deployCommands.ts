@@ -2,8 +2,8 @@ import fs from "node:fs";
 import dotenv from "dotenv";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
-import {APIApplicationCommand} from "discord-api-types/v10.js";
-import fetch from "node-fetch";
+import {APIApplicationCommand} from "discord-api-types/v10";
+import {discordRequest} from "./requests.js";
 
 dotenv.config();
 
@@ -30,24 +30,16 @@ process.exit();
 async function registerCommands(commands: APIApplicationCommand[], dev: boolean) {
     try {
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
-        await fetch(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
+        await discordRequest(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
             {
                 method: "put",
-                headers: {
-                    "Authorization": "Bot " + process.env["BOT_TOKEN"],
-                    "User-Agent": "DiscordBot (http, 1.0)"
-                },
                 body: "{[]}"
             }
         );
         console.log("Successfully deleted all application commands.");
-        await fetch(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
+        await discordRequest(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
             {
                 method: "put",
-                headers: {
-                    "Authorization": "Bot " + process.env["BOT_TOKEN"],
-                    "User-Agent": "DiscordBot (http, 1.0)"
-                },
                 body: JSON.stringify(commands)
             }
         );

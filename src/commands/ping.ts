@@ -1,9 +1,10 @@
 import {getEmbedTemplate} from "../ui/templates.js";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10.js";
+import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
+import {discordRequest} from "../requests.js";
 
 export default <APIApplicationCommand>{
     name: "ping",
@@ -15,9 +16,19 @@ export default <APIApplicationCommand>{
             name: "API Latency ⌛",
             value: "Pinging..."
         }];
+        const start = (BigInt(interaction.id) >> 22n) + 1420070400000n;
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {embeds: [embed]}
         });
+        const message = JSON.parse(await (await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`)).text());
+        if (message) {
+            const end = (BigInt(message.id) >> 22n) + 1420070400000n;
+            embed.fields[0].value = `${end - start} ms`;
+            await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`, {
+                method: "patch",
+                body: JSON.stringify({embeds: [embed]})
+            });
+        }
     }
 };

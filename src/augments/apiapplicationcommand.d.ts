@@ -1,4 +1,4 @@
-import {APIApplicationCommandAutocompleteInteraction, APIInteraction} from "discord-api-types/v10.js";
+import {APIApplicationCommandAutocompleteInteraction, APIInteraction} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 
 declare module "discord-api-types/v10" {

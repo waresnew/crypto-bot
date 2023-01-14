@@ -13,7 +13,7 @@ import {
     InteractionResponseType,
     MessageFlags,
     TextInputStyle
-} from "discord-api-types/v10.js";
+} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses.js";
 import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel.js";
@@ -23,8 +23,8 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
         const coin = await this.getChoiceFromEmbed(interaction.message);
         if (interaction.data.custom_id.startsWith("coin_alertsmodal")) {
-            const what = interaction.data.components[0].components.find(entry => entry.custom_id == `coin_alertsmodalstat_${interaction.user.id}`).value.toLowerCase();
-            const when = interaction.data.components[0].components.find(entry => entry.custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).value;
+            const what = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
+            const when = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).components[0].value;
             if (when.charAt(0) != "<" && when.charAt(0) != ">") {
                 await http.send({
                     type: InteractionResponseType.Modal, data: {
@@ -62,7 +62,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
             if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertDirection))[0]) {
                 await http.send({
-                    type: InteractionResponseType.Modal, data: {
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
                         content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
                         flags: MessageFlags.Ephemeral
                     }
@@ -72,7 +72,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             if ((await db.get("select count(id) from user_settings where id=? and type=?", alert.id, alert.type))["count(id)"] >= 25) {
                 //limit to 25 bc stringselectmenus hax a max of 25 entries
                 await http.send({
-                    type: InteractionResponseType.Modal, data: {
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
                         content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
                         flags: MessageFlags.Ephemeral
                     }
@@ -81,7 +81,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             }
             await genSqlInsertCommand(alert, "user_settings", new UserSetting());
             await http.send({
-                type: InteractionResponseType.Modal, data: {
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
                     content: `Done! Added alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
                     flags: MessageFlags.Ephemeral
                 }
@@ -96,31 +96,37 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             const modal: APIModalInteractionResponseCallbackData = {
                 custom_id: `coin_alertsmodal_${interaction.user.id}`,
                 title: `Adding alert for ${coin.name}`,
-                components: [{
-                    type: ComponentType.ActionRow,
-                    components: [
-                        {
-                            type: ComponentType.TextInput,
-                            label: "Which stat do you want to track?",
-                            custom_id: `coin_alertsmodalstat_${interaction.user.id}`,
-                            style: TextInputStyle.Short,
-                            max_length: sortedOptions[sortedOptions.length - 1].length,
-                            min_length: sortedOptions[0].length,
-                            placeholder: sortedOptions.join(", "),
-                            required: true
-                        },
-                        {
-                            type: ComponentType.TextInput,
-                            custom_id: `coin_alertsmodalvalue_${interaction.user.id}`,
-                            label: "At what threshold should you be alerted?",
-                            style: TextInputStyle.Short,
-                            max_length: 10,
-                            min_length: 2,
-                            placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
-                            required: true
-                        }
-                    ]
-                }
+                components: [
+                    {
+                        type: ComponentType.ActionRow,
+                        components: [
+                            {
+                                type: ComponentType.TextInput,
+                                label: "Which stat do you want to track?",
+                                custom_id: `coin_alertsmodalstat_${interaction.user.id}`,
+                                style: TextInputStyle.Short,
+                                max_length: sortedOptions[sortedOptions.length - 1].length,
+                                min_length: sortedOptions[0].length,
+                                placeholder: sortedOptions.join(", "),
+                                required: true
+                            }
+                        ]
+                    },
+                    {
+                        type: ComponentType.ActionRow,
+                        components: [
+                            {
+                                type: ComponentType.TextInput,
+                                custom_id: `coin_alertsmodalvalue_${interaction.user.id}`,
+                                label: "At what threshold should you be alerted?",
+                                style: TextInputStyle.Short,
+                                max_length: 10,
+                                min_length: 2,
+                                placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
+                                required: true
+                            }
+                        ]
+                    }
                 ]
             };
             await http.send({type: InteractionResponseType.Modal, data: modal});

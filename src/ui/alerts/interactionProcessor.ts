@@ -9,7 +9,7 @@ import {
     APIMessageComponentSelectMenuInteraction,
     InteractionResponseType,
     MessageFlags
-} from "discord-api-types/v10.js";
+} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils.js";
 

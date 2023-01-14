@@ -1,4 +1,4 @@
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10.js";
+import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction

@@ -8,7 +8,7 @@ import {
     APIApplicationCommandAutocompleteInteraction,
     ApplicationCommandOptionType,
     InteractionResponseType
-} from "discord-api-types/v10.js";
+} from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
@@ -28,7 +28,7 @@ export default <APIApplicationCommand>{
         }
     ],
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
-        const input = interaction.data.options.find(option => option.name == "name");
+        const input = interaction.data.options?.find(option => option.name == "name");
         let coin: string;
         if (!input) {
             coin = "btc";

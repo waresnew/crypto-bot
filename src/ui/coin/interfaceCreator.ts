@@ -9,7 +9,7 @@ import {
     APIInteraction,
     ButtonStyle,
     ComponentType
-} from "discord-api-types/v10.js";
+} from "discord-api-types/v10";
 import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel.js";
 
 export async function makeFavouritesMenu(interaction: APIInteraction) {
@@ -84,7 +84,8 @@ export function makeEmbed(choice: CryptoApiData) {
 }
 
 export async function makeButtons(choice: CryptoApiData, interaction: APIInteraction) {
-    const favourited = Object.values(await db.get("select exists(select 1 from user_settings where id=? and favouriteCrypto=?)", interaction.user.id, choice.id))[0];
+    const favouritedEntry = await db.get("select exists(select 1 from user_settings where id=? and favouriteCrypto=? and type=?)", interaction.user.id, choice.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]);
+    const favourited = Object.values(favouritedEntry)[0];
     return <APIActionRowComponent<APIButtonComponent>>{
         type: ComponentType.ActionRow,
         components: [

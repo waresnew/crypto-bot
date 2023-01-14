@@ -38,7 +38,7 @@ await db.each("select symbol,name from cmc_cache", (err, row) => {
     cryptoSymbolList.push(row.symbol);
     cryptoNameList.push(row.name);
 });
-
+console.log("Database initialized");
 /**assume fields are only type number/string */
 async function genSqlSchema(dummy: unknown, table: string) {
     const keys = Object.keys(dummy).filter(key => key != "dummy");

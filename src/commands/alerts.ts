@@ -2,8 +2,8 @@ import {makeAlertsMenu, makeButtons, makeEmbed} from "../ui/alerts/interfaceCrea
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 
 export default <APIApplicationCommand>{
     name: "alerts",
@@ -11,9 +11,10 @@ export default <APIApplicationCommand>{
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const instructions = await makeEmbed([], interaction);
         const actions = makeButtons(interaction);
+        const menu = await makeAlertsMenu(interaction);
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [instructions], components: [await makeAlertsMenu(interaction), actions]}
+            data: {embeds: [instructions], components: [menu, actions]}
         });
     }
 };

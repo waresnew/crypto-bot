@@ -7,8 +7,8 @@ import {UserSetting, UserSettingType} from "../structs/usersettings.js";
 import CryptoStat from "../structs/cryptoStat.js";
 import {formatAlert} from "../ui/alerts/interfaceCreator.js";
 import {getEmbedTemplate} from "../ui/templates.js";
-import {sendDm} from "../requests.js";
-import {APIMessage} from "discord-api-types/v10.js";
+import {discordRequest} from "../requests.js";
+import {APIChannel} from "discord-api-types/v10";
 
 new CronJob(
     "*/5 * * * *",
@@ -90,6 +90,11 @@ async function notifyUsers() {
         });
         desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
         message.description = desc;
-        await sendDm(user, {embeds: [message]} as APIMessage);
+        const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+            body: JSON.stringify({recipient_id: user})
+        });
+        await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+            body: JSON.stringify(message)
+        });
     }
 }

@@ -4,13 +4,13 @@ import {getEmbedTemplate} from "../templates.js";
 import CryptoStat from "../../structs/cryptoStat.js";
 import {
     APIActionRowComponent,
+    APIButtonComponent,
     APIInteraction,
-    APISelectMenuComponent,
     APISelectMenuOption,
     ButtonStyle,
     ComponentType
-} from "discord-api-types/v10.js";
-import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel.js";
+} from "discord-api-types/v10";
+import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel.js";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: UserSetting[] = [];
@@ -30,9 +30,11 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
         });
     }
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
-    return <APIActionRowComponent<APISelectMenuComponent>>{
+    return <APIActionRowComponent<APIStringSelectComponent>>{
+        type: ComponentType.ActionRow,
         components: [
             {
+                type: ComponentType.StringSelect,
                 custom_id: `alerts_menu_${interaction.user.id}`,
                 min_values: 1,
                 max_values: alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length,
@@ -101,20 +103,23 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
 }
 
 export function makeButtons(interaction: APIInteraction) {
-    return <APIActionRowComponent<APIButtonComponentWithCustomId>>{
+    return <APIActionRowComponent<APIButtonComponent>>{
         type: ComponentType.ActionRow,
         components: [
             {
+                type: ComponentType.Button,
                 custom_id: `alerts_enable_${interaction.user.id}`,
                 label: "Enable selected",
                 style: ButtonStyle.Success
             },
             {
+                type: ComponentType.Button,
                 custom_id: `alerts_disable_${interaction.user.id}`,
                 label: "Disable selected",
                 style: ButtonStyle.Secondary
             },
             {
+                type: ComponentType.Button,
                 custom_id: `alerts_delete_${interaction.user.id}`,
                 label: "Delete selected",
                 style: ButtonStyle.Danger

@@ -1,6 +1,6 @@
 import {db} from "../../database.js";
 import {getEmbedTemplate} from "../../ui/templates.js";
-import {APIApplicationCommand, ApplicationCommandOptionType, InteractionResponseType} from "discord-api-types/v10.js";
+import {APIApplicationCommand, ApplicationCommandOptionType, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction

@@ -1,5 +1,5 @@
 import InteractionProcessor from "./ui/abstractInteractionProcessor.js";
-import {APIUser} from "discord-api-types/v10.js";
+import {APIUser} from "discord-api-types/v10";
 
 //avoiding circular dependencies
 export const cryptoSymbolList: string[] = [];
@@ -9,6 +9,8 @@ export const interactionProcessors = new Map<string, InteractionProcessor>();
 export let client: APIUser;
 export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const commands = new Map<string, any>();
 
 export function initClient(input: APIUser) {
     client = input;
