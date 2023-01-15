@@ -1,12 +1,12 @@
-import {getEmbedTemplate} from "../ui/templates.js";
+import {getEmbedTemplate} from "../ui/templates";
 import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
-import {discordRequest} from "../requests.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import discordRequest from "../requests";
 
-export default <APIApplicationCommand>{
+export default {
     name: "ping",
     description: "Gets bot latency",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
@@ -31,4 +31,4 @@ export default <APIApplicationCommand>{
             });
         }
     }
-};
+} as APIApplicationCommand;

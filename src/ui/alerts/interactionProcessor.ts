@@ -1,8 +1,8 @@
-import InteractionProcessor from "../abstractInteractionProcessor.js";
-import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
-import {db} from "../../database.js";
-import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator.js";
-import CryptoStat from "../../structs/cryptoStat.js";
+import InteractionProcessor from "../abstractInteractionProcessor";
+import {UserSetting, UserSettingType} from "../../structs/usersettings";
+import {db} from "../../database";
+import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator";
+import CryptoStat from "../../structs/cryptoStat";
 import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
@@ -11,7 +11,7 @@ import {
     MessageFlags
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {commandIds} from "../../utils.js";
+import {commandIds} from "../../utils";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {

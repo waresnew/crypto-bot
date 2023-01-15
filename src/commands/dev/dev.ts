@@ -2,9 +2,9 @@ import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 
-export default <APIApplicationCommand>{
+export default {
     name: "dev",
     description: "Run test commands",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
@@ -13,5 +13,5 @@ export default <APIApplicationCommand>{
             data: {content: "crazy"}
         });
     }
-};
+} as APIApplicationCommand;
 

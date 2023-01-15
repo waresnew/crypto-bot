@@ -1,8 +1,8 @@
-import {db} from "../../database.js";
-import {CryptoApiData} from "../../structs/cryptoapidata.js";
-import {UserSettingType} from "../../structs/usersettings.js";
-import {getEmbedTemplate} from "../templates.js";
-import {scientificNotationToNumber} from "../../utils.js";
+import {db} from "../../database";
+import {CryptoApiData} from "../../structs/cryptoapidata";
+import {UserSettingType} from "../../structs/usersettings";
+import {getEmbedTemplate} from "../templates";
+import {scientificNotationToNumber} from "../../utils";
 import {
     APIActionRowComponent,
     APIButtonComponent,
@@ -10,7 +10,7 @@ import {
     ButtonStyle,
     ComponentType
 } from "discord-api-types/v10";
-import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel.js";
+import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 
 export async function makeFavouritesMenu(interaction: APIInteraction) {
     const selectFavs: APIActionRowComponent<APIStringSelectComponent> = {
@@ -86,7 +86,7 @@ export function makeEmbed(choice: CryptoApiData) {
 export async function makeButtons(choice: CryptoApiData, interaction: APIInteraction) {
     const favouritedEntry = await db.get("select exists(select 1 from user_settings where id=? and favouriteCrypto=? and type=?)", interaction.user.id, choice.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]);
     const favourited = Object.values(favouritedEntry)[0];
-    return <APIActionRowComponent<APIButtonComponent>>{
+    return {
         type: ComponentType.ActionRow,
         components: [
             {
@@ -120,5 +120,5 @@ export async function makeButtons(choice: CryptoApiData, interaction: APIInterac
                 style: ButtonStyle.Primary
             }
         ]
-    };
+    } as APIActionRowComponent<APIButtonComponent>;
 }

@@ -1,15 +1,15 @@
-import {db} from "../../database.js";
-import {getEmbedTemplate} from "../../ui/templates.js";
+import {db} from "../../database";
+import {getEmbedTemplate} from "../../ui/templates";
 import {APIApplicationCommand, ApplicationCommandOptionType, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {
     APIApplicationCommandInteractionDataStringOption
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string";
 
-export default <APIApplicationCommand>{
+export default {
     name: "sql",
     description: "Evaluates SQL queries using the main database",
     options: [
@@ -38,4 +38,4 @@ export default <APIApplicationCommand>{
         }
         await http.send({type: InteractionResponseType.ChannelMessageWithSource, data: {embeds: [embed]}});
     }
-};
+} as APIApplicationCommand;

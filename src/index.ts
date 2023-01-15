@@ -7,4 +7,4 @@ await madge("./")
     .then(res => res.image("./dependencies.svg"));
 console.log("Starting... (if it freezes here then there might be a circular dependency caused by dynamic imports");
 
-import("./bot.js");
+import("./bot");

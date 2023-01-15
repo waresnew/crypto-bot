@@ -1,4 +1,4 @@
-import InteractionProcessor from "./ui/abstractInteractionProcessor.js";
+import InteractionProcessor from "./ui/abstractInteractionProcessor";
 import {APIUser} from "discord-api-types/v10";
 
 //avoiding circular dependencies
@@ -32,15 +32,5 @@ export function scientificNotationToNumber(input: string): string {
 export interface Indexable {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;
-}
-
-export async function alertDevs(message: string) {
-    await fetch(process.env["LOG_WEBHOOK"], {
-        method: "post",
-        body: `content: ${message}`,
-        headers: {
-            "User-Agent": "DiscordBot (http, 1.0)"
-        }
-    });
 }
 

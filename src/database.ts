@@ -2,9 +2,9 @@ import sqlite3 from "sqlite3";
 import {Database, open} from "sqlite";
 import path from "node:path";
 import {fileURLToPath} from "url";
-import {CryptoApiData} from "./structs/cryptoapidata.js";
-import {cryptoNameList, cryptoSymbolList} from "./utils.js";
-import {UserSetting} from "./structs/usersettings.js";
+import {CryptoApiData} from "./structs/cryptoapidata";
+import {cryptoNameList, cryptoSymbolList} from "./utils";
+import {UserSetting} from "./structs/usersettings";
 
 export let db: Database = null;
 sqlite3.verbose();

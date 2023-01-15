@@ -10,18 +10,14 @@ import {
     InteractionType,
     MessageFlags
 } from "discord-api-types/v10";
-import {db} from "./database.js";
+import {db} from "./database";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
-import {commands, interactionProcessors} from "./utils.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {commands, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 
 const server = fastify({logger: true});
-// server.setErrorHandler((error, request, reply)=>{
-//     console.error(error);
-//     reply.status(500).send("error");
-// });
 
 await server.register(rawBody, {
     runFirst: true
@@ -83,12 +79,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         response.status(400).send({error: "Unknown Type"});
     }
 });
-server.get("/", async (request, response) => {
-    response.send(request.rawBody);
-});
-server.post("/", async (request, response) => {
-    response.send(request.rawBody);
-});
+
 server.listen({port: 3000}, async (error, address) => {
     if (error) {
         console.error(error);

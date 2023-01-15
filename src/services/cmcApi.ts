@@ -1,13 +1,12 @@
 import {CronJob} from "cron";
-import fetch from "node-fetch";
-import {db, genSqlInsertCommand} from "../database.js";
-import {alertDevs, commandIds, cryptoSymbolList} from "../utils.js";
-import {CryptoApiData} from "../structs/cryptoapidata.js";
-import {UserSetting, UserSettingType} from "../structs/usersettings.js";
-import CryptoStat from "../structs/cryptoStat.js";
-import {formatAlert} from "../ui/alerts/interfaceCreator.js";
-import {getEmbedTemplate} from "../ui/templates.js";
-import {discordRequest} from "../requests.js";
+import {db, genSqlInsertCommand} from "../database";
+import {commandIds, cryptoSymbolList} from "../utils";
+import {CryptoApiData} from "../structs/cryptoapidata";
+import {UserSetting, UserSettingType} from "../structs/usersettings";
+import CryptoStat from "../structs/cryptoStat";
+import {formatAlert} from "../ui/alerts/interfaceCreator";
+import {getEmbedTemplate} from "../ui/templates";
+import discordRequest from "../requests";
 import {APIChannel} from "discord-api-types/v10";
 
 new CronJob(
@@ -37,7 +36,7 @@ export async function updateCmc() {
     const json = JSON.parse(await request.text());
     const errorCode = json.status.error_code;
     if (errorCode != 0) {
-        await alertDevs(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
+        console.log(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
         return;
     }
     await db.run("begin");
@@ -68,7 +67,7 @@ async function notifyUsers() {
             }
             const expr = crypto[CryptoStat.shortToDb(alert.alertStat)] + alert.alertDirection + alert.alertThreshold;
             if (!new RegExp(/^[\d-.e<>]+$/).test(expr)) { //match num>num or num<num
-                await alertDevs(`Potentially malicious code almost ran: \`${expr}\``);
+                console.log(`Potentially malicious code almost ran: \`${expr}\``);
                 continue;
             }
             if (eval(expr)) {

@@ -1,9 +1,9 @@
-import {db, genSqlInsertCommand, idToApiData} from "../../database.js";
-import {CryptoApiData} from "../../structs/cryptoapidata.js";
-import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
-import InteractionProcessor from "../abstractInteractionProcessor.js";
-import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator.js";
-import CryptoStat from "../../structs/cryptoStat.js";
+import {db, genSqlInsertCommand, idToApiData} from "../../database";
+import {CryptoApiData} from "../../structs/cryptoapidata";
+import {UserSetting, UserSettingType} from "../../structs/usersettings";
+import InteractionProcessor from "../abstractInteractionProcessor";
+import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator";
+import CryptoStat from "../../structs/cryptoStat";
 import {
     APIMessage,
     APIMessageComponentButtonInteraction,
@@ -15,9 +15,9 @@ import {
     TextInputStyle
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses.js";
-import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel.js";
-import {commandIds} from "../../utils.js";
+import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses";
+import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel";
+import {commandIds} from "../../utils";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {

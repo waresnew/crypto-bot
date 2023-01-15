@@ -1,4 +1,4 @@
-import {scientificNotationToNumber} from "../utils.js";
+import {scientificNotationToNumber} from "../utils";
 
 describe("Test precision", () => {
     test("1", () => {

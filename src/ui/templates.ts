@@ -1,5 +1,5 @@
 import {APIEmbed} from "discord-api-types/v10";
-import {client} from "../utils.js";
+import {client} from "../utils";
 
 export function getEmbedTemplate(): APIEmbed {
     return {

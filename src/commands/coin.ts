@@ -1,8 +1,8 @@
-import {db} from "../database.js";
+import {db} from "../database";
 import didyoumean from "didyoumean";
-import {CryptoApiData} from "../structs/cryptoapidata.js";
-import {cryptoNameList, cryptoSymbolList} from "../utils.js";
-import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator.js";
+import {CryptoApiData} from "../structs/cryptoapidata";
+import {cryptoNameList, cryptoSymbolList} from "../utils";
+import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -11,13 +11,13 @@ import {
 } from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
 import {
     APIApplicationCommandInteractionDataStringOption
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string";
 
-export default <APIApplicationCommand>{
+export default {
     name: "coin",
     description: "Gets information about a cryptocurrency",
     options: [
@@ -68,4 +68,4 @@ export default <APIApplicationCommand>{
         });
     }
 
-};
+} as APIApplicationCommand;

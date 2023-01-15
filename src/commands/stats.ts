@@ -1,14 +1,14 @@
-import {db} from "../database.js";
-import {getEmbedTemplate} from "../ui/templates.js";
+import {db} from "../database";
+import {getEmbedTemplate} from "../ui/templates";
 import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
-} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput.js";
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {startTime} from "../utils.js";
-import {discordRequest} from "../requests.js";
+import {startTime} from "../utils";
+import discordRequest from "../requests";
 
-export default <APIApplicationCommand>{
+export default {
     name: "stats",
     description: "List bot stats",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
@@ -28,7 +28,7 @@ export default <APIApplicationCommand>{
             }];
         await http.send({type: InteractionResponseType.ChannelMessageWithSource, data: {embeds: [embed]}});
     }
-};
+} as APIApplicationCommand;
 
 function formatTime(milliseconds: number) {
     const days = Math.floor(milliseconds / 86400000);

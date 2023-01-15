@@ -1,4 +1,4 @@
-import CryptoStat from "../structs/cryptoStat.js";
+import CryptoStat from "../structs/cryptoStat";
 
 describe("Test conversions", () => {
     test("1", () => {

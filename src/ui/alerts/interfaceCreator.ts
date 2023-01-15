@@ -1,7 +1,7 @@
-import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
-import {db, idToApiData} from "../../database.js";
-import {getEmbedTemplate} from "../templates.js";
-import CryptoStat from "../../structs/cryptoStat.js";
+import {UserSetting, UserSettingType} from "../../structs/usersettings";
+import {db, idToApiData} from "../../database";
+import {getEmbedTemplate} from "../templates";
+import CryptoStat from "../../structs/cryptoStat";
 import {
     APIActionRowComponent,
     APIButtonComponent,
@@ -10,7 +10,7 @@ import {
     ButtonStyle,
     ComponentType
 } from "discord-api-types/v10";
-import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel.js";
+import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: UserSetting[] = [];
@@ -30,7 +30,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
         });
     }
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
-    return <APIActionRowComponent<APIStringSelectComponent>>{
+    return {
         type: ComponentType.ActionRow,
         components: [
             {
@@ -45,7 +45,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
                 }]
             }
         ]
-    };
+    } as APIActionRowComponent<APIStringSelectComponent>;
 
 }
 
@@ -103,7 +103,7 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
 }
 
 export function makeButtons(interaction: APIInteraction) {
-    return <APIActionRowComponent<APIButtonComponent>>{
+    return {
         type: ComponentType.ActionRow,
         components: [
             {
@@ -125,7 +125,7 @@ export function makeButtons(interaction: APIInteraction) {
                 style: ButtonStyle.Danger
             }
         ]
-    };
+    } as APIActionRowComponent<APIButtonComponent>;
 }
 
 export async function formatAlert(alert: UserSetting) {

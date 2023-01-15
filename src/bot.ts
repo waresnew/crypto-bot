@@ -2,10 +2,10 @@
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import fs from "node:fs";
-import {commandIds, commands, initClient, interactionProcessors} from "./utils.js";
+import {commandIds, commands, initClient, interactionProcessors} from "./utils";
 import dotenv from "dotenv";
-import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands.js";
-import {discordRequest} from "./requests.js";
+import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
+import discordRequest from "./requests";
 
 dotenv.config();
 
@@ -29,7 +29,7 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
     commands.set(command.name, command);
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
-await import("./server.js");
+await import("./server");
 console.log("Ready!");
 
 /**use type any for modules*/

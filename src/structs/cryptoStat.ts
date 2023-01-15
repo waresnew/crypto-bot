@@ -1,4 +1,4 @@
-import {Indexable} from "../utils.js";
+import {Indexable} from "../utils";
 
 export default class CryptoStat {
 

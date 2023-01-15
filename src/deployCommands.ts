@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import {APIApplicationCommand} from "discord-api-types/v10";
-import {discordRequest} from "./requests.js";
+import discordRequest from "./requests";
 
 dotenv.config();
 

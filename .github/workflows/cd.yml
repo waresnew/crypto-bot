@@ -18,10 +18,9 @@ jobs:
           script: |
             sudo systemctl stop crypto-bot
             cd /home/newwares/programs/crypto-bot
-            rm -r node_modules
             git pull origin master
             git status
-            npm install --omit=dev
+            npm ci --omit=dev
             npm run register
             sudo chmod -R 777 $(pwd)
             sudo systemctl start crypto-bot
