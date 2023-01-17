@@ -8,11 +8,10 @@
     "node": ">=18.13.0 <19.0.0"
   },
   "scripts": {
-    "clean": "rimraf dist && mkdir dist",
-    "build": "npm run clean && npx swc src -d dist",
-    "register": "npm run build && node dist/deployCommands.js",
-    "start": "npm run build && node dist/index.js",
-    "test": "jest"
+    "build": "npx swc src -d dist",
+    "register": "node --experimental-specifier-resolution=node dist/deployCommands.js",
+    "start": "node --experimental-specifier-resolution=node dist/index.js",
+    "test": "node --experimental-vm-modules --experimental-specifier-resolution=node node_modules/.bin/jest"
   },
   "keywords": [],
   "author": "newwares",
@@ -24,8 +23,6 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.11.0",
     "fastify-raw-body": "^4.2.0",
-    "madge": "^5.0.1",
-    "rimraf": "^4.0.4",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4",
     "tweetnacl": "^1.0.3"

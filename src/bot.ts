@@ -3,11 +3,8 @@ import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import fs from "node:fs";
 import {commandIds, commands, initClient, interactionProcessors} from "./utils";
-import dotenv from "dotenv";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import discordRequest from "./requests";
-
-dotenv.config();
 
 const request = await discordRequest(
     "https://discord.com/api/v10/users/@me"

@@ -29,13 +29,15 @@ setInterval(async () => {
                 sleeping = true;
                 const ratelimit = JSON.parse(await req.text()) as RESTRateLimit;
                 const retryMs = ratelimit.retry_after * 1000 + 50;
-                console.log(`Rate limit reached, hanging for ${Math.round(retryMs / 1000)} seconds`);
+                console.log(`Rate limit reached, hanging for ${(retryMs / 1000).toPrecision(2)} seconds`);
                 jobs.push(cur);
                 sleep(retryMs).then(() => {
                     sleeping = false;
                 });
-            } else {
+            } else if (req.status == 200) {
                 cur.resolve(req);
+            } else {
+                jobs.push(cur);
             }
         } catch (err) {
             cur.reject(err);
