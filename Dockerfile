@@ -1,33 +1,33 @@
-FROM node:18.13.0 as base
+FROM node:18.13.0-bullseye-slim as base
+USER node
 WORKDIR /app
 COPY package*.json ./
 
-FROM base as dev
-ENV NODE_ENV development
+FROM base as build
 RUN npm ci
 COPY . .
-EXPOSE 3000
 RUN npm run build
-CMD ["npm", "start"]
+
+FROM build as dev
+ENV NODE_ENV development
+EXPOSE 3000
+CMD ["npm", "run", "start"]
 
 FROM base as prod
 ENV NODE_ENV production
 RUN npm ci --omit=dev
-COPY ./dist .
+COPY --from=build /app/dist /app/dist
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["npm","run", "start"]
 
-FROM base as test
+FROM build as test
 ENV NODE_ENV development
-RUN npm ci
-COPY . .
 EXPOSE 3000
-CMD ["npm", "test"]
+CMD ["npm","run", "test"]
 
 FROM base as register
 ENV NODE_ENV production
 RUN npm ci --omit=dev
-COPY . .
+COPY --from=build /app/dist /app/dist
 EXPOSE 3000
-RUN npm run build
-CMD ["npm", "register"]
+CMD ["npm","run", "register"]
