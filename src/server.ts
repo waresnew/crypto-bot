@@ -23,6 +23,17 @@ await server.register(rawBody, {
     runFirst: true
 });
 
+async function closeGracefully(signal: string | number) {
+    console.log(`Received signal to terminate: ${signal}`);
+    await server.close();
+    await db.close();
+    console.log("All services closed, exiting...");
+    process.kill(process.pid, signal);
+}
+
+process.once("SIGINT", closeGracefully);
+process.once("SIGTERM", closeGracefully);
+
 server.post("/crypto-bot/interactions", async (request, response) => {
     if (!validateSignature(request)) {
         response.status(401).send({error: "Bad request signature"});
