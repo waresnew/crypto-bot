@@ -2,9 +2,9 @@ import sqlite3 from "sqlite3";
 import {Database, open} from "sqlite";
 import path from "node:path";
 import {fileURLToPath} from "url";
-import {CryptoApiData} from "./structs/cryptoapidata.js";
-import {cryptoNameList, cryptoSymbolList} from "./utils.js";
-import {UserSetting} from "./structs/usersettings.js";
+import {CryptoApiData} from "./structs/cryptoapidata";
+import {cryptoNameList, cryptoSymbolList} from "./utils";
+import {UserSetting} from "./structs/usersettings";
 
 export let db: Database = null;
 sqlite3.verbose();
@@ -38,7 +38,7 @@ await db.each("select symbol,name from cmc_cache", (err, row) => {
     cryptoSymbolList.push(row.symbol);
     cryptoNameList.push(row.name);
 });
-
+console.log("Database initialized");
 /**assume fields are only type number/string */
 async function genSqlSchema(dummy: unknown, table: string) {
     const keys = Object.keys(dummy).filter(key => key != "dummy");

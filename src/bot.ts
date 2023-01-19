@@ -1,45 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {Client, Collection, Command, GatewayIntentBits, Partials} from "discord.js";
-import dotenv from "dotenv";
-import fs from "node:fs";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
-import {interactionProcessors} from "./utils.js";
-import {initClient} from "./services/cmcApi.js";
+import fs from "node:fs";
+import {commandIds, commands, initClient, interactionProcessors} from "./utils";
+import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
+import discordRequest from "./requests";
 
-dotenv.config();
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.DirectMessages
-    ],
-    partials: [
-        Partials.Channel
-    ],
-    shards: "auto"
-});
-initClient(client);
+const request = await discordRequest(
+    "https://discord.com/api/v10/users/@me"
+);
+initClient(JSON.parse(await request.text()));
+const getCommands = await discordRequest(`https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`);
+if (getCommands.status == 200) {
+    JSON.parse(await getCommands.text()).forEach((command: APIApplicationCommand) => commandIds.set(command.name, command.id));
+} else {
+    throw "failed to init: fetching commands from api failed";
+}
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 await importFromDir(path.join(cwd, "services"), (_module: any) => {
     return; //importing = running top level stuff
 });
-await importFromDir(path.join(cwd, "events"), (module: any) => {
-    const event = module.default;
-    if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args));
-    } else {
-        client.on(event.name, (...args) => event.execute(...args));
-    }
-});
-client.commands = new Collection();
 await importFromDir(path.join(cwd, "commands"), (module: any) => {
-    const command: Command = module.default;
-    client.commands.set(command.data.name, command);
+    const command = module.default;
+    commands.set(command.name, command);
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
-
-client.login(process.env["BOT_TOKEN"]);
+await import("./server");
+console.log("Ready!");
 
 /**use type any for modules*/
 async function importFromDir(curDir: string, modifier: (module: any) => void) {
@@ -67,3 +55,4 @@ async function importInteractionProcessors(curDir: string) {
         }
     }
 }
+

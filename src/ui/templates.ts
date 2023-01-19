@@ -1,10 +1,12 @@
-import {Client, EmbedBuilder} from "discord.js";
+import {APIEmbed} from "discord-api-types/v10";
+import {client} from "../utils";
 
-export function getEmbedTemplate(client: Client) {
-    return new EmbedBuilder()
-        .setFooter({
-            text: client.user.username,
-            iconURL: client.user.displayAvatarURL()
-        })
-        .setColor(0x2374ff);
+export function getEmbedTemplate(): APIEmbed {
+    return {
+        color: 0x2374ff,
+        footer: {
+            text: client.username,
+            icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
+        }
+    };
 }

@@ -1,54 +1,73 @@
-import {
-    AutocompleteInteraction,
-    chatInputApplicationCommandMention,
-    ChatInputCommandInteraction,
-    SlashCommandBuilder
-} from "discord.js";
-import {db} from "../database.js";
+import {db} from "../database";
 import didyoumean from "didyoumean";
-import {CryptoApiData} from "../structs/cryptoapidata.js";
-import {cryptoNameList, cryptoSymbolList} from "../utils.js";
-import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator.js";
+import {CryptoApiData} from "../structs/cryptoapidata";
+import {cryptoNameList, cryptoSymbolList} from "../utils";
+import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator";
+import {
+    APIApplicationCommand,
+    APIApplicationCommandAutocompleteInteraction,
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    InteractionResponseType
+} from "discord-api-types/v10";
+import {
+    APIChatInputApplicationCommandInteraction
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {FastifyReply} from "fastify";
+import {
+    APIApplicationCommandInteractionDataStringOption
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string";
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("coin")
-        .setDescription("Gets information about a cryptocurrency")
-        .addStringOption(option =>
-            option.setName("name").setDescription("The name/symbol of the coin").setAutocomplete(true)
-        ),
-    async execute(interaction: ChatInputCommandInteraction) {
-
-        let input = interaction.options.getString("name");
+    name: "coin",
+    type: ApplicationCommandType.ChatInput,
+    description: "Gets information about a cryptocurrency",
+    options: [
+        {
+            name: "name",
+            description: "The name/symbol of the coin",
+            autocomplete: true
+        }
+    ],
+    async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
+        const input = interaction.data.options?.find(option => option.name == "name");
+        let coin: string;
         if (!input) {
-            input = "btc";
+            coin = "btc";
+        } else {
+            coin = (input as APIApplicationCommandInteractionDataStringOption).value;
         }
 
-        const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", input);
+        const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin);
         if (!choice) {
-            const suggestion = didyoumean(input.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
-            await interaction.reply(
-                `Couldn't find a coin called \`${input}\`. ${suggestion != null
-                    ? `Did you mean ${chatInputApplicationCommandMention(
-                        interaction.commandName,
-                        interaction.commandId
-                    )} \`${suggestion}\`?`
-                    : ""
-                }`
-            );
+            const suggestion = didyoumean(coin.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
+            await http.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    content: `Couldn't find a coin called \`${coin}\`. ${suggestion != null
+                        ? `Did you mean </coin:${interaction.id}> \`${suggestion}\`?`
+                        : ""
+                    }`
+                }
+            });
             return;
         }
 
-        const embed = await makeEmbed(choice, interaction.client);
+        const embed = await makeEmbed(choice);
         const buttons = await makeButtons(choice, interaction);
         const favourites = await makeFavouritesMenu(interaction);
-        await interaction.reply({embeds: [embed], components: [buttons, favourites], fetchReply: true});
+        await http.send({
+            type: InteractionResponseType.ChannelMessageWithSource,
+            data: {embeds: [embed], components: [buttons, favourites], fetchReply: true}
+        });
     },
-    async autocomplete(interaction: AutocompleteInteraction) {
-        const focusedValue = interaction.options.getFocused().toLowerCase();
+    async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
+        const focusedValue = (interaction.data.options.find(option => option.type == ApplicationCommandOptionType.String && option.focused) as APIApplicationCommandInteractionDataStringOption).value.toLowerCase();
         const filtered = cryptoSymbolList.filter(choice => choice.toLowerCase().startsWith(focusedValue));
         filtered.length = Math.min(filtered.length, 25);
-        await interaction.respond(filtered.map(choice => ({name: choice, value: choice})));
+        await http.send({
+            type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+            data: {choices: filtered.map(choice => ({name: choice, value: choice}))}
+        });
     }
 
-};
+} as APIApplicationCommand;

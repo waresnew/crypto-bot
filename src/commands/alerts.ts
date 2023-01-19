@@ -1,11 +1,21 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
-import {makeAlertsMenu, makeButtons, makeEmbed} from "../ui/alerts/interfaceCreator.js";
+import {makeAlertsMenu, makeButtons, makeEmbed} from "../ui/alerts/interfaceCreator";
+import {FastifyReply} from "fastify";
+import {
+    APIChatInputApplicationCommandInteraction
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 
 export default {
-    data: new SlashCommandBuilder().setName("alerts").setDescription("Manage your alerts"),
-    async execute(interaction: ChatInputCommandInteraction) {
+    name: "alerts",
+    type: ApplicationCommandType.ChatInput,
+    description: "Manage your alerts",
+    async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const instructions = await makeEmbed([], interaction);
         const actions = makeButtons(interaction);
-        await interaction.reply({embeds: [instructions], components: [await makeAlertsMenu(interaction), actions]});
+        const menu = await makeAlertsMenu(interaction);
+        await http.send({
+            type: InteractionResponseType.ChannelMessageWithSource,
+            data: {embeds: [instructions], components: [menu, actions]}
+        });
     }
-};
+} as APIApplicationCommand;

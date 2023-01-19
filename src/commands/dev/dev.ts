@@ -1,9 +1,18 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
+import {FastifyReply} from "fastify";
+import {
+    APIChatInputApplicationCommandInteraction
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 
 export default {
-    data: new SlashCommandBuilder().setName("dev").setDescription("Run test commands"),
-    async execute(interaction: ChatInputCommandInteraction) {
-        await interaction.reply("crazy");
+    name: "dev",
+    type: ApplicationCommandType.ChatInput,
+    description: "Run test commands",
+    async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
+        await http.send({
+            type: InteractionResponseType.ChannelMessageWithSource,
+            data: {content: "crazy"}
+        });
     }
-};
+} as APIApplicationCommand;
 

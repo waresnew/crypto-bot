@@ -1,15 +1,35 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder} from "discord.js";
-import {db} from "../../database.js";
-import {getEmbedTemplate} from "../../ui/templates.js";
+import {db} from "../../database";
+import {getEmbedTemplate} from "../../ui/templates";
+import {
+    APIApplicationCommand,
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    InteractionResponseType
+} from "discord-api-types/v10";
+import {FastifyReply} from "fastify";
+import {
+    APIChatInputApplicationCommandInteraction
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {
+    APIApplicationCommandInteractionDataStringOption
+} from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string";
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName("sql")
-        .setDescription("Evaluates SQL queries using the main database")
-        .addStringOption(option => option.setName("command").setDescription("The SQL command").setRequired(true)),
-    async execute(interaction: ChatInputCommandInteraction) {
-        const command = interaction.options.getString("command");
-        const embed = getEmbedTemplate(interaction.client).setTitle("Result");
+    name: "sql",
+    type: ApplicationCommandType.ChatInput,
+    description: "Evaluates SQL queries using the main database",
+    options: [
+        {
+            name: "command",
+            description: "The SQL command",
+            type: ApplicationCommandOptionType.String,
+            required: true
+        }
+    ],
+    async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
+        const command = (interaction.data.options.find(option => option.name == "command") as APIApplicationCommandInteractionDataStringOption).value;
+        const embed = getEmbedTemplate();
+        embed.title = "Result";
         try {
             let output = "";
             await db.each(command, (err, row) => {
@@ -18,10 +38,10 @@ export default {
                 }
                 output += JSON.stringify(row) + "\n";
             });
-            embed.setDescription(output);
+            embed.description = output;
         } catch (err) {
-            embed.setDescription(err.toString());
+            embed.description = err.toString();
         }
-        await interaction.reply({embeds: [embed]});
+        await http.send({type: InteractionResponseType.ChannelMessageWithSource, data: {embeds: [embed]}});
     }
-};
+} as APIApplicationCommand;

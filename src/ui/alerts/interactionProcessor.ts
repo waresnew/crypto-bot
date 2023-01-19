@@ -1,62 +1,70 @@
-import InteractionProcessor from "../abstractInteractionProcessor.js";
+import InteractionProcessor from "../abstractInteractionProcessor";
+import {UserSetting, UserSettingType} from "../../structs/usersettings";
+import {db} from "../../database";
+import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator";
+import CryptoStat from "../../structs/cryptoStat";
 import {
-    ButtonInteraction,
-    chatInputApplicationCommandMention,
-    MessageComponentInteraction,
-    StringSelectMenuInteraction
-} from "discord.js";
-import {UserSetting, UserSettingType} from "../../structs/usersettings.js";
-import {db} from "../../database.js";
-import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator.js";
-import CryptoStat from "../../structs/cryptoStat.js";
+    APIInteraction,
+    APIMessageComponentButtonInteraction,
+    APIMessageComponentSelectMenuInteraction,
+    InteractionResponseType,
+    MessageFlags
+} from "discord-api-types/v10";
+import {FastifyReply} from "fastify";
+import {commandIds} from "../../utils";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
-    static override async processStringSelect(interaction: StringSelectMenuInteraction) {
-        if (interaction.customId.startsWith("alerts_menu")) {
-            if (interaction.values[0] == "default") {
-                await interaction.reply({
-                    content: `Error: You have not set any alerts. Please set one with ${chatInputApplicationCommandMention("coin", (await interaction.client.application.commands.fetch()).find(command => command.name == "coin").id)
-                    } before proceeding.`,
-                    ephemeral: true
+    static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
+        if (interaction.data.custom_id.startsWith("alerts_menu")) {
+            if (interaction.data.values[0] == "default") {
+                const coinLink = `</coin:${commandIds.get("coin")}>`;
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: `Error: You have not set any alerts. Please set one with ${coinLink} before proceeding.`,
+                        flags: MessageFlags.Ephemeral
+                    }
                 });
                 return;
             }
 
-            const instructions = await makeEmbed(interaction.values, interaction);
+            const instructions = await makeEmbed(interaction.data.values, interaction);
 
-            await interaction.update({
-                embeds: [instructions],
-                components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+            await http.send({
+                type: InteractionResponseType.UpdateMessage, data: {
+                    embeds: [instructions],
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+                }
             });
-
         }
     }
 
-    static override async processButton(interaction: ButtonInteraction) {
+    static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
-        if (interaction.customId.startsWith("alerts_enable")) {
+        if (interaction.data.custom_id.startsWith("alerts_enable")) {
             for (const alert of selected) {
                 alert.alertDisabled = 0;
                 await db.run("update user_settings set alertDisabled=0 where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
-        } else if (interaction.customId.startsWith("alerts_disable")) {
+        } else if (interaction.data.custom_id.startsWith("alerts_disable")) {
             for (const alert of selected) {
                 alert.alertDisabled = 1;
                 await db.run("update user_settings set alertDisabled=1 where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
-        } else if (interaction.customId.startsWith("alerts_delete")) {
+        } else if (interaction.data.custom_id.startsWith("alerts_delete")) {
             for (const alert of selected) {
                 await db.run("delete from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
             selected.length = 0;
         }
-        await interaction.update({
-            embeds: [await makeEmbed(selected, interaction)],
-            components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+        await http.send({
+            type: InteractionResponseType.UpdateMessage, data: {
+                embeds: [await makeEmbed(selected, interaction)],
+                components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+            }
         });
     }
 
-    static async parseSelected(interaction: MessageComponentInteraction) {
+    static async parseSelected(interaction: APIInteraction) {
         const selected: UserSetting[] = [];
         for (const line of interaction.message.embeds[0].description.split("\n")) {
             const input = line.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));

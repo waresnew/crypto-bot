@@ -1,19 +1,13 @@
 import {CronJob} from "cron";
-import {chatInputApplicationCommandMention, Client} from "discord.js";
-import fetch from "node-fetch";
-import {db, genSqlInsertCommand} from "../database.js";
-import {alertDevs, cryptoSymbolList} from "../utils.js";
-import {CryptoApiData} from "../structs/cryptoapidata.js";
-import {UserSetting, UserSettingType} from "../structs/usersettings.js";
-import CryptoStat from "../structs/cryptoStat.js";
-import {formatAlert} from "../ui/alerts/interfaceCreator.js";
-import {getEmbedTemplate} from "../ui/templates.js";
-
-let client: Client;
-
-export function initClient(c: Client) {
-    client = c;
-}
+import {db, genSqlInsertCommand} from "../database";
+import {commandIds, cryptoSymbolList} from "../utils";
+import {CryptoApiData} from "../structs/cryptoapidata";
+import {UserSetting, UserSettingType} from "../structs/usersettings";
+import CryptoStat from "../structs/cryptoStat";
+import {formatAlert} from "../ui/alerts/interfaceCreator";
+import {getEmbedTemplate} from "../ui/templates";
+import discordRequest from "../requests";
+import {APIChannel} from "discord-api-types/v10";
 
 new CronJob(
     "*/5 * * * *",
@@ -42,7 +36,7 @@ export async function updateCmc() {
     const json = JSON.parse(await request.text());
     const errorCode = json.status.error_code;
     if (errorCode != 0) {
-        await alertDevs(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
+        console.log(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
         return;
     }
     await db.run("begin");
@@ -73,7 +67,7 @@ async function notifyUsers() {
             }
             const expr = crypto[CryptoStat.shortToDb(alert.alertStat)] + alert.alertDirection + alert.alertThreshold;
             if (!new RegExp(/^[\d-.e<>]+$/).test(expr)) { //match num>num or num<num
-                await alertDevs(`Potentially malicious code almost ran: \`${expr}\``);
+                console.log(`Potentially malicious code almost ran: \`${expr}\``);
                 continue;
             }
             if (eval(expr)) {
@@ -87,13 +81,19 @@ async function notifyUsers() {
     }
     for (const user of toDm.keys()) {
         const notifs = toDm.get(user);
-        const message = getEmbedTemplate(client).setTitle(`⚠️ Alert${notifs.length > 1 ? "s" : ""} triggered!`);
+        const message = getEmbedTemplate();
+        message.title = `⚠️ Alert${notifs.length > 1 ? "s" : ""} triggered!`;
         let desc = `The following alert${notifs.length > 1 ? "s have" : " has"} been triggered:\n`;
-        notifs.forEach((line) => {
+        notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at ${chatInputApplicationCommandMention("alerts", (await client.application.commands.fetch()).find(command => command.name == "alerts").id)}.\n\nHappy trading!`;
-        message.setDescription(desc);
-        await (await client.users.fetch(user)).send({embeds: [message]});
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
+        message.description = desc;
+        const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+            body: JSON.stringify({recipient_id: user})
+        });
+        await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+            body: JSON.stringify(message)
+        });
     }
 }
