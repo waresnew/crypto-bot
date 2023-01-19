@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Run Jest
 
 on:
   pull_request:
