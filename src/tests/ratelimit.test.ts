@@ -4,6 +4,9 @@ import discordRequest from "../requests";
 fetchMock.enableMocks();
 
 describe("ratelimit handling", () => {
+    beforeEach(() => {
+        fetchMock.resetMocks();
+    });
     const responses = [
         {
             status: 429,
@@ -29,14 +32,12 @@ describe("ratelimit handling", () => {
         }
     ];
     it("retries requests after ratelimit", () => {
-        fetchMock.resetMocks();
         responses.forEach(resp => fetchMock.once(resp.body, {status: resp.status}));
         return discordRequest("https://discord.com/api/v10/users/@me").then(async resp => {
             expect(JSON.parse(await resp.text()).message).toBe("ok");
         });
     });
     it("delays requests after ratelimit", () => {
-        fetchMock.resetMocks();
         responses.forEach(resp => fetchMock.once(resp.body, {status: resp.status}));
         const start = Date.now();
         return discordRequest("https://discord.com/api/v10/users/@me").then(() => {

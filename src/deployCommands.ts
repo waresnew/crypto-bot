@@ -4,16 +4,26 @@ import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import {APIApplicationCommand} from "discord-api-types/v10";
 import discordRequest from "./requests";
+import {db} from "./database";
 
 dotenv.config();
 
+async function closeGracefully(signal: string | number) {
+    console.log(`Received signal to terminate: ${signal}`);
+    await db.close();
+    console.log("All services closed, exiting...");
+    process.kill(process.pid, signal);
+}
+
+process.once("SIGINT", closeGracefully);
+process.once("SIGTERM", closeGracefully);
 const commands: APIApplicationCommand[] = [];
 const commandPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "commands");
 const commandFiles = fs.readdirSync(commandPath).filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
     const command = (await import(path.join(pathToFileURL(commandPath).toString(), file))).default;
-    commands.push(command.data.toJSON());
+    commands.push(command);
 }
 
 const devCommands: APIApplicationCommand[] = [];
@@ -21,7 +31,7 @@ const devCommandPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "
 const devCommandFiles = fs.readdirSync(devCommandPath).filter(file => file.endsWith(".js"));
 for (const file of devCommandFiles) {
     const command = (await import(path.join(pathToFileURL(devCommandPath).toString(), file))).default;
-    devCommands.push(command.data.toJSON());
+    devCommands.push(command);
 }
 await registerCommands(devCommands, true);
 await registerCommands(commands, false);

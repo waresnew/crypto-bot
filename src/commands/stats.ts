@@ -1,6 +1,6 @@
 import {db} from "../database";
 import {getEmbedTemplate} from "../ui/templates";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
@@ -10,6 +10,7 @@ import discordRequest from "../requests";
 
 export default {
     name: "stats",
+    type: ApplicationCommandType.ChatInput,
     description: "List bot stats",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const embed = getEmbedTemplate();

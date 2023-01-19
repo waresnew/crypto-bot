@@ -1,6 +1,11 @@
 import {db} from "../../database";
 import {getEmbedTemplate} from "../../ui/templates";
-import {APIApplicationCommand, ApplicationCommandOptionType, InteractionResponseType} from "discord-api-types/v10";
+import {
+    APIApplicationCommand,
+    ApplicationCommandOptionType,
+    ApplicationCommandType,
+    InteractionResponseType
+} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
@@ -11,6 +16,7 @@ import {
 
 export default {
     name: "sql",
+    type: ApplicationCommandType.ChatInput,
     description: "Evaluates SQL queries using the main database",
     options: [
         {

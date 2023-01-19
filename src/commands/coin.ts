@@ -7,6 +7,7 @@ import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
     ApplicationCommandOptionType,
+    ApplicationCommandType,
     InteractionResponseType
 } from "discord-api-types/v10";
 import {
@@ -19,6 +20,7 @@ import {
 
 export default {
     name: "coin",
+    type: ApplicationCommandType.ChatInput,
     description: "Gets information about a cryptocurrency",
     options: [
         {

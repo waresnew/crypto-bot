@@ -1,6 +1,6 @@
 FROM node:18.13.0-bullseye-slim as base
+LABEL org.opencontainers.image.source=https://github.com/waresnew/crypto-bot
 RUN apt-get update && apt-get install -y --no-install-recommends dumb-init
-USER node
 WORKDIR /app
 COPY package*.json ./
 

@@ -34,10 +34,8 @@ setInterval(async () => {
                 sleep(retryMs).then(() => {
                     sleeping = false;
                 });
-            } else if (req.status == 200) {
-                cur.resolve(req);
             } else {
-                jobs.push(cur);
+                cur.resolve(req);
             }
         } catch (err) {
             cur.reject(err);

@@ -1,4 +1,4 @@
-name: Node.js CD
+name: Publish Production Image
 
 on:
   push:
@@ -8,19 +8,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy using ssh
-        uses: appleboy/ssh-action@master
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSHKEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            sudo systemctl stop crypto-bot
-            cd /home/newwares/programs/crypto-bot
-            git pull origin master
-            git status
-            npm ci --omit=dev
-            npm run register
-            sudo chmod -R 777 $(pwd)
-            sudo systemctl start crypto-bot
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push prod image
+        run: |
+          docker build . --tag ghcr.io/waresnew/crypto-bot-prod:latest --target prod
+          docker push ghcr.io/waresnew/crypto-bot-prod:latest
+

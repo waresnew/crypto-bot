@@ -3,10 +3,11 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 
 export default {
     name: "alerts",
+    type: ApplicationCommandType.ChatInput,
     description: "Manage your alerts",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const instructions = await makeEmbed([], interaction);

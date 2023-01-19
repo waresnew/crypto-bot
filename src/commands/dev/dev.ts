@@ -1,4 +1,4 @@
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
@@ -6,6 +6,7 @@ import {
 
 export default {
     name: "dev",
+    type: ApplicationCommandType.ChatInput,
     description: "Run test commands",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         await http.send({

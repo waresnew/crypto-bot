@@ -1,5 +1,5 @@
 import {getEmbedTemplate} from "../ui/templates";
-import {APIApplicationCommand, InteractionResponseType} from "discord-api-types/v10";
+import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
@@ -8,6 +8,7 @@ import discordRequest from "../requests";
 
 export default {
     name: "ping",
+    type: ApplicationCommandType.ChatInput,
     description: "Gets bot latency",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const embed = getEmbedTemplate();
