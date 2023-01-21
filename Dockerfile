@@ -12,7 +12,8 @@ RUN npm run build
 FROM build as dev
 ENV NODE_ENV development
 EXPOSE 3000
-CMD ["dumb-init","npm", "run", "start"]
+EXPOSE 9229
+CMD ["dumb-init","npm", "run", "debug"]
 
 FROM base as prod
 ENV NODE_ENV production

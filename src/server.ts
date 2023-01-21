@@ -91,7 +91,11 @@ server.post("/crypto-bot/interactions", async (request, response) => {
     }
 });
 
-server.listen({port: 3000}, async (error, address) => {
+server.get("/", async (request, response) => {
+    response.send("ok");
+});
+
+server.listen({port: 3000, host: "0.0.0.0"}, async (error, address) => {
     if (error) {
         console.error(error);
     }
