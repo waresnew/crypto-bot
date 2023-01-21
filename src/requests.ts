@@ -20,7 +20,7 @@ export default function discordRequest(url: string, init?: RequestInit): Promise
     });
 }
 
-setInterval(async () => {
+export const requestProcessor = setInterval(async () => {
     if (jobs.length > 0 && !sleeping) {
         const cur = jobs.shift();
         try {

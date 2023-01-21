@@ -1,8 +1,10 @@
 import fetchMock from "jest-fetch-mock";
-import discordRequest from "../requests";
+import discordRequest, {requestProcessor} from "../requests";
 
 fetchMock.enableMocks();
-
+afterAll(() => {
+    clearInterval(requestProcessor);
+});
 describe("ratelimit handling", () => {
     beforeEach(() => {
         fetchMock.resetMocks();
