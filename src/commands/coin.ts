@@ -44,7 +44,7 @@ export default {
             await http.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
                     content: `Couldn't find a coin called \`${coin}\`. ${suggestion != null
-                        ? `Did you mean </coin:${interaction.id}> \`${suggestion}\`?`
+                        ? `Did you mean </coin:${interaction.data.id}> \`${suggestion}\`?`
                         : ""
                     }`
                 }
