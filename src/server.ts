@@ -3,6 +3,7 @@ import fastify, {FastifyRequest} from "fastify";
 import rawBody from "fastify-raw-body";
 import {
     APIApplicationCommandAutocompleteInteraction,
+    APIInteraction,
     APIMessageComponentInteraction,
     APIModalSubmitInteraction,
     ComponentType,
@@ -39,7 +40,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         response.status(401).send({error: "Bad request signature"});
         return;
     }
-    const message = JSON.parse(JSON.stringify(request.body));
+    const message: APIInteraction = JSON.parse(JSON.stringify(request.body));
     if (!message.user && message.member) {
         message.user = message.member.user;
     }
@@ -48,7 +49,6 @@ server.post("/crypto-bot/interactions", async (request, response) => {
             type: InteractionResponseType.Pong
         });
     } else if (message.type == InteractionType.ApplicationCommand) {
-        await db.run("update global_stats set commands_run_ever = commands_run_ever+1");
         await commands.get((message as APIChatInputApplicationCommandInteraction).data.name).execute(message, response);
     } else if (message.type == InteractionType.ApplicationCommandAutocomplete) {
         const command = commands.get((message as APIApplicationCommandAutocompleteInteraction).data.name);

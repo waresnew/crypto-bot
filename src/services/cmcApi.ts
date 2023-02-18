@@ -24,7 +24,7 @@ export async function updateCmc() {
             limit: "200"
         }),
         {
-            method: "get",
+            method: "GET",
             headers: {
                 "X-CMC_PRO_API_KEY": process.env["COINMARKETCAP_KEY"],
                 Accept: "application/json",
@@ -55,7 +55,7 @@ export async function updateCmc() {
 
 async function notifyUsers() {
     const cache: CryptoApiData[] = await db.all("select * from cmc_cache");
-    const alerts: UserSetting[] = await db.all("select id,alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
+    const alerts: UserSetting[] = await db.all("select * from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
     const toDm = new Map<string, string[]>();
     for (const crypto of cache) {
         for (const alert of alerts) {
@@ -90,10 +90,12 @@ async function notifyUsers() {
         desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
         message.description = desc;
         const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+            method: "POST",
             body: JSON.stringify({recipient_id: user})
         });
         await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
-            body: JSON.stringify(message)
+            method: "POST",
+            body: JSON.stringify({embeds: [message]})
         });
     }
 }
