@@ -14,7 +14,7 @@ export default {
         const embed = getEmbedTemplate();
         embed.title = "Pong!";
         embed.fields = [{
-            name: "API Latency ⌛",
+            name: "Round-trip time ⌛",
             value: "Pinging..."
         }];
         const start = (BigInt(interaction.id) >> 22n) + 1420070400000n;
