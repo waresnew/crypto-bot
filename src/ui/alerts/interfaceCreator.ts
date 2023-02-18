@@ -15,7 +15,7 @@ import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: UserSetting[] = [];
     const alertMenuOptions: APISelectMenuOption[] = [];
-    await db.each("select alertToken,alertStat,alertThreshold,alertDirection,alertDisabled from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
+    await db.each("select * from user_settings where type=? and id=?", UserSettingType[UserSettingType.ALERT], interaction.user.id, (err, row) => {
         if (err) {
             throw err;
         }
@@ -26,7 +26,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
         alertMenuOptions.push({
             label: `${alert.alertDisabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await idToApiData(alert.alertToken)).name}`,
             description: (alert.alertDirection == "<" ? "Less than " : "Greater than ") + (alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : ""),
-            value: `${alert.alertToken}_${alert.alertStat}_${alert.alertThreshold}_${alert.alertDirection}_${alert.alertDisabled}`
+            value: `${alert.alertToken}_${alert.alertStat}_${alert.alertThreshold}_${alert.alertDirection}_${alert.id}`
         });
     }
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
@@ -49,15 +49,17 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
 
 }
 
-export function parseAlertId(id: string) {
+export async function parseAlertId(id: string) {
     const alert = new UserSetting();
     const tokens = id.split("_");
     alert.alertToken = Number(tokens[0]);
     alert.alertStat = tokens[1];
     alert.alertThreshold = Number(tokens[2]);
     alert.alertDirection = tokens[3];
-    alert.alertDisabled = Number(tokens[4]);
-    alert.id = tokens[5];
+    alert.id = tokens[4];
+    const disabled = await db.get("select alertDisabled from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
+    alert.alertDisabled = disabled["alertDisabled"];
+
     return alert;
 }
 
@@ -70,7 +72,7 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
     for (const value of values) {
         let alert = new UserSetting();
         if (values.length > 0 && typeof values[0] == "string") {
-            alert = parseAlertId(value as string);
+            alert = await parseAlertId(value as string);
         } else {
             alert = value as UserSetting;
         }
