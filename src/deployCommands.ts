@@ -6,7 +6,7 @@ import {APIApplicationCommand} from "discord-api-types/v10";
 import discordRequest from "./requests";
 import {db} from "./database";
 
-dotenv.config();
+dotenv.config({path: `./data/${process.env["NODE_ENV"]}.env`});
 
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);

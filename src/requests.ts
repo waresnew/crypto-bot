@@ -10,13 +10,16 @@ const jobs: { url: string, init: RequestInit, resolve: (value: Response) => void
  * @param {RequestInit} init headers and stuff
  * @return {Response} the response
  */
-export default function discordRequest(url: string, init?: RequestInit): Promise<Response> {
-    const params = !init ? {headers: new Headers()} : !init.headers ? {...init, ...{headers: new Headers()}} : init;
-    (params.headers as Headers).set("User-Agent", "DiscordBot (http, 1.0)");
-    (params.headers as Headers).set("Authorization", "Bot " + process.env["BOT_TOKEN"]);
-    (params.headers as Headers).set("Content-Type", "application/json");
+export default function discordRequest(url: string, init: RequestInit = {}): Promise<Response> {
+
+    const headers = {
+        "User-Agent": "DiscordBot (http, 1.0)",
+        "Authorization": "Bot " + process.env["BOT_TOKEN"],
+        "Content-Type": "application/json"
+    };
+    init.headers = {...headers, ...init.headers};
     return new Promise<Response>((resolve, reject) => {
-        jobs.push({url: url, init: params, resolve: resolve, reject: reject});
+        jobs.push({url: url, init: init, resolve: resolve, reject: reject});
     });
 }
 
@@ -34,8 +37,11 @@ export const requestProcessor = setInterval(async () => {
                 sleep(retryMs).then(() => {
                     sleeping = false;
                 });
-            } else {
+            } else if (req.ok) {
                 cur.resolve(req);
+            } else {
+                const text = await req.text();
+                cur.reject(text);
             }
         } catch (err) {
             cur.reject(err);

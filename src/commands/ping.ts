@@ -24,10 +24,11 @@ export default {
         });
         const message = JSON.parse(await (await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`)).text());
         if (message) {
+
             const end = (BigInt(message.id) >> 22n) + 1420070400000n;
             embed.fields[0].value = `${end - start} ms`;
             await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`, {
-                method: "patch",
+                method: "PATCH",
                 body: JSON.stringify({embeds: [embed]})
             });
         }

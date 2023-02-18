@@ -24,4 +24,13 @@ describe("Test jest-fetch-mock", () => {
         expect(resp.status).toBe(429);
         expect(await resp.text()).toBe("no");
     });
+    it("allows mocking headers", async () => {
+        fetchMock.once("ok", {headers: {"Content-Type": "application/json"}});
+        const init: RequestInit = {};
+        init.headers = new Headers();
+        init.headers.append("a", "b");
+        const resp = await fetch("https://google.com", init);
+        expect(resp.headers.get("Content-Type")).toBe("application/json");
+        expect(await resp.text()).toBe("ok");
+    });
 });
