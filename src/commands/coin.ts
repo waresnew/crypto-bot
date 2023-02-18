@@ -38,7 +38,7 @@ export default {
             coin = (input as APIApplicationCommandInteractionDataStringOption).value;
         }
 
-        const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin);
+        const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin, coin);
         if (!choice) {
             const suggestion = didyoumean(coin.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
             await http.send({
