@@ -12,6 +12,7 @@ import {
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
+import {analytics} from "../../analytics/segment";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
@@ -41,16 +42,37 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
         if (interaction.data.custom_id.startsWith("alerts_enable")) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Enabled selected alerts",
+                properties: {
+                    count: selected.length
+                }
+            });
             for (const alert of selected) {
                 alert.alertDisabled = 0;
                 await db.run("update user_settings set alertDisabled=0 where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
         } else if (interaction.data.custom_id.startsWith("alerts_disable")) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Disabled selected alerts",
+                properties: {
+                    count: selected.length
+                }
+            });
             for (const alert of selected) {
                 alert.alertDisabled = 1;
                 await db.run("update user_settings set alertDisabled=1 where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
         } else if (interaction.data.custom_id.startsWith("alerts_delete")) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Deleted selected alerts",
+                properties: {
+                    count: selected.length
+                }
+            });
             for (const alert of selected) {
                 await db.run("delete from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
