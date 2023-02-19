@@ -85,7 +85,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         if (interaction.message.embeds.length == 0) {
             response.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: "Error: Expected an embed on this message, but none found. Was the embed deleted?",
+                    content: "Error: Expected an embed on this message, but none was found. Was the embed deleted?",
                     flags: MessageFlags.Ephemeral
                 }
             });
