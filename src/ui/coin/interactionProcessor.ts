@@ -18,6 +18,7 @@ import {FastifyReply} from "fastify";
 import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses";
 import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel";
 import {commandIds} from "../../utils";
+import {analytics} from "../../analytics/segment";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
@@ -26,6 +27,14 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             const what = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
             const when = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).components[0].value;
             if (when.charAt(0) != "<" && when.charAt(0) != ">") {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Invalid Threshold Character",
+                        coin: coin.symbol
+                    }
+                });
                 await http.send({
                     type: InteractionResponseType.Modal, data: {
                         content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
@@ -35,6 +44,14 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 return;
             }
             if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Invalid Threshold Number",
+                        coin: coin.symbol
+                    }
+                });
                 await http.send({
                     type: InteractionResponseType.Modal, data: {
                         content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
@@ -44,6 +61,14 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 return;
             }
             if (!CryptoStat.listShorts().includes(what)) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Invalid Stat",
+                        coin: coin.symbol
+                    }
+                });
                 await http.send({
                     type: InteractionResponseType.Modal, data: {
                         content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
@@ -61,6 +86,14 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             alert.alertDirection = when.charAt(0);
             const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
             if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertDirection))[0]) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Duplicate/redundant Alert",
+                        coin: coin.symbol
+                    }
+                });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
                         content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
@@ -71,6 +104,14 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             }
             if ((await db.get("select count(id) from user_settings where id=? and type=?", alert.id, alert.type))["count(id)"] >= 25) {
                 //limit to 25 bc stringselectmenus hax a max of 25 entries
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Too many alerts",
+                        coin: coin.symbol
+                    }
+                });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
                         content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
@@ -79,6 +120,16 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Alert Created",
+                properties: {
+                    coin: coin.symbol,
+                    stat: alert.alertStat,
+                    threshold: alert.alertThreshold,
+                    direction: alert.alertDirection
+                }
+            });
             await genSqlInsertCommand(alert, "user_settings", new UserSetting());
             await http.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
@@ -145,8 +196,22 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 setting.id = interaction.user.id;
                 setting.favouriteCrypto = coin.id;
                 setting.type = UserSettingType[UserSettingType.FAVOURITE_CRYPTO];
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Favourited a coin",
+                    properties: {
+                        coin: coin.symbol
+                    }
+                });
                 await genSqlInsertCommand(setting, "user_settings", new UserSetting());
             } else {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Unfavourited a coin",
+                    properties: {
+                        coin: coin.symbol
+                    }
+                });
                 await db.run("delete from user_settings where id=? and favouriteCrypto=?", interaction.user.id, coin.id);
             }
             const newButtons = await makeButtons(coin, interaction);
@@ -156,6 +221,13 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 data: {embeds: interaction.message.embeds, components: [newButtons, newMenu]}
             });
         } else if (interaction.data.custom_id.startsWith("coin_refresh")) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Refreshed a coin",
+                properties: {
+                    coin: coin.symbol
+                }
+            });
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     components: [await makeButtons(await this.getChoiceFromEmbed(interaction.message), interaction), await makeFavouritesMenu(interaction)],
@@ -175,7 +247,15 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             });
             return;
         }
+
         const coin = await idToApiData(selected);
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Selected a favourite coin",
+            properties: {
+                coin: coin.symbol
+            }
+        });
         await http.send({
             type: InteractionResponseType.UpdateMessage, data: {
                 components: [await makeButtons(coin, interaction), await makeFavouritesMenu(interaction)],

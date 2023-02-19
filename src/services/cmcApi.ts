@@ -8,6 +8,7 @@ import {formatAlert} from "../ui/alerts/interfaceCreator";
 import {getEmbedTemplate} from "../ui/templates";
 import discordRequest from "../requests";
 import {APIChannel} from "discord-api-types/v10";
+import {analytics} from "../analytics/segment";
 
 new CronJob(
     "*/5 * * * *",
@@ -89,6 +90,13 @@ async function notifyUsers() {
         });
         desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
         message.description = desc;
+        analytics.track({
+            userId: user,
+            event: "Alert(s) Triggered",
+            properties: {
+                alerts: notifs.length
+            }
+        });
         const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
             method: "POST",
             body: JSON.stringify({recipient_id: user})

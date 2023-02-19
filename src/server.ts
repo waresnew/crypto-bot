@@ -17,6 +17,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {commands, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
+import {analytics} from "./analytics/segment";
 
 const server = fastify({logger: true});
 
@@ -44,11 +45,34 @@ server.post("/crypto-bot/interactions", async (request, response) => {
     if (!message.user && message.member) {
         message.user = message.member.user;
     }
+    if (message.user) {
+        analytics.identify({
+            userId: message.user.id,
+            traits: {
+                username: message.user.username,
+                discriminator: message.user.discriminator
+            }
+        });
+
+        analytics.page({
+            userId: message.user.id,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            category: Object.keys(InteractionType).find(key => InteractionType[key] == message.type)
+        });
+    }
     if (message.type == InteractionType.Ping) {
         response.send({
             type: InteractionResponseType.Pong
         });
     } else if (message.type == InteractionType.ApplicationCommand) {
+        analytics.track({
+            userId: message.user.id,
+            event: "Ran command",
+            properties: {
+                command: (message as APIChatInputApplicationCommandInteraction).data.name
+            }
+        });
         await commands.get((message as APIChatInputApplicationCommandInteraction).data.name).execute(message, response);
     } else if (message.type == InteractionType.ApplicationCommandAutocomplete) {
         const command = commands.get((message as APIApplicationCommandAutocompleteInteraction).data.name);
