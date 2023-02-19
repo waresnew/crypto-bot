@@ -82,6 +82,15 @@ server.post("/crypto-bot/interactions", async (request, response) => {
     } else if (message.type == InteractionType.MessageComponent) {
         const interaction = message as APIMessageComponentInteraction;
         const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
+        if (interaction.message.embeds.length == 0) {
+            response.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    content: "Error: Expected an embed on this message, but none found. Was the embed deleted?",
+                    flags: MessageFlags.Ephemeral
+                }
+            });
+            return;
+        }
         if (!interaction.data.custom_id.endsWith(interaction.user.id.toString())) {
             response.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
