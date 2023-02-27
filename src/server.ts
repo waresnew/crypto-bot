@@ -58,7 +58,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
             userId: message.user.id,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            category: Object.keys(InteractionType).find(key => InteractionType[key] == message.type)
+            name: Object.keys(InteractionType).find(key => InteractionType[key] == message.type)
         });
     }
     if (message.type == InteractionType.Ping) {
