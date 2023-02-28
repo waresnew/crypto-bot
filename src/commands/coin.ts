@@ -25,6 +25,7 @@ export default {
     options: [
         {
             name: "name",
+            type: ApplicationCommandOptionType.String,
             description: "The name/symbol of the coin",
             autocomplete: true
         }
