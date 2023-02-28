@@ -22,6 +22,7 @@ const commandPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "com
 const commandFiles = fs.readdirSync(commandPath).filter(file => file.endsWith(".js"));
 
 for (const file of commandFiles) {
+
     const command = (await import(path.join(pathToFileURL(commandPath).toString(), file))).default;
     commands.push(command);
 }
@@ -42,20 +43,12 @@ async function registerCommands(commands: APIApplicationCommand[], dev: boolean)
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
         await discordRequest(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
             {
-                method: "put",
-                body: "{[]}"
-            }
-        );
-        console.log("Successfully deleted all application commands.");
-        await discordRequest(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
-            {
-                method: "put",
+                method: "PUT",
                 body: JSON.stringify(commands)
             }
         );
         console.log("Successfully reloaded the application (/) commands.");
-    } catch
-        (error) {
+    } catch (error) {
         console.error(error);
     }
 }

@@ -66,7 +66,7 @@ export async function parseAlertId(id: string) {
 export async function makeEmbed(values: string[] | UserSetting[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
-    let desc = "Toggle/delete your crypto notifications here. Disabled notifications are marked with an ❌ and enabled notifications are marked with a ✅.";
+    let desc = "Toggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values) {
