@@ -7,6 +7,6 @@
   "testEnvironment": "node",
   "verbose": true,
   "testPathIgnorePatterns": [
-    "src/"
+    "dist/"
   ]
 }
