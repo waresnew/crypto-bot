@@ -7,10 +7,6 @@
   "testEnvironment": "node",
   "verbose": true,
   "testPathIgnorePatterns": [
-    "src/"
-  ],
-  "coverageReporters": [
-    "text",
-    "cobertura"
+    "dist/"
   ]
 }
