@@ -35,14 +35,9 @@ describe("ratelimit handling", () => {
     ];
     it("retries requests after ratelimit", () => {
         responses.forEach(resp => fetchMock.once(resp.body, {status: resp.status}));
+        const start = Date.now();
         return discordRequest("https://discord.com/api/v10/users/@me").then(async resp => {
             expect(JSON.parse(await resp.text()).message).toBe("ok");
-        });
-    });
-    it("delays requests after ratelimit", () => {
-        responses.forEach(resp => fetchMock.once(resp.body, {status: resp.status}));
-        const start = Date.now();
-        return discordRequest("https://discord.com/api/v10/users/@me").then(() => {
             expect(Date.now() - start).toBeGreaterThanOrEqual(1500);
         });
     });

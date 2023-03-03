@@ -11,14 +11,17 @@ import {
     InteractionType,
     MessageFlags
 } from "discord-api-types/v10";
-import {db} from "./database";
+import {db, initDb, openDb} from "./database";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {commands, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
-import {analytics} from "./analytics/segment";
+import {analytics, initAnalytics} from "./analytics/segment";
 
+await openDb();
+await initDb();
+initAnalytics();
 const server = fastify({logger: true});
 
 await server.register(rawBody, {

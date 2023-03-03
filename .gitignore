@@ -2,3 +2,5 @@ node_modules
 docker
 .idea
 dist
+.swc
+coverage

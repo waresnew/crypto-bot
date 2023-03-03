@@ -1,4 +1,4 @@
-import {db} from "../../database";
+import {db, getCmcCache} from "../../database";
 import {CryptoApiData} from "../../structs/cryptoapidata";
 import {UserSettingType} from "../../structs/usersettings";
 import {getEmbedTemplate} from "../templates";
@@ -28,7 +28,7 @@ export async function makeFavouritesMenu(interaction: APIInteraction) {
 
     for (let i = 0; i < favs.length; i++) {
         const row = favs[i];
-        const favName = await db.get("select name from cmc_cache where id=?", row.favouriteCrypto);
+        const favName = await getCmcCache("select name from cmc_cache where id=?", row.favouriteCrypto);
         if (favName) {
             selectFavs.components[0].options.push({label: favName.name, value: row.favouriteCrypto.toString()});
         }

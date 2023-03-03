@@ -1,16 +1,12 @@
 {
   "transform": {
-    "^.+\\.(t|j)sx?$": [
+    "^.+\\.tsx?$": [
       "@swc/jest"
     ]
   },
   "testEnvironment": "node",
   "verbose": true,
   "testPathIgnorePatterns": [
-    "dist/"
-  ],
-  "extensionsToTreatAsEsm": [
-    ".ts",
-    ".tsx"
+    "src/"
   ]
 }

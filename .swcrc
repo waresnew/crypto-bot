@@ -3,10 +3,14 @@
         "parser": {
             "syntax": "typescript"
         },
+        "experimental": {
+              "plugins": [["jest_workaround", {}]]
+            },
         "target": "es2022"
     },
     "module": {
-        "type": "es6"
+        "type": "commonjs",
+        "ignoreDynamic":true
     },
     "sourceMaps": true
 }
