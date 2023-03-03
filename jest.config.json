@@ -8,5 +8,9 @@
   "verbose": true,
   "testPathIgnorePatterns": [
     "src/"
+  ],
+  "coverageReporters": [
+    "text",
+    "cobertura"
   ]
 }
