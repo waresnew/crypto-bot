@@ -1,4 +1,4 @@
-import {db} from "../database";
+import {getCmcCache} from "../database";
 import didyoumean from "didyoumean";
 import {CryptoApiData} from "../structs/cryptoapidata";
 import {cryptoNameList, cryptoSymbolList} from "../utils";
@@ -39,7 +39,7 @@ export default {
             coin = (input as APIApplicationCommandInteractionDataStringOption).value;
         }
 
-        const choice: CryptoApiData = await db.get("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin, coin);
+        const choice: CryptoApiData = await getCmcCache("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin, coin);
         if (!choice) {
             const suggestion = didyoumean(coin.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
             await http.send({

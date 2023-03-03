@@ -20,7 +20,7 @@ To get started, simply run </coin:${commandIds.get("coin")}> to open a menu. Fro
 
 If you want to personalize your experience, head over to </settings:${commandIds.get("settings")}> to change your preferences.
 
-Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap.
+Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap. If a coin falls off the top 200 and you have an alert for it, you will be DM'ed and the alert will be deleted.
 
 We hope you find Botchain helpful in your cryptocurrency trading journey. If you have any questions or feedback, feel free to fill out this [form](https://forms.gle/4NrFuyv72c9oow9j9). Happy trading!`;
         embed.fields = [

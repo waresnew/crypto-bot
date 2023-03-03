@@ -22,11 +22,6 @@ COPY --from=build /app/dist /app/dist
 EXPOSE 3000
 CMD ["dumb-init","npm","run", "start"]
 
-FROM build as test
-ENV NODE_ENV development
-EXPOSE 3000
-CMD ["dumb-init","npm","run", "test"]
-
 FROM base as register
 ENV NODE_ENV production
 RUN npm ci --omit=dev

@@ -1,6 +1,6 @@
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
-import {db} from "../../database";
+import {db, getCmcCache} from "../../database";
 import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator";
 import CryptoStat from "../../structs/cryptoStat";
 import {
@@ -97,7 +97,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             setting.id = interaction.user.id;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             setting.alertStat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
-            setting.alertToken = (await db.get("select id from cmc_cache where name=?", input[3])).id;
+            setting.alertToken = (await getCmcCache("select id from cmc_cache where name=?", input[3])).id;
             setting.alertThreshold = Number(input[5].replace(new RegExp(/[$%]/), ""));
             setting.alertDirection = input[4] == "less" ? "<" : ">";
             setting.alertDisabled = input[1] == "❌" ? 1 : 0;

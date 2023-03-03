@@ -5,6 +5,7 @@ import fs from "node:fs";
 import {commandIds, commands, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import discordRequest from "./requests";
+import {cmcCron} from "./services/cmcApi";
 
 const request = await discordRequest(
     "https://discord.com/api/v10/users/@me"
@@ -27,6 +28,7 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
+cmcCron.start();
 console.log("Ready!");
 
 /**use type any for modules*/
