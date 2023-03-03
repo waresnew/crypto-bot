@@ -1,7 +1,28 @@
 {
   "transform": {
     "^.+\\.tsx?$": [
-      "@swc/jest"
+      "@swc/jest",
+      {
+        "jsc": {
+          "parser": {
+            "syntax": "typescript"
+          },
+          "experimental": {
+            "plugins": [
+              [
+                "jest_workaround",
+                {}
+              ]
+            ]
+          },
+          "target": "es2022"
+        },
+        "module": {
+          "type": "commonjs",
+          "ignoreDynamic": true
+        },
+        "sourceMaps": true
+      }
     ]
   },
   "testEnvironment": "node",
