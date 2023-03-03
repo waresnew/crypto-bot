@@ -12,11 +12,20 @@ import * as templates from "../ui/templates";
 import * as requests from "../requests";
 import * as cmcApi from "../services/cmcApi";
 import {makeEmbed} from "../ui/coin/interfaceCreator";
-
+/*
+note to self:
+require("leaked-handles").set({
+    timeout: 50
+});
+put ^ that at the top of the file to find out open handles
+ */
 setAnalytics(new Analytics("ok"));
 jest.spyOn(cmcApi, "notifyUsers").mockReturnValue(undefined);
 const mockDiscordRequest = jest.spyOn(requests, "default");
 jest.spyOn(templates, "getEmbedTemplate").mockReturnValue({color: 0x2374ff});
+jest.spyOn(analytics, "track").mockReturnValue(undefined);
+jest.spyOn(analytics, "page").mockReturnValue(undefined);
+jest.spyOn(analytics, "identify").mockReturnValue(undefined);
 let fakeDb: Database = null;
 beforeAll(async () => {
     fakeDb = await open({
@@ -28,9 +37,9 @@ beforeAll(async () => {
 
 });
 
-afterAll(() => {
+afterAll(async () => {
     clearInterval(requests.requestProcessor);
-    db.close();
+    await db.close();
 });
 const btcData = {
     dummy: 0,
