@@ -13,6 +13,5 @@ describe("Test /alert ui", () => {
         expect(msg.mock.calls[0][0].data.components[1].components[0].label).toBe("Enable selected");
         expect(msg.mock.calls[0][0].data.components[1].components[1].label).toBe("Disable selected");
         expect(msg.mock.calls[0][0].data.components[1].components[2].label).toBe("Delete selected");
-
     });
 });

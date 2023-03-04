@@ -94,10 +94,6 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
     }
     for (const val of choices) {
         const addition = "\n- " + val;
-        if (desc.length + addition.length > 4096) {
-            desc += "...";
-            break;
-        }
         desc += addition;
     }
     instructions.description = desc;
