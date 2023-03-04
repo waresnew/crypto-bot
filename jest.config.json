@@ -29,6 +29,9 @@
   "setupFilesAfterEnv": [
     "<rootDir>/src/tests/testSetup.ts"
   ],
+  "collectCoverageFrom": [
+    "./src/**"
+  ],
   "verbose": true,
   "testPathIgnorePatterns": [
     "dist/"
