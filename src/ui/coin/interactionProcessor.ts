@@ -16,7 +16,6 @@ import {
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses";
-import {APIButtonComponentWithCustomId} from "discord-api-types/payloads/v10/channel";
 import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
 
@@ -182,7 +181,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             };
             await http.send({type: InteractionResponseType.Modal, data: modal});
         } else if (interaction.data.custom_id.startsWith("coin_setfav")) {
-            if ((interaction.message.components[0].components.find(c => c.type == ComponentType.Button && (c as APIButtonComponentWithCustomId).custom_id == interaction.data.custom_id) as APIButtonComponentWithCustomId).label == "Favourite") {
+            if (!await db.get("select * from user_settings where id=? and type=? and favouriteCrypto=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO], coin.id)) {
                 if ((await db.get("select count(id) from user_settings where id=? and type=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]))["count(id)"] >= 25) {
                     await http.send({
                         type: InteractionResponseType.ChannelMessageWithSource, data: {

@@ -123,6 +123,27 @@ export async function notifyExpiredAlerts(toDm: string[], alerts: UserSetting[])
     }
 }
 
+/**
+ * Evaluates an inequality expression safely
+ * @param expr only numbers, <, >, are allowed (no equal signs)
+ * @returns true if the expression is true, false otherwise
+ */
+export function evalInequality(expr: string) {
+    const match = expr.match(/^([\d-.e]+)([<>])([\d-.e]+)$/);
+    if (!match) {
+        return false;
+    }
+    const a = parseFloat(match[1]);
+    const b = parseFloat(match[3]);
+    switch (match[2]) {
+        case ">":
+            return a > b;
+        case "<":
+            return a < b;
+    }
+    return false;
+}
+
 export async function notifyUsers() {
     const cache: CryptoApiData[] = await db.all("select * from cmc_cache");
     const alerts: UserSetting[] = await db.all("select * from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
@@ -136,11 +157,7 @@ export async function notifyUsers() {
                 continue;
             }
             const expr = crypto[CryptoStat.shortToDb(alert.alertStat)] + alert.alertDirection + alert.alertThreshold;
-            if (!new RegExp(/^[\d-.e<>]+$/).test(expr)) { //match num>num or num<num
-                console.log(`Potentially malicious code almost ran: \`${expr}\``);
-                continue;
-            }
-            if (eval(expr)) {
+            if (evalInequality(expr)) {
                 if (!toDm.has(alert.id)) {
                     toDm.set(alert.id, []);
                 }
