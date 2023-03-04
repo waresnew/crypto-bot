@@ -1,11 +1,6 @@
 import fetchMock from "jest-fetch-mock";
 
-fetchMock.enableMocks();
-
 describe("Test jest-fetch-mock", () => {
-    beforeEach(() => {
-        fetchMock.resetMocks();
-    });
     it("mocks the request only once", async () => {
         fetchMock.once("ok");
         expect(await (await fetch("https://google.com")).text()).toBe("ok");

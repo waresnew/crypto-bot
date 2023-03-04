@@ -26,6 +26,9 @@
     ]
   },
   "testEnvironment": "node",
+  "setupFilesAfterEnv": [
+    "<rootDir>/src/tests/testSetup.ts"
+  ],
   "verbose": true,
   "testPathIgnorePatterns": [
     "dist/"
