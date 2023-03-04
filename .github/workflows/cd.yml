@@ -20,6 +20,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/waresnew/crypto-bot-prod:latest
           cache-from: type=gha
