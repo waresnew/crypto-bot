@@ -1,4 +1,3 @@
-import {db} from "../database";
 import {getEmbedTemplate} from "../ui/templates";
 import {APIApplicationCommand, ApplicationCommandType, InteractionResponseType} from "discord-api-types/v10";
 import {
@@ -19,10 +18,6 @@ export default {
             name: "Server Count",
             value: await JSON.parse(await (await discordRequest("https://discord.com/api/v10/users/@me/guilds")).text()).length
         },
-            {
-                name: "Total Commands Ran",
-                value: (await db.get("select commands_run_ever from global_stats")).commands_run_ever.toString()
-            },
             {
                 name: "Uptime",
                 value: formatTime(Date.now() - startTime)

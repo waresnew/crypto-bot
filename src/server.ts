@@ -18,6 +18,7 @@ import {
 import {commands, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
+import {requestProcessor} from "./requests";
 
 await openDb();
 await initDb();
@@ -32,6 +33,8 @@ async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
     await server.close();
     await db.close();
+    clearInterval(requestProcessor);
+    await analytics.flush();
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
 }
