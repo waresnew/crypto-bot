@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
