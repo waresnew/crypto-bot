@@ -1,12 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {btcEthApiData, mockCommandInteraction, mockReply} from "./testSetup";
 import coinCmd from "../commands/coin";
-import {APIEmbed, APIModalSubmitInteraction, InteractionResponseType} from "discord-api-types/v10";
+import {
+    APIEmbed,
+    APIInteractionResponseCallbackData,
+    APIModalSubmitInteraction,
+    ComponentType,
+    InteractionResponseType
+} from "discord-api-types/v10";
 import {updateCmc} from "../services/cmcApi";
 import fetchMock from "jest-fetch-mock";
 import CoinInteractionProcessor from "../ui/coin/interactionProcessor";
 import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses";
 import {db} from "../database";
+import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import Mock = jest.Mock;
 
 let msg: Mock<any, any, any> = null, embed: APIEmbed = null;
@@ -26,6 +33,8 @@ describe("Tests /coin interface", () => {
         expect(embed.thumbnail.url).toBe("https://s2.coinmarketcap.com/static/img/coins/128x128/1.png");
         expect(embed.fields[0].name).toBe("Price");
         expect(embed.fields[0].value).toBe("$9283.92 🟢");
+        expect(msg.mock.calls[0][0].data.components[0].components[0].label).toBe("Add alert");
+        expect(msg.mock.calls[0][0].data.components[0].components[1].label).toBe("Favourite");
     });
 
     it("displays the alert modal correctly after click button", async () => {
@@ -120,6 +129,7 @@ describe("Tests /coin interface", () => {
             }
         }, mockReply);
         expect(db.get("select * from user_settings where id=\"123\" and type=\"FAVOURITE_CRYPTO\" and favouriteCrypto=1")).not.toBeUndefined();
+        expect(((msg.mock.calls[0][0].data as APIInteractionResponseCallbackData).components.find(row => row.components[0].type == ComponentType.StringSelect).components[0] as APIStringSelectComponent).options[0].label).toBe("Bitcoin");
         await CoinInteractionProcessor.processButton({
             app_permissions: undefined,
             application_id: "",
@@ -170,6 +180,7 @@ describe("Tests /coin interface", () => {
                 ]
             }
         }, mockReply);
+        expect(((msg.mock.calls[1][0].data as APIInteractionResponseCallbackData).components.find(row => row.components[0].type == ComponentType.StringSelect).components[0] as APIStringSelectComponent).options[0].label).toBe("Favourite a coin to add it here!");
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"FAVOURITE_CRYPTO\" and favouriteCrypto=1")).toBeUndefined();
     });
 
