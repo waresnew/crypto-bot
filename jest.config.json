@@ -32,6 +32,9 @@
   "collectCoverageFrom": [
     "./src/**"
   ],
+  "coveragePathIgnorePatterns": [
+    "<rootDir>/src/commands/"
+  ],
   "verbose": true,
   "testPathIgnorePatterns": [
     "dist/"

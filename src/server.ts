@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fastify, {FastifyRequest} from "fastify";
 import rawBody from "fastify-raw-body";

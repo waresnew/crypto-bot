@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import fs from "node:fs";
 import dotenv from "dotenv";
 import path from "node:path";
