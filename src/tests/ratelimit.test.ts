@@ -1,14 +1,7 @@
 import fetchMock from "jest-fetch-mock";
-import discordRequest, {requestProcessor} from "../requests";
+import discordRequest from "../requests";
 
-fetchMock.enableMocks();
-afterAll(() => {
-    clearInterval(requestProcessor);
-});
 describe("ratelimit handling", () => {
-    beforeEach(() => {
-        fetchMock.resetMocks();
-    });
     const responses = [
         {
             status: 429,
