@@ -33,7 +33,7 @@
     "./src/**"
   ],
   "coveragePathIgnorePatterns": [
-    "<rootDir>/src/commands/**"
+    "<rootDir>/src/commands/"
   ],
   "verbose": true,
   "testPathIgnorePatterns": [
