@@ -75,6 +75,21 @@ export async function updateCmc() {
         await genSqlInsertCommand(coin, "cmc_cache", new CryptoApiData());
     }
     await db.run("commit");
+    await db.run("begin");
+    await db.each("select * from user_settings where type=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], async (err, row) => {
+        if (err) {
+            throw err;
+        }
+        const setting = row as UserSetting;
+        if (!newCoins.find(c => c.id == setting.favouriteCrypto)) {
+            analytics.track({
+                userId: setting.id,
+                event: "Favourite(s) expired"
+            });
+            await db.run("delete from user_settings where id=? and favouriteCrypto=?", setting.id, setting.favouriteCrypto);
+        }
+    });
+    await db.run("commit");
     console.log(`Updated caches at ${new Date().toString()}`);
 
 }

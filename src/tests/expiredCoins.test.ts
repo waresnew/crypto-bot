@@ -1,8 +1,8 @@
 import fetchMock from "jest-fetch-mock";
 import CoinInteractionProcessor from "../ui/coin/interactionProcessor";
 import {APIChannel, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
-import {db, idToApiData} from "../database";
-import {UserSettingType} from "../structs/usersettings";
+import {db, genSqlInsertCommand, idToApiData} from "../database";
+import {UserSetting, UserSettingType} from "../structs/usersettings";
 import * as cmcApi from "../services/cmcApi";
 import {makeEmbed} from "../ui/coin/interfaceCreator";
 import {addAlertModal, btcData, btcEthApiData, mockDiscordRequest, mockReply} from "./testSetup";
@@ -32,15 +32,25 @@ describe("Checks if expired coins are handled properly", function () {
         fetchMock.once(JSON.stringify({
             id: "123123123"
         } as APIChannel));
+        const setting = new UserSetting();
+        setting.id = "1234567890";
+        setting.favouriteCrypto = 1;
+        setting.type = UserSettingType[UserSettingType.FAVOURITE_CRYPTO];
+        await genSqlInsertCommand(setting, "user_settings", new UserSetting());
+        expect(await db.get("select * from user_settings where id=? and favouriteCrypto=?", "1234567890", 1)).not.toBeUndefined();
         await cmcApi.updateCmc();
+        expect(await db.get("select * from user_settings where id=? and favouriteCrypto=?", "1234567890", 1)).toBeUndefined();
         expect(await db.get("select * from cmc_cache where id = 1")).toBeUndefined();
         expect(await db.get("select * from cmc_cache where id = 1027")).not.toBeUndefined();
         expect(mockDiscordRequest).toBeCalledTimes(2);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect(JSON.parse((mockDiscordRequest.mock.calls[1][1] as any).body).embeds[0].description).toBe("The following alert has expired:\n\n- When price of Bitcoin is less than $50\n\nThe above coins are no longer in the top 200 cryptocurrencies by market cap. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert has been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!");
         jest.spyOn(CoinInteractionProcessor, "getChoiceFromEmbed").mockReturnValueOnce(idToApiData(1));
-        const outdatedEmbed = makeEmbed(await CoinInteractionProcessor.getChoiceFromEmbed(undefined));
-        expect(outdatedEmbed.title).toBe("This coin is no longer in the top 200 coins. (N/A-USD)");
-        expect(outdatedEmbed.thumbnail.url).toBe("https://s2.coinmarketcap.com/static/img/coins/128x128/0.png");
+        try {
+            makeEmbed(await CoinInteractionProcessor.getChoiceFromEmbed(undefined));
+            fail("Should have thrown an error");
+        } catch (e) {
+            expect(e).not.toBeUndefined();
+        }
     });
 });

@@ -88,14 +88,10 @@ export async function genSqlInsertCommand(data: unknown, table: string, dummy: u
  * only for SELECTing from cmc_cache
  * @param command
  * @param binds param vars to pass into db.get()
- * @returns coin(s) if exists in cmc_cache, otherwise a placeholder coin
+ * @returns coin if exists, undefined if not (intended behavior) (idc if an error occurs when someone clicks a button)
  */
 export async function getCmcCache(command: string, ...binds: unknown[]) {
-    const result = await db.get(command, binds) as CryptoApiData;
-    const placeholder = new CryptoApiData();
-    placeholder.name = "This coin is no longer in the top 200 coins.";
-    placeholder.symbol = "N/A";
-    return result ? result : placeholder;
+    return await db.get(command, binds) as CryptoApiData;
 }
 
 export async function idToApiData(id: number | string) {
