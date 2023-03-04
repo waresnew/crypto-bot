@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as templates from "../ui/templates";
 import {analytics, setAnalytics} from "../analytics/segment";
 import {open} from "sqlite";
@@ -11,6 +12,8 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import SpyInstance = jest.SpyInstance;
+import Mock = jest.Mock;
 /*
 note to self:
 require("leaked-handles").set({
@@ -129,19 +132,25 @@ export const addAlertModal: APIModalSubmitInteraction = {
     version: 1,
     application_id: "555555555555555555"
 };
+
+const globalMocks: SpyInstance[] = [];
 beforeEach(() => {
     fetchMock.resetMocks();
 });
+
 afterEach(() => {
-    jest.clearAllMocks();
+    globalMocks.forEach(mock => mock.mockClear());
+    (mockReply.send as Mock<any, any, any>).mockClear();
+    mockDiscordRequest.mockClear();
 });
+
 beforeAll(async () => {
     fetchMock.enableMocks();
     setAnalytics(new Analytics("ok"));
-    jest.spyOn(templates, "getEmbedTemplate").mockReturnValue({color: 0x2374ff});
-    jest.spyOn(analytics, "track").mockReturnValue(undefined);
-    jest.spyOn(analytics, "page").mockReturnValue(undefined);
-    jest.spyOn(analytics, "identify").mockReturnValue(undefined);
+    globalMocks.push(jest.spyOn(templates, "getEmbedTemplate").mockReturnValue({color: 0x2374ff}));
+    globalMocks.push(jest.spyOn(analytics, "track").mockReturnValue(undefined));
+    globalMocks.push(jest.spyOn(analytics, "page").mockReturnValue(undefined));
+    globalMocks.push(jest.spyOn(analytics, "identify").mockReturnValue(undefined));
     setDb(await open({
         filename: ":memory:",
         driver: sqlite3.Database
