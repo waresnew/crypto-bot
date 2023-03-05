@@ -5,6 +5,7 @@ import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator";
 import CryptoStat from "../../structs/cryptoStat";
 import {
+    APIButtonComponentWithCustomId,
     APIMessage,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
@@ -204,6 +205,15 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 await genSqlInsertCommand(setting, "user_settings", new UserSetting());
             } else {
+                if ((interaction.message.components[0].components.find(c => c.type == ComponentType.Button && (c as APIButtonComponentWithCustomId).custom_id == interaction.data.custom_id) as APIButtonComponentWithCustomId).label == "Favourite") {
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: "Error: You already have this coin favourited.",
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
                 analytics.track({
                     userId: interaction.user.id,
                     event: "Unfavourited a coin",
