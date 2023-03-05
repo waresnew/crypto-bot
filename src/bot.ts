@@ -7,10 +7,12 @@ import {commandIds, commands, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import discordRequest from "./requests";
 import {cmcCron} from "./services/cmcApi";
+import didYouMean from "didyoumean";
 
 const request = await discordRequest(
     "https://discord.com/api/v10/users/@me"
 );
+didYouMean.threshold = null;
 initClient(JSON.parse(await request.text()));
 const getCommands = await discordRequest(`https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`);
 if (getCommands.status == 200) {
