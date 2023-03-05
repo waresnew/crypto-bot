@@ -26,6 +26,59 @@ beforeAll(async () => {
     embed = msg.mock.calls[0][0].data.embeds[0] as APIEmbed;
 });
 
+async function clickFavourite(favourite: boolean) {
+    await CoinInteractionProcessor.processButton({
+        app_permissions: undefined,
+        application_id: "",
+        channel_id: undefined,
+        data: {
+            custom_id: "coin_setfav_123",
+            component_type: 2
+        },
+        id: "",
+        locale: undefined,
+        token: "",
+        type: undefined,
+        version: 1,
+        user: {id: "123", username: "123", discriminator: "123", avatar: "123"},
+        message: {
+            id: "123",
+            type: undefined,
+            content: "",
+            channel_id: "",
+            embeds: [{
+                title: "Bitcoin (BTC-USD)",
+                thumbnail: {url: "https://s2.coinmarketcap.com/static/img/coins/128x128/1.png"}
+            }],
+            author: undefined,
+            timestamp: undefined,
+            edited_timestamp: undefined,
+            tts: undefined,
+            mention_everyone: undefined,
+            mentions: undefined,
+            mention_roles: undefined,
+            attachments: undefined,
+            pinned: undefined,
+            components: [
+                {
+                    type: 1,
+                    components: [
+                        {
+                            type: 2,
+                            style: 1,
+                            custom_id: "coin_setfav_123",
+                            label: favourite ? "Favourite" : "Unfavourite",
+                            emoji: {
+                                name: "⭐"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }, mockReply);
+}
+
 describe("Tests /coin interface", () => {
     it("displays the coin embed correctly after cmd", async () => {
         expect(msg.mock.calls[0][0].type).toBe(InteractionResponseType.ChannelMessageWithSource);
@@ -130,56 +183,8 @@ describe("Tests /coin interface", () => {
         }, mockReply);
         expect(db.get("select * from user_settings where id=\"123\" and type=\"FAVOURITE_CRYPTO\" and favouriteCrypto=1")).not.toBeUndefined();
         expect(((msg.mock.calls[0][0].data as APIInteractionResponseCallbackData).components.find(row => row.components[0].type == ComponentType.StringSelect).components[0] as APIStringSelectComponent).options[0].label).toBe("Bitcoin");
-        await CoinInteractionProcessor.processButton({
-            app_permissions: undefined,
-            application_id: "",
-            channel_id: undefined,
-            data: {
-                custom_id: "coin_setfav_123",
-                component_type: 2
-            },
-            id: "",
-            locale: undefined,
-            token: "",
-            type: undefined,
-            version: 1,
-            user: {id: "123", username: "123", discriminator: "123", avatar: "123"},
-            message: {
-                id: "123",
-                type: undefined,
-                content: "",
-                channel_id: "",
-                embeds: [{
-                    title: "Bitcoin (BTC-USD)",
-                    thumbnail: {url: "https://s2.coinmarketcap.com/static/img/coins/128x128/1.png"}
-                }],
-                author: undefined,
-                timestamp: undefined,
-                edited_timestamp: undefined,
-                tts: undefined,
-                mention_everyone: undefined,
-                mentions: undefined,
-                mention_roles: undefined,
-                attachments: undefined,
-                pinned: undefined,
-                components: [
-                    {
-                        type: 1,
-                        components: [
-                            {
-                                type: 2,
-                                style: 1,
-                                custom_id: "coin_setfav_123",
-                                label: "Favourite",
-                                emoji: {
-                                    name: "⭐"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        }, mockReply);
+
+        await clickFavourite(false);
         expect(((msg.mock.calls[1][0].data as APIInteractionResponseCallbackData).components.find(row => row.components[0].type == ComponentType.StringSelect).components[0] as APIStringSelectComponent).options[0].label).toBe("Favourite a coin to add it here!");
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"FAVOURITE_CRYPTO\" and favouriteCrypto=1")).toBeUndefined();
     });
@@ -188,56 +193,7 @@ describe("Tests /coin interface", () => {
         for (let i = 2; i <= 26; i++) {
             await db.run(`insert into user_settings(id,type,favouriteCrypto) values("123","FAVOURITE_CRYPTO",${i})`);
         }
-        await CoinInteractionProcessor.processButton({
-            app_permissions: undefined,
-            application_id: "",
-            channel_id: undefined,
-            data: {
-                custom_id: "coin_setfav_123",
-                component_type: 2
-            },
-            id: "",
-            locale: undefined,
-            token: "",
-            type: undefined,
-            version: 1,
-            user: {id: "123", username: "123", discriminator: "123", avatar: "123"},
-            message: {
-                id: "123",
-                type: undefined,
-                content: "",
-                channel_id: "",
-                embeds: [{
-                    title: "Bitcoin (BTC-USD)",
-                    thumbnail: {url: "https://s2.coinmarketcap.com/static/img/coins/128x128/1.png"}
-                }],
-                author: undefined,
-                timestamp: undefined,
-                edited_timestamp: undefined,
-                tts: undefined,
-                mention_everyone: undefined,
-                mentions: undefined,
-                mention_roles: undefined,
-                attachments: undefined,
-                pinned: undefined,
-                components: [
-                    {
-                        type: 1,
-                        components: [
-                            {
-                                type: 2,
-                                style: 1,
-                                custom_id: "coin_setfav_123",
-                                label: "Favourite",
-                                emoji: {
-                                    name: "⭐"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        }, mockReply);
+        await clickFavourite(true);
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"FAVOURITE_CRYPTO\" and favouriteCrypto=1")).toBeUndefined();
         expect(msg.mock.calls[0][0].data.content).toBe("Error: You can not have more than 25 favourited cryptos.");
         await db.run("delete from user_settings");
@@ -250,6 +206,12 @@ describe("Tests /coin interface", () => {
         await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">6"), mockReply);
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"ALERT\" and alertToken=1 and alertStat=\"price\" and alertThreshold=6")).toBeUndefined();
         expect(msg.mock.calls[1][0].data.content).toBe("Error: You already have an alert that checks if the price of Bitcoin is greater than a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from </alerts:undefined> before proceeding.");
+    });
+
+    it("rejects duplicate favourites", async () => {
+        await db.run("insert into user_settings(id,type,favouriteCrypto) values(\"123\",\"FAVOURITE_CRYPTO\",1)");
+        await clickFavourite(true);
+        expect(msg.mock.calls[0][0].data.content).toBe("Error: You already have this coin favourited.");
     });
 });
 
