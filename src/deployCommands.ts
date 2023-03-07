@@ -51,6 +51,18 @@ async function registerCommands(commands: APIApplicationCommand[], dev: boolean)
                 body: JSON.stringify(commands)
             }
         );
+        if (!dev) {
+            const dbl = await fetch(`https://discordbotlist.com/api/v1/bots/${process.env["APP_ID"]}/commands`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": process.env["DBL_TOKEN"]
+                },
+                body: JSON.stringify(commands)
+            });
+            console.log(dbl.status);
+            console.log(await dbl.text());
+        }
         console.log("Successfully reloaded the application (/) commands.");
     } catch (error) {
         console.error(error);
