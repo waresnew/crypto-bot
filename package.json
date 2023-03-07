@@ -23,7 +23,7 @@
     "didyoumean": "^1.2.2",
     "discord-api-types": "^0.37.35",
     "dotenv": "^16.0.3",
-    "fastify": "^4.13.0",
+    "fastify": "^4.14.1",
     "fastify-raw-body": "^4.2.0",
     "sqlite": "^4.1.2",
     "sqlite3": "^5.1.4",
