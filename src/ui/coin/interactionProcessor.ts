@@ -36,8 +36,8 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     }
                 });
                 await http.send({
-                    type: InteractionResponseType.Modal, data: {
-                        content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above.",
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above. For example, entering `>20` will mean you will be alerted when the value is above 20.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -53,8 +53,8 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     }
                 });
                 await http.send({
-                    type: InteractionResponseType.Modal, data: {
-                        content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.)",
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input. For example, entering `>20` will mean you will be alerted when the value is above 20.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -70,8 +70,8 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     }
                 });
                 await http.send({
-                    type: InteractionResponseType.Modal, data: {
-                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example (eg. `1h%` or `price`)",
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Our currently supported stats are: `" + CryptoStat.listShorts().join("`, `") + "`.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
