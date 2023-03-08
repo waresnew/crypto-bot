@@ -112,14 +112,18 @@ export async function notifyExpiredAlerts(toDm: string[], alerts: UserSetting[])
                 alerts: expired.length
             }
         });
-        const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
-            method: "POST",
-            body: JSON.stringify({recipient_id: user})
-        });
-        await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
-            method: "POST",
-            body: JSON.stringify({embeds: [message]})
-        });
+        try {
+            const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+                method: "POST",
+                body: JSON.stringify({recipient_id: user})
+            });
+            await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+                method: "POST",
+                body: JSON.stringify({embeds: [message]})
+            });
+        } catch (e) {
+
+        }
     }
 }
 
@@ -183,14 +187,19 @@ export async function notifyUsers() {
                 alerts: notifs.length
             }
         });
-        const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
-            method: "POST",
-            body: JSON.stringify({recipient_id: user})
-        });
 
-        await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
-            method: "POST",
-            body: JSON.stringify({embeds: [message]})
-        });
+        try {
+            const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+                method: "POST",
+                body: JSON.stringify({recipient_id: user})
+            });
+
+            await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+                method: "POST",
+                body: JSON.stringify({embeds: [message]})
+            });
+        } catch (e) {
+
+        }
     }
 }
