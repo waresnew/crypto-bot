@@ -187,6 +187,7 @@ export async function notifyUsers() {
             method: "POST",
             body: JSON.stringify({recipient_id: user})
         });
+
         await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
             method: "POST",
             body: JSON.stringify({embeds: [message]})

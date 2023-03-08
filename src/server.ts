@@ -20,12 +20,17 @@ import {commands, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
 import {requestProcessor} from "./requests";
+import Sentry from "@sentry/node";
 
 await openDb();
 await initDb();
 initAnalytics();
 const server = fastify({logger: true});
-
+server.setErrorHandler((error, request, reply) => {
+    console.log(error);
+    Sentry.captureException(error);
+    reply.status(500).send({error: "Internal server error"});
+});
 await server.register(rawBody, {
     runFirst: true
 });
