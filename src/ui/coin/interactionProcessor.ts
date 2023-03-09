@@ -94,7 +94,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-            if (Number(when.substring(1)) > 1000000000) {
+            if (Math.abs(Number(when.substring(1))) > 1000000000) {
                 analytics.track({
                     userId: interaction.user.id,
                     event: "Alert Creation Failed",
@@ -105,7 +105,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The threshold you specified was too high. Please ensure it is at most one billion.",
+                        content: "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
