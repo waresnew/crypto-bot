@@ -11,7 +11,7 @@ export default {
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {content: "crazy"}
+            data: {content: await (await discordRequest("https://discord.com/api/v10/users/@me/guilds")).text()}
         });
     }
 } as APIApplicationCommand;
