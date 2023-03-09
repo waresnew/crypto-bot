@@ -60,7 +60,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-            if (when.length > 9) {
+            if (when.length > 13) {
                 analytics.track({
                     userId: interaction.user.id,
                     event: "Alert Creation Failed",
@@ -71,7 +71,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The threshold you specified was too long. Please ensure it is at most 8 digits long.",
+                        content: "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -94,7 +94,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-            if (Number(when.substring(1)) > 99999999) {
+            if (Number(when.substring(1)) > 1000000000) {
                 analytics.track({
                     userId: interaction.user.id,
                     event: "Alert Creation Failed",
@@ -105,7 +105,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The threshold you specified was too high. Please ensure it is less than one billion.",
+                        content: "Error: The threshold you specified was too high. Please ensure it is at most one billion.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
