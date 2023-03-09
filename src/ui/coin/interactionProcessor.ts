@@ -26,6 +26,23 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
         if (interaction.data.custom_id.startsWith("coin_alertsmodal")) {
             const what = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
             const when = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).components[0].value;
+            if (!what || !when) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Missing Fields",
+                        coin: coin.symbol
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: You did not specify a stat or a threshold. Please try again.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             if (when.charAt(0) != "<" && when.charAt(0) != ">") {
                 analytics.track({
                     userId: interaction.user.id,
@@ -43,6 +60,23 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
+            if (when.length > 9) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "When field too long",
+                        coin: coin.symbol
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: The threshold you specified was too long. Please ensure it is at most 8 digits long.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
                 analytics.track({
                     userId: interaction.user.id,
@@ -55,6 +89,23 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
                         content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input. For example, entering `>20` will mean you will be alerted when the value is above 20.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
+            if (Number(when.substring(1)) > 99999999) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Threshold too high",
+                        coin: coin.symbol
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: The threshold you specified was too high. Please ensure it is less than one billion.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -156,8 +207,6 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                                 label: "Which stat do you want to track?",
                                 custom_id: `coin_alertsmodalstat_${interaction.user.id}`,
                                 style: TextInputStyle.Short,
-                                max_length: sortedOptions[sortedOptions.length - 1].length,
-                                min_length: sortedOptions[0].length,
                                 placeholder: sortedOptions.join(", "),
                                 required: true
                             }
@@ -171,8 +220,6 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                                 custom_id: `coin_alertsmodalvalue_${interaction.user.id}`,
                                 label: "At what threshold should you be alerted?",
                                 style: TextInputStyle.Short,
-                                max_length: 10,
-                                min_length: 2,
                                 placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
                                 required: true
                             }
