@@ -60,7 +60,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-            if (when.length > 13) {
+            if (when.length > 12) {
                 analytics.track({
                     userId: interaction.user.id,
                     event: "Alert Creation Failed",
@@ -122,7 +122,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Our currently supported stats are: `" + CryptoStat.listShorts().join("`, `") + "`.",
+                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
