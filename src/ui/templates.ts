@@ -4,7 +4,7 @@ import {APIEmbed} from "discord-api-types/v10";
 
 const randomFooters = [
     "Need help? Join the official support server: https://discord.gg/mpyPadCG3q",
-    "Support the bot by voting: https://top.gg/bot/1058388231273590885/vote"
+    "Support the bot by running /vote!"
 ];
 export function getEmbedTemplate(): APIEmbed {
     return {
