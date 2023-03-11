@@ -136,23 +136,6 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             alert.alertToken = coin.id;
             alert.alertDirection = when.charAt(0);
             const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
-            if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertDirection))[0]) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Duplicate/redundant Alert",
-                        coin: coin.symbol
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: `Error: You already have an alert that checks if the ${CryptoStat.shortToLong(alert.alertStat)} of ${coin.name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from ${manageAlertLink} before proceeding.`,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
             if ((await db.get("select count(id) from user_settings where id=? and type=?", alert.id, alert.type))["count(id)"] >= 25) {
                 //limit to 25 bc stringselectmenus hax a max of 25 entries
                 analytics.track({
