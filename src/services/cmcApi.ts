@@ -178,7 +178,7 @@ export async function notifyUsers() {
         notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\n\nHappy trading!`;
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\nIf Botchain has helped you, please support us by voting at </vote:${commandIds.get("vote")}>.\n\nHappy trading!`;
         message.description = desc;
         analytics.track({
             userId: user,
