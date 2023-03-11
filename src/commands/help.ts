@@ -17,6 +17,7 @@ export default {
             `Welcome to Botchain, the Discord bot that keeps you informed about the price of your favorite cryptocurrencies! With Botchain, you can set up alerts for specific cryptocurrencies and get DM'ed when the price (or some other statistic) reaches a certain threshold. This is particularly useful for traders and investors who need to keep a close eye on the markets.
 
 To get started, simply run </coin:${commandIds.get("coin")}> to open a menu. From there, you can set up an alert for the cryptocurrency. You can choose from a variety of different statistics to track. Currently, the statistics we support are: price, 24 hour volume percent change, the market cap dominance, and the 1 hour/24 hour/7 day price percent change. The user interface is mainly point-and-click to make it as easy to use as possible.
+When an alert is triggered, you will be notified by DM and the alert will be deleted. With this in mind, please ensure that you always share a server with the bot and have it unblocked, or else some alerts may silently fail.
 
 If you want to personalize your experience, head over to </settings:${commandIds.get("settings")}> to change your preferences.
 
