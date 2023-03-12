@@ -27,7 +27,8 @@ const customIdVersions = {
     alerts_delete: "0.0.1",
     alerts_editmodal: "0.0.1",
     alerts_editmodalstat: "0.0.1",
-    alerts_editmodalvalue: "0.0.1"
+    alerts_editmodalvalue: "0.0.1",
+    alerts_refresh: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {
