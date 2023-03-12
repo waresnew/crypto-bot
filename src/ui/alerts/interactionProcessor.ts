@@ -86,7 +86,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}`, {
                 method: "POST",
                 body: JSON.stringify({
-                    content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.`,
+                    content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.
+                    Tip: When editing an alert, leave a field blank to keep the old value.`,
                     flags: MessageFlags.Ephemeral
                 })
             });
