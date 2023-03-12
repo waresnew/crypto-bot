@@ -68,7 +68,7 @@ export async function streamToString(stream: ReadableStream) {
  * @returns returns customid but without the version if successful else undefined
  * @throws error if the customid version is not in the dictionary (not supposed to happen)
  */
-export function validateCustomIdVer(id: string) {
+function validateCustomIdVer(id: string) {
     const version = id.split("_")[0].split(".");
     const major = version[0], minor = version[1], patch = version[2];
     const key = id.split("_")[1] + "_" + id.split("_")[2];
@@ -91,7 +91,7 @@ function patchCustomIdVer(id: string) {
     return latest + "_" + id;
 }
 
-export function deepVersionCustomId(obj: any) {
+export function deepInsertCustomId(obj: any) {
     if (obj == undefined) {
         return;
     }
@@ -100,7 +100,28 @@ export function deepVersionCustomId(obj: any) {
             obj[key] = patchCustomIdVer(obj[key]);
         }
         if (obj[key] instanceof Object) {
-            deepVersionCustomId(obj[key]);
+            deepInsertCustomId(obj[key]);
         }
     }
+}
+
+export function deepStripCustomId(obj: any) {
+    if (obj == undefined) {
+        return true;
+    }
+    for (const key of Object.keys(obj)) {
+        if (key == "custom_id") {
+            const stripped = validateCustomIdVer(obj[key]);
+            if (!stripped) {
+                return false;
+            }
+            obj[key] = stripped;
+        }
+        if (obj[key] instanceof Object) {
+            if (!deepStripCustomId(obj[key])) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
