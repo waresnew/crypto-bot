@@ -17,6 +17,7 @@ import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
 import CoinInteractionProcessor from "../coin/interactionProcessor";
+import discordRequest from "../../requests";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
 
@@ -82,13 +83,13 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     components: [await makeAlertsMenu(interaction), await makeButtons([], interaction)]
                 }
             });
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
+            await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}`, {
+                method: "POST",
+                body: JSON.stringify({
                     content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.`,
                     flags: MessageFlags.Ephemeral
-                }
+                })
             });
-
         }
     }
 

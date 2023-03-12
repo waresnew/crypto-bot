@@ -31,4 +31,12 @@ export interface Indexable {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;
 }
-
+export async function streamToString(stream: ReadableStream) {
+    const chunks = [];
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    for await (const chunk of stream) {
+        chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks).toString("utf-8");
+}
