@@ -11,7 +11,6 @@ export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const commands = new Map<string, any>();
-
 export function initClient(input: APIUser) {
     client = input;
     startTime = Date.now();
@@ -28,7 +27,6 @@ export function scientificNotationToNumber(input: string): string {
     ans += tokens[0].replace(".", "");
     return ans;
 }
-
 export interface Indexable {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;

@@ -197,17 +197,17 @@ describe("Tests /coin interface", () => {
 
     it("processes modal correctly", async () => {
         await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">500"), mockReply);
-        expect(msg.mock.calls[0][0].data.content).toMatch(new RegExp("Done!.+"));
+        expect(msg.mock.calls[0][0].data.content).toMatch(new RegExp("Done!"));
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"ALERT\" and alertToken=1 and alertStat=\"price\" and alertThreshold=500")).not.toBeUndefined();
         await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">6"), mockReply);
         expect(await db.get("select * from user_settings where id=\"123\" and type=\"ALERT\" and alertToken=1 and alertStat=\"price\" and alertThreshold=6")).not.toBeUndefined();
         expect(msg.mock.calls[1][0].data.content).not.toBe("Error: You already have an alert that checks if the price of Bitcoin is greater than a certain amount.\nAdding another alert of this type would be redundant. Please delete your old one from </alerts:undefined> before proceeding.");
         await CoinInteractionProcessor.processModal(genMockModalSubmit("ipuohegfwdg", ">500"), mockReply);
-        expect(msg.mock.calls[2][0].data.content).toMatch(new RegExp("Error: The specified stat was invalid.+"));
+        expect(msg.mock.calls[2][0].data.content).toMatch(new RegExp("Error: The specified stat was invalid"));
         await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">1000000001"), mockReply);
-        expect(msg.mock.calls[3][0].data.content).toMatch(new RegExp("Error: The threshold you specified was too high\\..+"));
+        expect(msg.mock.calls[3][0].data.content).toMatch(new RegExp("Error: The threshold you specified was too high\\."));
         await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">-00000000000"), mockReply);
-        expect(msg.mock.calls[4][0].data.content).toMatch(new RegExp("The threshold you specified was too long.+"));
+        expect(msg.mock.calls[4][0].data.content).toMatch(new RegExp("The threshold you specified was too long"));
     });
 
     it("rejects duplicate favourites", async () => {

@@ -62,7 +62,6 @@ export async function parseAlertId(id: string) {
 
     return alert;
 }
-
 export async function makeEmbed(values: string[] | UserSetting[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
