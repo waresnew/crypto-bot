@@ -10,7 +10,7 @@ describe("Test conversions", () => {
     });
 
     test("3", () => {
-        expect(CryptoStat.shortToDb("volume%")).toBe("volume_24h");
+        expect(CryptoStat.shortToDb("volume%")).toBe("volume_change_24h");
     });
 
     test("4", () => {
