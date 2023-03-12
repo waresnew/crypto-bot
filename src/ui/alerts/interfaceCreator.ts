@@ -115,17 +115,6 @@ export function makeButtons(selected: UserSetting[], interaction: APIInteraction
             },
             {
                 type: ComponentType.Button,
-                custom_id: `alerts_edit_${interaction.user.id}`,
-                label: "Edit alert",
-                style: ButtonStyle.Primary,
-                emoji: {
-                    id: null,
-                    name: "✏️"
-                },
-                disabled: selected.length != 1
-            },
-            {
-                type: ComponentType.Button,
                 custom_id: `alerts_disable_${interaction.user.id}`,
                 label: "Disable selected",
                 emoji: {
@@ -143,6 +132,17 @@ export function makeButtons(selected: UserSetting[], interaction: APIInteraction
                     name: "🗑️"
                 },
                 style: ButtonStyle.Danger
+            },
+            {
+                type: ComponentType.Button,
+                custom_id: `alerts_edit_${interaction.user.id}`,
+                label: "Edit alert",
+                style: ButtonStyle.Primary,
+                emoji: {
+                    id: null,
+                    name: "✏️"
+                },
+                disabled: selected.length != 1
             },
             {
                 type: ComponentType.Button,

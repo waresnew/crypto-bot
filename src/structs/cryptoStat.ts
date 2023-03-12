@@ -8,7 +8,7 @@ export default class CryptoStat {
     static percent_change_1h = new CryptoStat("1h%", "1 hour price change");
     static percent_change_24h = new CryptoStat("24h%", "24 hour price change");
     static percent_change_7d = new CryptoStat("7d%", "7 day price change");
-    static volume_24h = new CryptoStat("volume%", "24 hour volume change");
+    static volume_change_24h = new CryptoStat("volume%", "24 hour volume change");
     static market_cap_dominance = new CryptoStat("dominance%", "market cap dominance");
 
     shortForm: string;

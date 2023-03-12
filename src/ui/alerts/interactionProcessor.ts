@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
 import {db, getCmcCache, idToCrypto} from "../../database";
@@ -24,45 +25,53 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply) {
         if (interaction.data.custom_id.startsWith("alerts_editmodal")) {
             const oldAlert = (await this.parseSelected(interaction))[0];
-            const what = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
-            const when = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalvalue_${interaction.user.id}`).components[0].value;
+            let what = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
+            let when = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalvalue_${interaction.user.id}`).components[0].value;
             try {
                 CoinInteractionProcessor.validateWhat(what);
-            } catch (e) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Invalid alert modal input",
-                    properties: {
-                        type: "what",
-                        input: what
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+            } catch (e: any) {
+                if (e.startsWith("Error: You did not specify")) {
+                    what = oldAlert.alertStat;
+                } else {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Invalid alert modal input",
+                        properties: {
+                            type: "what",
+                            input: what
+                        }
+                    });
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: e,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
             }
             try {
                 CoinInteractionProcessor.validateWhen(when);
-            } catch (e) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Invalid alert modal input",
-                    properties: {
-                        type: "when",
-                        input: when
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+            } catch (e: any) {
+                if (e.startsWith("Error: You did not specify")) {
+                    when = oldAlert.alertDirection + oldAlert.alertThreshold;
+                } else {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Invalid alert modal input",
+                        properties: {
+                            type: "when",
+                            input: when
+                        }
+                    });
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: e,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
             }
             const alert = new UserSetting();
             alert.id = interaction.user.id;
@@ -86,7 +95,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}`, {
                 method: "POST",
                 body: JSON.stringify({
-                    content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.`,
+                    content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.
+> Tip: When editing an alert, leave a field blank to keep the old value.`,
                     flags: MessageFlags.Ephemeral
                 })
             });
@@ -213,7 +223,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                                     custom_id: `alerts_editmodalstat_${interaction.user.id}`,
                                     style: TextInputStyle.Short,
                                     placeholder: sortedOptions.join(", "),
-                                    required: true
+                                    required: false
                                 }
                             ]
                         },
@@ -226,7 +236,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                                     label: "At what threshold should you be alerted?",
                                     style: TextInputStyle.Short,
                                     placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
-                                    required: true
+                                    required: false
                                 }
                             ]
                         }

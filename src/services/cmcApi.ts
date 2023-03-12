@@ -67,14 +67,15 @@ export async function updateCmc() {
         }
     }
     await notifyExpiredAlerts(expiredAlerts.map(alert => alert.id), expiredAlerts);
-    await notifyUsers();
-    console.log("Sent alerts");
+
     await db.run("begin");
     await db.run("delete from cmc_cache");
     for (const coin of newCoins) {
         await genSqlInsertCommand(coin, "cmc_cache", new CryptoApiData());
     }
     await db.run("commit");
+    await notifyUsers();
+    console.log("Sent alerts");
     await db.run("begin");
     await db.each("select * from user_settings where type=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], async (err, row) => {
         if (err) {

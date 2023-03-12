@@ -15,9 +15,9 @@ describe("Test /alert ui", () => {
         expect(msg.mock.calls[0][0].data.embeds[0].description).toMatch(new RegExp("Toggle/delete your crypto notifications here.+\\n\\nYou currently have no selected alerts"));
         expect(msg.mock.calls[0][0].data.components[0].components[0].options[0].label).toBe("You have no alerts.");
         expect(msg.mock.calls[0][0].data.components[1].components[0].label).toBe("Enable selected");
-        expect(msg.mock.calls[0][0].data.components[1].components[1].label).toBe("Edit alert");
-        expect(msg.mock.calls[0][0].data.components[1].components[2].label).toBe("Disable selected");
-        expect(msg.mock.calls[0][0].data.components[1].components[3].label).toBe("Delete selected");
+        expect(msg.mock.calls[0][0].data.components[1].components[3].label).toBe("Edit alert");
+        expect(msg.mock.calls[0][0].data.components[1].components[1].label).toBe("Disable selected");
+        expect(msg.mock.calls[0][0].data.components[1].components[2].label).toBe("Delete selected");
     });
 
     it("rejects edit if more than one selected", async () => {
@@ -90,7 +90,7 @@ describe("Test /alert ui", () => {
         expect(newAlert).not.toBeUndefined();
         expect(newAlert.alertStat).toBe("24h%");
         expect(newAlert.alertDirection).toBe(">");
-        expect(JSON.parse(await streamToString(mockDiscordRequest.mock.calls[0][1].body as ReadableStream)).content).toBe("Done! Edited alert for Bitcoin.");
+        expect(JSON.parse(await streamToString(mockDiscordRequest.mock.calls[0][1].body as ReadableStream)).content).toMatch("Done! Edited alert for Bitcoin.");
 
     });
 });
