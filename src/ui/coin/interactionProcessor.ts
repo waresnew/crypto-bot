@@ -115,6 +115,23 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
+            if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Creation Failed",
+                    properties: {
+                        reason: "Duplicate alert",
+                        coin: coin.symbol
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`,
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             analytics.track({
                 userId: interaction.user.id,
                 event: "Alert Created",

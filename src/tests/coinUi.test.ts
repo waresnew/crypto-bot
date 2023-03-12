@@ -215,6 +215,12 @@ describe("Tests /coin interface", () => {
         await clickFavourite(true);
         expect(msg.mock.calls[0][0].data.content).toBe("Error: You already have this coin favourited.");
     });
+
+    it("rejects duplicate alerts", async () => {
+        await db.run("insert into user_settings(id,type,alertToken,alertStat,alertThreshold) values(\"123\",\"ALERT\",1,\"price\",500)");
+        await CoinInteractionProcessor.processModal(genMockModalSubmit("price", ">500"), mockReply);
+        expect(msg.mock.calls[0][0].data.content).toMatch("Error: You already have an alert exactly like the one you are trying to add");
+    });
 });
 
 function genMockModalSubmit(stat: string, threshold: string): APIModalSubmitInteraction {
