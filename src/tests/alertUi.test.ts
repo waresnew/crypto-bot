@@ -89,8 +89,8 @@ describe("Test /alert ui", () => {
         expect(newAlert).not.toBeUndefined();
         expect(newAlert.alertStat).toBe("24h%");
         expect(newAlert.alertDirection).toBe(">");
-        expect(msg.mock.calls[1][0].type).toBe(4);
-        expect(msg.mock.calls[1][0].data.content).toBe("Done! Edited alert for Bitcoin.");
+        expect(msg.mock.calls[2][0].type).toBe(4);
+        expect(msg.mock.calls[2][0].data.content).toBe("Done! Edited alert for Bitcoin.");
 
     });
 });
