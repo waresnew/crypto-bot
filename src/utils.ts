@@ -29,6 +29,7 @@ const customIdVersions = {
     alerts_editmodalstat: "0.0.1",
     alerts_editmodalvalue: "0.0.1"
 } as Indexable;
+
 export function initClient(input: APIUser) {
     client = input;
     startTime = Date.now();
@@ -45,6 +46,7 @@ export function scientificNotationToNumber(input: string): string {
     ans += tokens[0].replace(".", "");
     return ans;
 }
+
 export interface Indexable {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;
@@ -90,6 +92,9 @@ function patchCustomIdVer(id: string) {
 }
 
 export function deepVersionCustomId(obj: any) {
+    if (obj == undefined) {
+        return;
+    }
     for (const key of Object.keys(obj)) {
         if (key == "custom_id") {
             obj[key] = patchCustomIdVer(obj[key]);
