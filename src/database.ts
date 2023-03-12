@@ -94,6 +94,6 @@ export async function getCmcCache(command: string, ...binds: unknown[]) {
     return await db.get(command, binds) as CryptoApiData;
 }
 
-export async function idToApiData(id: number | string) {
+export async function idToCrypto(id: number | string) {
     return await getCmcCache("select * from cmc_cache where id=?", id) as CryptoApiData;
 }

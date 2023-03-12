@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {btcEthApiData, mockCommandInteraction, mockReply} from "./testSetup";
+import {mockCommandInteraction, mockReply} from "./testSetup";
 import coinCmd from "../commands/coin";
 import {
     APIEmbed,
@@ -8,8 +8,6 @@ import {
     ComponentType,
     InteractionResponseType
 } from "discord-api-types/v10";
-import {updateCmc} from "../services/cmcApi";
-import fetchMock from "jest-fetch-mock";
 import CoinInteractionProcessor from "../ui/coin/interactionProcessor";
 import {APIModalInteractionResponseCallbackData} from "discord-api-types/payloads/v10/_interactions/responses";
 import {db} from "../database";
@@ -18,8 +16,6 @@ import Mock = jest.Mock;
 
 let msg: Mock<any, any, any> = null, embed: APIEmbed = null;
 beforeAll(async () => {
-    fetchMock.once(btcEthApiData);
-    await updateCmc();
     await coinCmd.execute(mockCommandInteraction, mockReply);
     expect(mockReply.send).toHaveBeenCalled();
     msg = mockReply.send as Mock<any, any, any>;
@@ -32,7 +28,7 @@ async function clickFavourite(favourite: boolean) {
         application_id: "",
         channel_id: undefined,
         data: {
-            custom_id: "coin_setfav_123",
+            custom_id: "coin_setfav_1_123",
             component_type: 2
         },
         id: "",
@@ -66,7 +62,7 @@ async function clickFavourite(favourite: boolean) {
                         {
                             type: 2,
                             style: 1,
-                            custom_id: "coin_setfav_123",
+                            custom_id: "coin_setfav_1_123",
                             label: favourite ? "Favourite" : "Unfavourite",
                             emoji: {
                                 name: "⭐"
@@ -96,7 +92,7 @@ describe("Tests /coin interface", () => {
             application_id: "",
             channel_id: undefined,
             data: {
-                custom_id: "coin_alerts_123",
+                custom_id: "coin_alerts_1_123",
                 component_type: 2
             },
             id: "",
@@ -126,7 +122,7 @@ describe("Tests /coin interface", () => {
             }
         }, mockReply);
         const modal: APIModalInteractionResponseCallbackData = msg.mock.calls[0][0].data;
-        expect(modal.custom_id).toBe("coin_alertsmodal_123");
+        expect(modal.custom_id).toBe("coin_alertsmodal_1_123");
         expect(modal.title).toBe("Adding alert for Bitcoin");
     });
 
@@ -136,7 +132,7 @@ describe("Tests /coin interface", () => {
             application_id: "",
             channel_id: undefined,
             data: {
-                custom_id: "coin_setfav_123",
+                custom_id: "coin_setfav_1_123",
                 component_type: 2
             },
             id: "",
@@ -225,7 +221,7 @@ function genMockModalSubmit(stat: string, threshold: string): APIModalSubmitInte
     return {
         application_id: "",
         data: {
-            custom_id: "coin_alertsmodal_123",
+            custom_id: "coin_alertsmodal_1_123",
             components: [
                 {
                     type: 1,

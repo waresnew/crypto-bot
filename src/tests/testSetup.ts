@@ -12,6 +12,7 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import * as cmcApi from "../services/cmcApi";
 import SpyInstance = jest.SpyInstance;
 import Mock = jest.Mock;
 /*
@@ -96,7 +97,7 @@ export const addAlertModal: APIModalSubmitInteraction = {
         type: 0
     },
     data: {
-        custom_id: "coin_alertsmodal",
+        custom_id: "coin_alertsmodal_1",
         components: [
             {
                 type: 1,
@@ -156,6 +157,10 @@ beforeAll(async () => {
         driver: sqlite3.Database
     }));
     await initDb();
+    fetchMock.once(btcEthApiData);
+    await cmcApi.updateCmc();
+    expect((await db.get("select * from cmc_cache where id = 1"))["name"]).toBe("Bitcoin");
+    expect((await db.get("select * from cmc_cache where id = 1027"))["name"]).toBe("Ethereum");
 });
 
 afterAll(async () => {

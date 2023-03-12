@@ -166,7 +166,7 @@ export async function notifyUsers() {
                     toDm.set(alert.id, []);
                 }
                 toDm.get(alert.id).push(await formatAlert(alert));
-                await db.run("update user_settings set alertDisabled=1 where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
+                await db.run("delete from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
             }
         }
     }
@@ -178,7 +178,7 @@ export async function notifyUsers() {
         notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again until you re-enable ${notifs.length > 1 ? "them" : "it"} at </alerts:${commandIds.get("alerts")}>.\nIf Botchain has helped you, please support us by voting at </vote:${commandIds.get("vote")}>.\n\nHappy trading!`;
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **deleted** and won't trigger again.\nIf Botchain has helped you, please support us by voting at </vote:${commandIds.get("vote")}>.\n\nHappy trading!`;
         message.description = desc;
         analytics.track({
             userId: user,
