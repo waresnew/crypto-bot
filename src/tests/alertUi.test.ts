@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import alertsCmd from "../commands/alerts";
-import {mockCommandInteraction, mockReply} from "./testSetup";
+import {mockCommandInteraction, mockDiscordRequest, mockReply} from "./testSetup";
 import AlertsInteractionProcessor from "../ui/alerts/interactionProcessor";
 import {UserSetting} from "../structs/usersettings";
 import {db, genSqlInsertCommand} from "../database";
+import {streamToString} from "../utils";
 import Mock = jest.Mock;
 
 describe("Test /alert ui", () => {
@@ -89,8 +90,7 @@ describe("Test /alert ui", () => {
         expect(newAlert).not.toBeUndefined();
         expect(newAlert.alertStat).toBe("24h%");
         expect(newAlert.alertDirection).toBe(">");
-        expect(msg.mock.calls[2][0].type).toBe(4);
-        expect(msg.mock.calls[2][0].data.content).toBe("Done! Edited alert for Bitcoin.");
+        expect(JSON.parse(await streamToString(mockDiscordRequest.mock.calls[0][1].body as ReadableStream)).content).toBe("Done! Edited alert for Bitcoin.");
 
     });
 });
