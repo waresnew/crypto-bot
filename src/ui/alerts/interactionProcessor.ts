@@ -80,6 +80,22 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             alert.alertThreshold = Number(when.substring(1));
             alert.alertToken = oldAlert.alertToken;
             alert.alertDirection = when.charAt(0);
+            if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Alert Edit Failed",
+                    properties: {
+                        reason: "Duplicate alert"
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             analytics.track({
                 userId: interaction.user.id,
                 event: "Alert Edited"
@@ -120,6 +136,9 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             const selected: UserSetting[] = [];
             for (const value of interaction.data.values) {
                 const alert = await parseAlertId(value as string);
+                if (!alert) {
+                    continue;
+                }
                 if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
                     selected.push(alert);
                 }

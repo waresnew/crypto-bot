@@ -7,6 +7,44 @@ import {db, genSqlInsertCommand} from "../database";
 import {streamToString} from "../utils";
 import Mock = jest.Mock;
 
+function genMockModalEdit(what: string, when: string) {
+    return {
+        data: {
+            custom_id: "alerts_editmodal_123",
+            components: [
+                {
+                    type: 1,
+                    components: [
+                        {
+                            type: 3,
+                            custom_id: "alerts_editmodalstat_123",
+                            value: what
+                        }
+                    ]
+                },
+                {
+                    type: 1,
+                    components: [
+                        {
+                            type: 3,
+                            custom_id: "alerts_editmodalvalue_123",
+                            value: when
+                        }
+                    ]
+                }
+            ]
+        },
+        message: {
+            embeds: [
+                {
+                    description: "- ✅ When price of Bitcoin is less than $100"
+                }
+            ]
+        },
+        user: {id: "123"}
+    };
+}
+
 describe("Test /alert ui", () => {
     const msg = mockReply.send as Mock<any, any, any>;
     it("displays embed correctly", async () => {
@@ -50,47 +88,15 @@ describe("Test /alert ui", () => {
             user: {id: "123"}
         } as any, mockReply);
         expect(msg.mock.calls[0][0].data.title).toBe("Editing alert for Bitcoin");
-        await AlertsInteractionProcessor.processModal({
-            data: {
-                custom_id: "alerts_editmodal_123",
-                components: [
-                    {
-                        type: 1,
-                        components: [
-                            {
-                                type: 3,
-                                custom_id: "alerts_editmodalstat_123",
-                                value: "24h%"
-                            }
-                        ]
-                    },
-                    {
-                        type: 1,
-                        components: [
-                            {
-                                type: 3,
-                                custom_id: "alerts_editmodalvalue_123",
-                                value: ">1"
-                            }
-                        ]
-                    }
-                ]
-            },
-            message: {
-                embeds: [
-                    {
-                        description: "- ✅ When price of Bitcoin is less than $100"
-                    }
-                ]
-            },
-            user: {id: "123"}
-        } as any, mockReply);
+        await AlertsInteractionProcessor.processModal(genMockModalEdit("24h%", ">1") as any, mockReply);
         expect(await db.get("select * from user_settings where id = 123 and alertThreshold=100")).toBeUndefined();
         const newAlert = await db.get("select * from user_settings where id = 123 and alertThreshold=1");
         expect(newAlert).not.toBeUndefined();
         expect(newAlert.alertStat).toBe("24h%");
         expect(newAlert.alertDirection).toBe(">");
         expect(JSON.parse(await streamToString(mockDiscordRequest.mock.calls[0][1].body as ReadableStream)).content).toMatch("Done! Edited alert for Bitcoin.");
+        await AlertsInteractionProcessor.processModal(genMockModalEdit("24h%", ">1") as any, mockReply);
+        expect(msg.mock.calls[2][0].data.content).toMatch("Error: You already have an alert exactly like the one you are trying to add");
 
     });
 });
