@@ -234,6 +234,23 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
 
                 }
             });
+        } else if (interaction.data.custom_id.startsWith("alerts_refresh")) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Refreshed /alerts page"
+            });
+            const newSelected = [];
+            for (const alert of selected) {
+                if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
+                    newSelected.push(alert);
+                }
+            }
+            await http.send({
+                type: InteractionResponseType.UpdateMessage, data: {
+                    components: [await makeAlertsMenu(interaction), makeButtons(newSelected, interaction)],
+                    embeds: [await makeEmbed(selected, interaction)]
+                }
+            });
         }
 
     }
