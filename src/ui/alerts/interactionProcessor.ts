@@ -75,6 +75,13 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 event: "Alert Edited"
             });
             await db.run("update user_settings set alertStat=?, alertThreshold=?, alertDirection=? where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.alertStat, alert.alertThreshold, alert.alertDirection, oldAlert.id, UserSettingType[UserSettingType.ALERT], oldAlert.alertToken, oldAlert.alertStat, oldAlert.alertThreshold, oldAlert.alertDirection);
+            const instructions = await makeEmbed([], interaction);
+            await http.send({
+                type: InteractionResponseType.UpdateMessage, data: {
+                    embeds: [instructions],
+                    components: [await makeAlertsMenu(interaction), await makeButtons([], interaction)]
+                }
+            });
             await http.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
                     content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.`,
