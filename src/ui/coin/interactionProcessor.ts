@@ -1,12 +1,10 @@
-import {db, genSqlInsertCommand, idToApiData} from "../../database";
-import {CryptoApiData} from "../../structs/cryptoapidata";
+import {db, genSqlInsertCommand, idToCrypto} from "../../database";
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator";
 import CryptoStat from "../../structs/cryptoStat";
 import {
     APIButtonComponentWithCustomId,
-    APIMessage,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
     APIModalSubmitInteraction,
@@ -21,108 +19,68 @@ import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
+    static validateWhat(what: string) {
+        if (!what) {
+            throw "Error: You did not specify a stat or a threshold. Please try again.";
+        }
+        if (!CryptoStat.listShorts().includes(what)) {
+            throw "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.";
+        }
+    }
+
+    static validateWhen(when: string) {
+        if (when.charAt(0) != "<" && when.charAt(0) != ">") {
+            throw "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above. For example, entering `>20` will mean you will be alerted when the value is above 20.";
+        }
+        if (when.length > 12) {
+            throw "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.";
+        }
+        if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
+            throw "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input. For example, entering `>20` will mean you will be alerted when the value is above 20.";
+        }
+        if (Math.abs(Number(when.substring(1))) > 1000000000) {
+            throw "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.";
+        }
+    }
+
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
-        const coin = await this.getChoiceFromEmbed(interaction.message);
         if (interaction.data.custom_id.startsWith("coin_alertsmodal")) {
+            const coin = await idToCrypto(interaction.data.custom_id.split("_")[2]);
             const what = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
             const when = interaction.data.components.find(entry => entry.components[0].custom_id == `coin_alertsmodalvalue_${interaction.user.id}`).components[0].value;
-            if (!what || !when) {
+            try {
+                this.validateWhat(what);
+            } catch (e) {
                 analytics.track({
                     userId: interaction.user.id,
-                    event: "Alert Creation Failed",
+                    event: "Invalid alert modal input",
                     properties: {
-                        reason: "Missing Fields",
-                        coin: coin.symbol
+                        type: "what",
+                        input: what
                     }
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: You did not specify a stat or a threshold. Please try again.",
+                        content: e,
                         flags: MessageFlags.Ephemeral
                     }
                 });
                 return;
             }
-            if (when.charAt(0) != "<" && when.charAt(0) != ">") {
+            try {
+                this.validateWhen(when);
+            } catch (e) {
                 analytics.track({
                     userId: interaction.user.id,
-                    event: "Alert Creation Failed",
+                    event: "Invalid alert modal input",
                     properties: {
-                        reason: "Invalid Threshold Character",
-                        coin: coin.symbol
+                        type: "when",
+                        input: when
                     }
                 });
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above. For example, entering `>20` will mean you will be alerted when the value is above 20.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            if (when.length > 12) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "When field too long",
-                        coin: coin.symbol
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Invalid Threshold Number",
-                        coin: coin.symbol
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input. For example, entering `>20` will mean you will be alerted when the value is above 20.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            if (Math.abs(Number(when.substring(1))) > 1000000000) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Threshold too high",
-                        coin: coin.symbol
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            if (!CryptoStat.listShorts().includes(what)) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Invalid Stat",
-                        coin: coin.symbol
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.",
+                        content: e,
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -175,11 +133,11 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
     }
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
-        const coin = await this.getChoiceFromEmbed(interaction.message);
+        const coin = await idToCrypto(interaction.data.custom_id.split("_")[2]);
         if (interaction.data.custom_id.startsWith("coin_alerts")) {
             const sortedOptions = CryptoStat.listShorts().sort((a, b) => a.length - b.length);
             const modal: APIModalInteractionResponseCallbackData = {
-                custom_id: `coin_alertsmodal_${interaction.user.id}`,
+                custom_id: `coin_alertsmodal_${coin.id}_${interaction.user.id}`,
                 title: `Adding alert for ${coin.name}`,
                 components: [
                     {
@@ -269,7 +227,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             });
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    components: [await makeButtons(await this.getChoiceFromEmbed(interaction.message), interaction), await makeFavouritesMenu(interaction)],
+                    components: [await makeButtons(await idToCrypto(interaction.data.custom_id.split("_")[2]), interaction), await makeFavouritesMenu(interaction)],
                     embeds: [await makeEmbed(coin)]
                 }
             });
@@ -287,7 +245,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             return;
         }
 
-        const coin = await idToApiData(selected);
+        const coin = await idToCrypto(selected);
         analytics.track({
             userId: interaction.user.id,
             event: "Selected a favourite coin",
@@ -301,12 +259,5 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 embeds: [await makeEmbed(coin)]
             }
         });
-    }
-
-    static async getChoiceFromEmbed(message: APIMessage): Promise<CryptoApiData> {
-        const pictureUrl = message.embeds[0].thumbnail.url;
-        const firstToken = "https://s2.coinmarketcap.com/static/img/coins/128x128/", secondToken = ".png";
-        const id = pictureUrl.substring(pictureUrl.indexOf(firstToken) + firstToken.length, pictureUrl.indexOf(secondToken));
-        return await idToApiData(id);
     }
 }

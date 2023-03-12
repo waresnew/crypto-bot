@@ -1,5 +1,5 @@
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
-import {db, idToApiData} from "../../database";
+import {db, idToCrypto} from "../../database";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {
@@ -24,7 +24,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
     for (const alert of alerts) {
         const fancyStat = CryptoStat.shortToLong(alert.alertStat);
         alertMenuOptions.push({
-            label: `${alert.alertDisabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await idToApiData(alert.alertToken)).name}`,
+            label: `${alert.alertDisabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await idToCrypto(alert.alertToken)).name}`,
             description: (alert.alertDirection == "<" ? "Less than " : "Greater than ") + (alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : ""),
             value: `${alert.alertToken}_${alert.alertStat}_${alert.alertThreshold}_${alert.alertDirection}_${alert.id}`
         });
@@ -62,11 +62,10 @@ export async function parseAlertId(id: string) {
 
     return alert;
 }
-
 export async function makeEmbed(values: string[] | UserSetting[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
-    let desc = "Toggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
+    let desc = "Toggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅. If you only select one alert, you may directly edit it with the `Edit alert` button.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values) {
@@ -100,7 +99,7 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
     return instructions;
 }
 
-export function makeButtons(interaction: APIInteraction) {
+export function makeButtons(selected: UserSetting[], interaction: APIInteraction) {
     return {
         type: ComponentType.ActionRow,
         components: [
@@ -109,6 +108,13 @@ export function makeButtons(interaction: APIInteraction) {
                 custom_id: `alerts_enable_${interaction.user.id}`,
                 label: "Enable selected",
                 style: ButtonStyle.Success
+            },
+            {
+                type: ComponentType.Button,
+                custom_id: `alerts_edit_${interaction.user.id}`,
+                label: "Edit alert",
+                style: ButtonStyle.Primary,
+                disabled: selected.length != 1
             },
             {
                 type: ComponentType.Button,
@@ -128,5 +134,5 @@ export function makeButtons(interaction: APIInteraction) {
 
 export async function formatAlert(alert: UserSetting) {
     const fancyStat = CryptoStat.shortToLong(alert.alertStat);
-    return `When ${fancyStat} of ${(await idToApiData(alert.alertToken)).name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} ${(alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${(await idToCrypto(alert.alertToken)).name} is ${alert.alertDirection == "<" ? "less than" : "greater than"} ${(alert.alertStat == "price" ? "$" : "") + alert.alertThreshold + (alert.alertStat.endsWith("%") ? "%" : "")}`;
 }

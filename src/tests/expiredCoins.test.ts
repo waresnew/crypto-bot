@@ -1,22 +1,16 @@
 import fetchMock from "jest-fetch-mock";
 import CoinInteractionProcessor from "../ui/coin/interactionProcessor";
 import {APIChannel, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
-import {db, genSqlInsertCommand, idToApiData} from "../database";
+import {db, genSqlInsertCommand, idToCrypto} from "../database";
 import {UserSetting, UserSettingType} from "../structs/usersettings";
 import * as cmcApi from "../services/cmcApi";
 import {makeEmbed} from "../ui/coin/interfaceCreator";
-import {addAlertModal, btcData, btcEthApiData, mockDiscordRequest, mockReply} from "./testSetup";
+import {addAlertModal, mockDiscordRequest, mockReply} from "./testSetup";
 
 jest.spyOn(cmcApi, "notifyUsers").mockReturnValue(undefined);
 
 describe("Checks if expired coins are handled properly", function () {
     it("Alerts user if they have an alert for an expired coin", async function () {
-        fetchMock.once(btcEthApiData);
-        await cmcApi.updateCmc();
-        expect((await db.get("select * from cmc_cache where id = 1"))["name"]).toBe("Bitcoin");
-        expect((await db.get("select * from cmc_cache where id = 1027"))["name"]).toBe("Ethereum");
-        jest.spyOn(CoinInteractionProcessor, "getChoiceFromEmbed").mockReturnValueOnce(
-            Promise.resolve(btcData));
 
         await CoinInteractionProcessor.processModal(addAlertModal, mockReply);
         expect(mockReply.send).toBeCalledTimes(1);
@@ -45,9 +39,8 @@ describe("Checks if expired coins are handled properly", function () {
         expect(mockDiscordRequest).toBeCalledTimes(2);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect(JSON.parse((mockDiscordRequest.mock.calls[1][1] as any).body).embeds[0].description).toBe("The following alert has expired:\n\n- When price of Bitcoin is less than $50\n\nThe above coins are no longer in the top 200 cryptocurrencies by market cap. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert has been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!");
-        jest.spyOn(CoinInteractionProcessor, "getChoiceFromEmbed").mockReturnValueOnce(idToApiData(1));
         try {
-            makeEmbed(await CoinInteractionProcessor.getChoiceFromEmbed(undefined));
+            makeEmbed(await idToCrypto("ok"));
             fail("Should have thrown an error");
         } catch (e) {
             expect(e).not.toBeUndefined();

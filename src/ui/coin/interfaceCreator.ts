@@ -1,4 +1,4 @@
-import {db, getCmcCache} from "../../database";
+import {db, idToCrypto} from "../../database";
 import {CryptoApiData} from "../../structs/cryptoapidata";
 import {UserSettingType} from "../../structs/usersettings";
 import {getEmbedTemplate} from "../templates";
@@ -28,9 +28,9 @@ export async function makeFavouritesMenu(interaction: APIInteraction) {
 
     for (let i = 0; i < favs.length; i++) {
         const row = favs[i];
-        const favName = await getCmcCache("select name from cmc_cache where id=?", row.favouriteCrypto);
-        if (favName) {
-            selectFavs.components[0].options.push({label: favName.name, value: row.favouriteCrypto.toString()});
+        const coin = await idToCrypto(row.favouriteCrypto);
+        if (coin) {
+            selectFavs.components[0].options.push({label: coin.name, value: row.favouriteCrypto.toString()});
         }
     }
     if (selectFavs.components[0].options.length == 0) {
@@ -91,7 +91,7 @@ export async function makeButtons(choice: CryptoApiData, interaction: APIInterac
         components: [
             {
                 type: ComponentType.Button,
-                custom_id: `coin_alerts_${interaction.user.id}`,
+                custom_id: `coin_alerts_${choice.id}_${interaction.user.id}`,
                 label: "Add alert",
                 emoji: {
                     id: null,
@@ -101,7 +101,7 @@ export async function makeButtons(choice: CryptoApiData, interaction: APIInterac
             },
             {
                 type: ComponentType.Button,
-                custom_id: `coin_setfav_${interaction.user.id}`,
+                custom_id: `coin_setfav_${choice.id}_${interaction.user.id}`,
                 label: favourited ? "Unfavourite" : "Favourite",
                 emoji: {
                     id: null,
@@ -111,7 +111,7 @@ export async function makeButtons(choice: CryptoApiData, interaction: APIInterac
             },
             {
                 type: ComponentType.Button,
-                custom_id: `coin_refresh_${interaction.user.id}`,
+                custom_id: `coin_refresh_${choice.id}_${interaction.user.id}`,
                 label: "Refresh",
                 emoji: {
                     id: null,
