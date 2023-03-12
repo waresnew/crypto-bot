@@ -142,6 +142,15 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         }
     } else if (message.type == InteractionType.ModalSubmit) {
         const interaction = message as APIModalSubmitInteraction;
+        if (!deepStripCustomId(interaction)) {
+            response.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    content: "Error: A bot update has caused this embed to become invalid. Please regenerate it and try again.",
+                    flags: MessageFlags.Ephemeral
+                }
+            });
+            return;
+        }
         const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
         const processor = interactionProcessors.get(origin) as any;
         if (processor) {
