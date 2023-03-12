@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import InteractionProcessor from "./ui/abstractInteractionProcessor";
 import {APIUser} from "discord-api-types/v10";
 
@@ -11,6 +12,23 @@ export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const commands = new Map<string, any>();
+const customIdVersions = {
+    coin_alertsmodal: "0.0.1",
+    coin_alertsmodalstat: "0.0.1",
+    coin_alertsmodalvalue: "0.0.1",
+    coin_setfav: "0.0.1",
+    coin_refresh: "0.0.1",
+    coin_alerts: "0.0.1",
+    coin_favCoins: "0.0.1",
+    alerts_menu: "0.0.1",
+    alerts_enable: "0.0.1",
+    alerts_disable: "0.0.1",
+    alerts_edit: "0.0.1",
+    alerts_delete: "0.0.1",
+    alerts_editmodal: "0.0.1",
+    alerts_editmodalstat: "0.0.1",
+    alerts_editmodalvalue: "0.0.1"
+} as Indexable;
 export function initClient(input: APIUser) {
     client = input;
     startTime = Date.now();
@@ -31,6 +49,7 @@ export interface Indexable {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;
 }
+
 export async function streamToString(stream: ReadableStream) {
     const chunks = [];
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -39,4 +58,44 @@ export async function streamToString(stream: ReadableStream) {
         chunks.push(Buffer.from(chunk));
     }
     return Buffer.concat(chunks).toString("utf-8");
+}
+
+/**
+ * we need to version customids to prevent errors when we change the customid format
+ * @param id the customid
+ * @returns returns customid but without the version if successful else undefined
+ * @throws error if the customid version is not in the dictionary (not supposed to happen)
+ */
+export function validateCustomIdVer(id: string) {
+    const version = id.split("_")[0].split(".");
+    const major = version[0], minor = version[1], patch = version[2];
+    const key = id.split("_")[1] + "_" + id.split("_")[2];
+    const latest = customIdVersions[key];
+    if (!latest) {
+        throw `${key} is not a valid customid key`;
+    }
+    if (latest == major + "." + minor + "." + patch) {
+        return id.substring(id.indexOf(key));
+    }
+    return undefined;
+}
+
+function patchCustomIdVer(id: string) {
+    const key = id.split("_")[0] + "_" + id.split("_")[1];
+    const latest = customIdVersions[key];
+    if (!latest) {
+        throw `${key} is not a valid customid key`;
+    }
+    return latest + "_" + id;
+}
+
+export function deepVersionCustomId(obj: any) {
+    for (const key of Object.keys(obj)) {
+        if (key == "custom_id") {
+            obj[key] = patchCustomIdVer(obj[key]);
+        }
+        if (obj[key] instanceof Object) {
+            deepVersionCustomId(obj[key]);
+        }
+    }
 }
