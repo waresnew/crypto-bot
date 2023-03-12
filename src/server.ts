@@ -16,7 +16,7 @@ import {db, initDb, openDb} from "./database";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {commands, deepVersionCustomId, interactionProcessors, validateCustomIdVer} from "./utils";
+import {commands, deepInsertCustomId, deepStripCustomId, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
 import {requestProcessor} from "./requests";
@@ -56,7 +56,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
 
     response.send = new Proxy(response.send, {
         apply: function (target, thisArg, argumentsList) {
-            deepVersionCustomId(argumentsList[0]);
+            deepInsertCustomId(argumentsList[0]);
             Reflect.apply(target, thisArg, argumentsList);
         }
     });
@@ -100,8 +100,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         }
     } else if (message.type == InteractionType.MessageComponent) {
         const interaction = message as APIMessageComponentInteraction;
-        const stripped = validateCustomIdVer(interaction.data.custom_id);
-        if (!stripped) {
+        if (!deepStripCustomId(interaction)) {
             response.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
                     content: "Error: A bot update has caused this embed to become invalid. Please regenerate it and try again.",
@@ -110,7 +109,6 @@ server.post("/crypto-bot/interactions", async (request, response) => {
             });
             return;
         }
-        interaction.data.custom_id = stripped;
         const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
         if (interaction.message.embeds.length == 0) {
             response.send({
