@@ -21,7 +21,7 @@ import {analytics} from "../../analytics/segment";
 export default class CoinInteractionProcessor extends InteractionProcessor {
     static validateWhat(what: string) {
         if (!what) {
-            throw "Error: You did not specify a stat or a threshold. Please try again.";
+            throw "Error: You did not specify a stat to track. Please try again.";
         }
         if (!CryptoStat.listShorts().includes(what)) {
             throw "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.";
@@ -29,6 +29,9 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
     }
 
     static validateWhen(when: string) {
+        if (!when) {
+            throw "Error: You did not specify a threshold. Please try again.";
+        }
         if (when.charAt(0) != "<" && when.charAt(0) != ">") {
             throw "Error: The specified threshold did not have a `<` or `>` sign in front of it. Please use `<` if you want to be alerted when the value is below your threshold, and `>` if you want to know when the value is above. For example, entering `>20` will mean you will be alerted when the value is above 20.";
         }
