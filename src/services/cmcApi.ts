@@ -60,7 +60,9 @@ export async function updateCmc() {
     cryptoSymbolList.length = 0;
     const newCoins: CryptoApiData[] = [];
     for (let i = 0; i < json.data.length; i++) {
+        const last_updated = json.data[i]["last_updated"];
         const data = {...json.data[i], ...json.data[i]["quote"]["USD"]} as CryptoApiData;
+        data.last_updated = last_updated;
         cryptoSymbolList.push(data.symbol);
         newCoins.push(data);
     }
