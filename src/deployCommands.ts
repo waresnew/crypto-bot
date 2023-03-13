@@ -5,16 +5,12 @@ import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import {APIApplicationCommand} from "discord-api-types/v10";
 import discordRequest, {requestProcessor} from "./requests";
-import {db} from "./database";
-import {analytics} from "./analytics/segment";
 
 dotenv.config({path: `./data/${process.env["NODE_ENV"]}.env`});
 
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
-    await db.close();
     clearInterval(requestProcessor);
-    await analytics.flush();
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
 }
