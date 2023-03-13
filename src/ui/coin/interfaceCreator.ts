@@ -78,7 +78,7 @@ export function makeEmbed(choice: CryptoApiData) {
             value: `${Math.round(choice.market_cap_dominance * 100) / 100}%`,
             inline: true
         },
-        {name: "Last Updated", value: `<t:${new Date(choice.last_updated).getTime() / 1000}:R>`}
+        {name: "Last Updated", value: `<t:${Math.floor(new Date(choice.last_updated).getTime() / 1000)}:R>`}
     ];
     return embed;
 }
