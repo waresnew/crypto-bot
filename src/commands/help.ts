@@ -18,18 +18,9 @@ export default {
 
 To get started, simply run </coin:${commandIds.get("coin")}> to open a menu. From there, you can set up an alert for the cryptocurrency. You can choose from a variety of different statistics to track. The user interface is mainly point-and-click to make it as easy to use as possible.
 
-If you want to personalize your experience, head over to </settings:${commandIds.get("settings")}> to change your preferences.
-
 Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap. If a coin falls off the top 200 and you have an alert for it, you will be DM'ed and the alert will be deleted.
 
 We hope you find Botchain helpful in your cryptocurrency trading journey. If you have any questions or feedback, feel free to join the support server at https://discord.gg/mpyPadCG3q. Happy trading!`;
-        embed.fields = [
-            {
-                name: "Privacy Notice",
-                value: "Your Discord tag and ID will be stored in our database. This is necessary for the bot to function properly. This information will also be shared with [Segment](https://segment.com/) and [Amplitude](https://amplitude.com/) for analytics and marketing purposes. If you do not consent to this information being stored and shared with these parties, please stop using this bot immediately.",
-                inline: true
-            }
-        ];
         embed.thumbnail = {
             url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
         };
