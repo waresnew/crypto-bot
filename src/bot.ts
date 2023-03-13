@@ -6,8 +6,8 @@ import fs from "node:fs";
 import {commandIds, commands, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import discordRequest from "./requests";
-import {cmcCron} from "./services/cmcApi";
 import didYouMean from "didyoumean";
+import {cmcCron} from "./services/cmcApi";
 
 const request = await discordRequest(
     "https://discord.com/api/v10/users/@me"
