@@ -78,7 +78,7 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
         } else {
             alert = value as UserSetting;
         }
-        if (!Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
+        if (!alert || !Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
             removed += "\n- " + await formatAlert(alert);
         } else {
             choices.push(`${alert.alertDisabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
