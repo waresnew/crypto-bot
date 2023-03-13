@@ -59,10 +59,10 @@ export async function parseAlertId(id: string) {
     alert.id = tokens[4];
     const disabled = await db.get("select alertDisabled from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
     if (!disabled) {
-        return undefined;
+        alert.alertDisabled = undefined;
+    } else {
+        alert.alertDisabled = disabled["alertDisabled"];
     }
-    alert.alertDisabled = disabled["alertDisabled"];
-
     return alert;
 }
 export async function makeEmbed(values: string[] | UserSetting[], interaction: APIInteraction) {
