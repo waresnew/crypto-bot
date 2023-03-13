@@ -1,4 +1,6 @@
 import {getCmcKey} from "../services/cmcApi";
+import {getCmcCache} from "../database";
+import {CryptoApiData} from "../structs/cryptoapidata";
 
 describe("Tests cmcApi functions", () => {
     it("rotates keys", () => {
@@ -13,5 +15,8 @@ describe("Tests cmcApi functions", () => {
         expect(getCmcKey()).toBe("key5");
         expect(getCmcKey()).toBe("key1");
         expect(getCmcKey()).toBe("key2");
+    });
+    it("uses the current last updated stat", async () => {
+        expect(((await getCmcCache("select * from cmc_cache where symbol = 'BTC'")) as CryptoApiData).last_updated).toBe("2018-06-02T22:51:28.209Z");
     });
 });
