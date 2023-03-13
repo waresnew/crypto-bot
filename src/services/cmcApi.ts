@@ -10,13 +10,23 @@ import discordRequest from "../requests";
 import {APIChannel} from "discord-api-types/v10";
 import {analytics} from "../analytics/segment";
 
+let cmcKeyIndex = 1;
 export const cmcCron = new CronJob(
-    "*/5 * * * *",
+    "* * * * *",
     updateCmc,
     null,
     false,
     "America/Toronto"
 );
+
+export function getCmcKey() {
+    const key = process.env[`COINMARKETCAP_KEY${cmcKeyIndex}`];
+    cmcKeyIndex++;
+    if (cmcKeyIndex > 5) {
+        cmcKeyIndex = 1;
+    }
+    return key;
+}
 
 export async function updateCmc() {
     const request = await fetch(
@@ -27,7 +37,7 @@ export async function updateCmc() {
         {
             method: "GET",
             headers: {
-                "X-CMC_PRO_API_KEY": process.env["COINMARKETCAP_KEY"],
+                "X-CMC_PRO_API_KEY": getCmcKey(),
                 Accept: "application/json",
                 "Accept-Encoding": "deflate, gzip",
                 "Content-Type": "application/json"
