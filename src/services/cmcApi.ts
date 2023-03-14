@@ -86,7 +86,6 @@ export async function updateCmc() {
     }
     await db.run("commit");
     await notifyUsers();
-    console.log("Sent alerts");
     await db.run("begin");
     await db.each("select * from user_settings where type=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], async (err, row) => {
         if (err) {
@@ -102,8 +101,6 @@ export async function updateCmc() {
         }
     });
     await db.run("commit");
-    console.log(`Updated caches at ${new Date().toString()}`);
-
 }
 
 export async function notifyExpiredAlerts(toDm: string[], alerts: UserSetting[]) {
