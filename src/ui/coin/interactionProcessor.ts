@@ -24,7 +24,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             throw "Error: You did not specify a stat to track. Please try again.";
         }
         if (!CryptoStat.listShorts().includes(what)) {
-            throw "Error: The specified stat was invalid. Make sure to specify the exact string provided in the example. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.";
+            throw "Error: The specified stat was invalid. Please enter one of the following exactly: `" + CryptoStat.listShorts().join("`, `") + "`.\n> Example: Entering `24h%` would track the 24 hour percent change of the coin, while just entering `price` would track the price. Entering `volume%` would track the 24 hour percent change in volume, and entering `dominance%` would track the coin's market cap dominance percentage.";
         }
     }
 
@@ -39,7 +39,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             throw "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.";
         }
         if (isNaN(Number(when.substring(1))) || isNaN(parseFloat(when.substring(1)))) {
-            throw "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input. For example, entering `>20` will mean you will be alerted when the value is above 20.";
+            throw "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.\n> Example: entering `>20` will mean you will be alerted when the value is above 20.";
         }
         if (Math.abs(Number(when.substring(1))) > 1000000000) {
             throw "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.";
@@ -145,7 +145,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             await genSqlInsertCommand(alert, "user_settings", new UserSetting());
             await http.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: `Done! Added alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
+                    content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
                     flags: MessageFlags.Ephemeral
                 }
             });

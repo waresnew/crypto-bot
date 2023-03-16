@@ -125,7 +125,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 const coinLink = `</coin:${commandIds.get("coin")}>`;
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: `Error: You have not set any alerts. Please set one with ${coinLink} before proceeding.`,
+                        content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -154,6 +154,22 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
+        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("alerts_refresh"))) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Performed batch operation with 0 selected",
+                properties: {
+                    type: interaction.data.custom_id
+                }
+            });
+            await http.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    content: "Error: You have not selected any alerts. Please select some alerts before proceeding.",
+                    flags: MessageFlags.Ephemeral
+                }
+            });
+            return;
+        }
         if (interaction.data.custom_id.startsWith("alerts_enable")) {
             analytics.track({
                 userId: interaction.user.id,
