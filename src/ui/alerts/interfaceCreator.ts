@@ -102,7 +102,7 @@ export async function makeEmbed(values: string[] | UserSetting[], interaction: A
     return instructions;
 }
 
-export function makeButtons(selected: UserSetting[], interaction: APIInteraction) {
+export function makeButtons(interaction: APIInteraction) {
     return {
         type: ComponentType.ActionRow,
         components: [
@@ -135,17 +135,6 @@ export function makeButtons(selected: UserSetting[], interaction: APIInteraction
                     name: "🗑️"
                 },
                 style: ButtonStyle.Danger
-            },
-            {
-                type: ComponentType.Button,
-                custom_id: `alerts_edit_${interaction.user.id}`,
-                label: "Edit alert",
-                style: ButtonStyle.Primary,
-                emoji: {
-                    id: null,
-                    name: "✏️"
-                },
-                disabled: selected.length != 1
             },
             {
                 type: ComponentType.Button,

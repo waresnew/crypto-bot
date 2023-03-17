@@ -13,13 +13,20 @@ export let startTime = Infinity;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const commands = new Map<string, any>();
 const customIdVersions = {
-    coin_alertsmodal: "0.0.1",
-    coin_alertsmodalstat: "0.0.1",
-    coin_alertsmodalvalue: "0.0.1",
+    alertwizard_alertstat: "0.0.1",
+    alertwizard_alertvalue: "0.0.1",
+    alertwizard_alertthresholdmodal: "0.0.1",
+    alertwizard_alertthresholdmodalvalue: "0.0.1",
+    alertwizard_alertdirectiongreater: "0.0.1",
+    alertwizard_alertdirectionless: "0.0.1",
+    alertwizard_confirm: "0.0.1",
+    alertwizard_confirmundo: "0.0.1",
+    alertwizard_alertvalueundo: "0.0.1",
+    alertwizard_alertdirectionundo: "0.0.1",
     coin_setfav: "0.0.1",
     coin_refresh: "0.0.1",
     coin_alerts: "0.0.1",
-    coin_favCoins: "0.0.1",
+    coin_favcoins: "0.0.1",
     alerts_menu: "0.0.1",
     alerts_enable: "0.0.1",
     alerts_disable: "0.0.1",
@@ -75,7 +82,7 @@ function validateCustomIdVer(id: string) {
     const key = id.split("_")[1] + "_" + id.split("_")[2];
     const latest = customIdVersions[key];
     if (!latest) {
-        throw `${key} is not a valid customid key`;
+        return undefined;
     }
     if (latest == major + "." + minor + "." + patch) {
         return id.substring(id.indexOf(key));
@@ -87,7 +94,7 @@ function patchCustomIdVer(id: string) {
     const key = id.split("_")[0] + "_" + id.split("_")[1];
     const latest = customIdVersions[key];
     if (!latest) {
-        throw `${key} is not a valid customid key`;
+        return undefined;
     }
     return latest + "_" + id;
 }

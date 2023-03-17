@@ -2,13 +2,12 @@
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
 import {db, getCmcCache, idToCrypto} from "../../database";
-import {makeAlertsMenu, makeButtons, makeEmbed, parseAlertId} from "./interfaceCreator";
+import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator";
 import CryptoStat from "../../structs/cryptoStat";
 import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
-    APIModalSubmitInteraction,
     ComponentType,
     InteractionResponseType,
     MessageFlags,
@@ -17,107 +16,8 @@ import {
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
-import CoinInteractionProcessor from "../coin/interactionProcessor";
-import discordRequest from "../../requests";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
-
-    static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply) {
-        if (interaction.data.custom_id.startsWith("alerts_editmodal")) {
-            const oldAlert = (await this.parseSelected(interaction))[0];
-            let what = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalstat_${interaction.user.id}`).components[0].value.toLowerCase();
-            let when = interaction.data.components.find(entry => entry.components[0].custom_id == `alerts_editmodalvalue_${interaction.user.id}`).components[0].value;
-            try {
-                CoinInteractionProcessor.validateWhat(what);
-            } catch (e: any) {
-                if (e.startsWith("Error: You did not specify")) {
-                    what = oldAlert.alertStat;
-                } else {
-                    analytics.track({
-                        userId: interaction.user.id,
-                        event: "Invalid alert modal input",
-                        properties: {
-                            type: "what",
-                            input: what
-                        }
-                    });
-                    await http.send({
-                        type: InteractionResponseType.ChannelMessageWithSource, data: {
-                            content: e,
-                            flags: MessageFlags.Ephemeral
-                        }
-                    });
-                    return;
-                }
-            }
-            try {
-                CoinInteractionProcessor.validateWhen(when);
-            } catch (e: any) {
-                if (e.startsWith("Error: You did not specify")) {
-                    when = oldAlert.alertDirection + oldAlert.alertThreshold;
-                } else {
-                    analytics.track({
-                        userId: interaction.user.id,
-                        event: "Invalid alert modal input",
-                        properties: {
-                            type: "when",
-                            input: when
-                        }
-                    });
-                    await http.send({
-                        type: InteractionResponseType.ChannelMessageWithSource, data: {
-                            content: e,
-                            flags: MessageFlags.Ephemeral
-                        }
-                    });
-                    return;
-                }
-            }
-            const alert = new UserSetting();
-            alert.id = interaction.user.id;
-            alert.type = UserSettingType[UserSettingType.ALERT];
-            alert.alertStat = what;
-            alert.alertThreshold = Number(when.substring(1));
-            alert.alertToken = oldAlert.alertToken;
-            alert.alertDirection = when.charAt(0);
-            if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Edit Failed",
-                    properties: {
-                        reason: "Duplicate alert"
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            analytics.track({
-                userId: interaction.user.id,
-                event: "Alert Edited"
-            });
-            await db.run("update user_settings set alertStat=?, alertThreshold=?, alertDirection=? where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.alertStat, alert.alertThreshold, alert.alertDirection, oldAlert.id, UserSettingType[UserSettingType.ALERT], oldAlert.alertToken, oldAlert.alertStat, oldAlert.alertThreshold, oldAlert.alertDirection);
-            const instructions = await makeEmbed([], interaction);
-            await http.send({
-                type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons([], interaction)]
-                }
-            });
-            await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}`, {
-                method: "POST",
-                body: JSON.stringify({
-                    content: `Done! Edited alert for ${(await idToCrypto(alert.alertToken)).name}.
-> Tip: When editing an alert, leave a field blank to keep the old value.`,
-                    flags: MessageFlags.Ephemeral
-                })
-            });
-        }
-    }
 
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
         if (interaction.data.custom_id.startsWith("alerts_menu")) {
@@ -125,7 +25,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 const coinLink = `</coin:${commandIds.get("coin")}>`;
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: `Error: You have not set any alerts. Please set one with ${coinLink} before proceeding.`,
+                        content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
                         flags: MessageFlags.Ephemeral
                     }
                 });
@@ -133,20 +33,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
 
             const instructions = await makeEmbed(interaction.data.values, interaction);
-            const selected: UserSetting[] = [];
-            for (const value of interaction.data.values) {
-                const alert = await parseAlertId(value as string);
-                if (!alert) {
-                    continue;
-                }
-                if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
-                    selected.push(alert);
-                }
-            }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(selected, interaction)]
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)],
+                    flags: MessageFlags.Ephemeral
                 }
             });
         }
@@ -154,6 +45,22 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
+        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("alerts_refresh"))) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Performed batch operation with 0 selected",
+                properties: {
+                    type: interaction.data.custom_id
+                }
+            });
+            await http.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    content: "Error: You have not selected any alerts. Please select some alerts before proceeding.",
+                    flags: MessageFlags.Ephemeral
+                }
+            });
+            return;
+        }
         if (interaction.data.custom_id.startsWith("alerts_enable")) {
             analytics.track({
                 userId: interaction.user.id,
@@ -169,7 +76,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(selected, interaction)]
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_disable")) {
@@ -187,7 +94,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(selected, interaction)]
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_delete")) {
@@ -205,7 +112,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(selected, interaction)]
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_edit")) {
@@ -268,16 +175,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 userId: interaction.user.id,
                 event: "Refreshed /alerts page"
             });
-            const newSelected = [];
-            for (const alert of selected) {
-                if (Object.values(await db.get("select exists(select 1 from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?)", interaction.user.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection))[0]) {
-                    newSelected.push(alert);
-                }
-            }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    components: [await makeAlertsMenu(interaction), makeButtons(newSelected, interaction)],
-                    embeds: [await makeEmbed(selected, interaction)]
+                    components: [await makeAlertsMenu(interaction), makeButtons(interaction)],
+                    embeds: [await makeEmbed(selected, interaction)],
+                    flags: MessageFlags.Ephemeral
                 }
             });
         }
