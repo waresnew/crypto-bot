@@ -17,7 +17,7 @@ export async function makeFavouritesMenu(interaction: APIInteraction) {
         type: ComponentType.ActionRow,
         components: [{
             type: ComponentType.StringSelect,
-            custom_id: `coin_favCoins_${interaction.user.id}`,
+            custom_id: `coin_favcoins_${interaction.user.id}`,
             placeholder: "Quickly access your favourites...",
             options: []
         }]

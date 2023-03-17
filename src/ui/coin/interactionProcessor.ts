@@ -2,7 +2,6 @@ import {db, genSqlInsertCommand, idToCrypto} from "../../database";
 import {UserSetting, UserSettingType} from "../../structs/usersettings";
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFavouritesMenu} from "./interfaceCreator";
-import CryptoStat from "../../structs/cryptoStat";
 import {
     APIButtonComponentWithCustomId,
     APIMessageComponentButtonInteraction,
@@ -12,41 +11,15 @@ import {
     MessageFlags
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
-import {getEmbedTemplate} from "../templates";
+import {makeStatPrompt} from "../alertwizard/interfaceCreator";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
         const coin = await idToCrypto(interaction.data.custom_id.split("_")[2]);
         if (interaction.data.custom_id.startsWith("coin_alerts")) {
-            const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
-            const message = getEmbedTemplate();
-            message.title = `Adding alert for ${coin.name}`;
-            message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </coin:${commandIds.get("coin")}>.
-
-Please select the stat you would like to be alerted by.`;
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    embeds: [message],
-                    flags: MessageFlags.Ephemeral,
-                    components: [{
-                        type: ComponentType.ActionRow,
-                        components: [{
-                            type: ComponentType.StringSelect,
-                            placeholder: "Select a stat...",
-                            custom_id: `alertwizard_alertstat_${coin.id}_${interaction.user.id}`,
-                            options: sortedOptions.map(entry => {
-                                return {
-                                    label: entry[0].toUpperCase() + entry.substring(1),
-                                    value: CryptoStat.longToShort(entry)
-                                };
-                            })
-                        }]
-                    }]
-                }
-            });
+            await http.send(makeStatPrompt(interaction, coin));
         } else if (interaction.data.custom_id.startsWith("coin_setfav")) {
             if (!await db.get("select * from user_settings where id=? and type=? and favouriteCrypto=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO], coin.id)) {
                 if ((await db.get("select count(id) from user_settings where id=? and type=?", interaction.user.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]))["count(id)"] >= 25) {

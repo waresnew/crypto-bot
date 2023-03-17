@@ -17,12 +17,16 @@ const customIdVersions = {
     alertwizard_alertvalue: "0.0.1",
     alertwizard_alertthresholdmodal: "0.0.1",
     alertwizard_alertthresholdmodalvalue: "0.0.1",
-    alertwizard_alertDirectionGreater: "0.0.1",
-    alertwizard_alertDirectionLess: "0.0.1",
+    alertwizard_alertdirectiongreater: "0.0.1",
+    alertwizard_alertdirectionless: "0.0.1",
+    alertwizard_confirm: "0.0.1",
+    alertwizard_confirmundo: "0.0.1",
+    alertwizard_alertvalueundo: "0.0.1",
+    alertwizard_alertdirectionundo: "0.0.1",
     coin_setfav: "0.0.1",
     coin_refresh: "0.0.1",
     coin_alerts: "0.0.1",
-    coin_favCoins: "0.0.1",
+    coin_favcoins: "0.0.1",
     alerts_menu: "0.0.1",
     alerts_enable: "0.0.1",
     alerts_disable: "0.0.1",
@@ -90,7 +94,7 @@ function patchCustomIdVer(id: string) {
     const key = id.split("_")[0] + "_" + id.split("_")[1];
     const latest = customIdVersions[key];
     if (!latest) {
-        throw `${key} is not a valid customid key`;
+        return undefined;
     }
     return latest + "_" + id;
 }

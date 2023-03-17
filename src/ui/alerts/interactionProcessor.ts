@@ -36,7 +36,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)],
+                    flags: MessageFlags.Ephemeral
                 }
             });
         }
@@ -177,7 +178,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     components: [await makeAlertsMenu(interaction), makeButtons(interaction)],
-                    embeds: [await makeEmbed(selected, interaction)]
+                    embeds: [await makeEmbed(selected, interaction)],
+                    flags: MessageFlags.Ephemeral
                 }
             });
         }
