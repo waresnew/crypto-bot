@@ -27,7 +27,8 @@ export default {
             name: "name",
             type: ApplicationCommandOptionType.String,
             description: "The name/symbol of the coin",
-            autocomplete: true
+            autocomplete: true,
+            required: true
         }
     ],
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
