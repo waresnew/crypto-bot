@@ -187,7 +187,7 @@ export async function notifyUsers() {
         notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **deleted** and won't trigger again.\nIf Botchain has helped you, please support us by voting at </vote:${commandIds.get("vote")}>.\n\nHappy trading!`;
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **deleted** and won't trigger again.\n\n**❤️ If Botchain has helped you, please upvote the bot with </vote:${commandIds.get("vote")}>.**\nHappy trading!`;
         message.description = desc;
         analytics.track({
             userId: user,
