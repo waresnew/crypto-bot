@@ -24,11 +24,11 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
         if (!when) {
             throw "Error: You did not specify a threshold. Please try again.";
         }
-        if (when.length > 12) {
+        if (when.length > 9) {
             throw "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.";
         }
         if (isNaN(Number(when)) || isNaN(parseFloat(when))) {
-            throw "Error: The specified threshold was not a number. Make sure to remove percent and dollar signs from your input.";
+            throw "Error: The specified threshold was not a number.";
         }
         if (Math.abs(Number(when)) > 1000000000) {
             throw "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.";
@@ -37,7 +37,13 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
 
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
         if (interaction.data.custom_id.startsWith("alertwizard_alertthresholdmodal")) {
-            const when = interaction.data.components[0].components[0].value;
+            let when = interaction.data.components[0].components[0].value;
+            if (when.length > 1 && when[0] == "$") {
+                when = when.substring(1);
+            }
+            if (when.length > 1 && when[when.length - 1] == "%") {
+                when = when.substring(0, when.length - 1);
+            }
             try {
                 this.validateWhen(when);
             } catch (e) {
@@ -99,7 +105,7 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
                             custom_id: `alertwizard_alertthresholdmodalvalue_${interaction.user.id}`,
                             style: TextInputStyle.Short,
                             required: true,
-                            placeholder: "Enter a raw number"
+                            placeholder: "Enter a number"
                         }]
                     }]
                 }
