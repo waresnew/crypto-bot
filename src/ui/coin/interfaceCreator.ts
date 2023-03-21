@@ -46,7 +46,7 @@ export function makeEmbed(choice: CryptoApiData) {
     embed.thumbnail = {
         url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.id}.png`
     };
-    embed.color = choice.percent_change_24h < 0 ? 0xed4245 : 0x3ba55c;
+    embed.color = choice.percent_change_7d < 0 ? 0xed4245 : 0x3ba55c;
     embed.title = `${choice.name} (${choice.symbol}-USD)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
