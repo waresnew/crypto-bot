@@ -47,6 +47,8 @@
     "@typescript-eslint/no-extra-parens": [
       "error",
       "all"
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/ban-ts-comment": "off"
   }
 }

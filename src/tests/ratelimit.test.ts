@@ -1,5 +1,5 @@
-import fetchMock from "jest-fetch-mock";
-import discordRequest from "../requests";
+import nock from "nock";
+import {discordGot} from "../utils";
 
 describe("ratelimit handling", () => {
     const responses = [
@@ -9,7 +9,10 @@ describe("ratelimit handling", () => {
                 message: "You are being rate limited.",
                 retry_after: 0.5,
                 global: false
-            })
+            }),
+            headers: {
+                "Retry-After": "0.5"
+            }
         },
         {
             status: 429,
@@ -17,7 +20,10 @@ describe("ratelimit handling", () => {
                 message: "You are being rate limited.",
                 retry_after: 1,
                 global: false
-            })
+            }),
+            headers: {
+                "Retry-After": "1"
+            }
         },
         {
             status: 200,
@@ -26,12 +32,12 @@ describe("ratelimit handling", () => {
             })
         }
     ];
-    it("retries requests after ratelimit", () => {
-        responses.forEach(resp => fetchMock.once(resp.body, {status: resp.status}));
+    it("retries requests after ratelimit", async () => {
+        const mock = nock("https://discord.com");
+        responses.forEach(resp => mock.get("/api/v10/users/@me").reply(resp.status, resp.body, resp.headers));
         const start = Date.now();
-        return discordRequest("https://discord.com/api/v10/users/@me").then(async resp => {
-            expect(JSON.parse(await resp.text()).message).toBe("ok");
-            expect(Date.now() - start).toBeGreaterThanOrEqual(1500);
-        });
+        expect(await discordGot("users/@me").text()).toBe(JSON.stringify({message: "ok"}));
+        expect(Date.now() - start).toBeGreaterThanOrEqual(1500);
+        expect(Date.now() - start).toBeLessThan(2000);
     });
 });

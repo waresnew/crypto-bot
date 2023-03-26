@@ -4,7 +4,7 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import discordRequest from "../requests";
+import {discordGot} from "../utils";
 
 export default {
     name: "ping",
@@ -22,12 +22,11 @@ export default {
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {embeds: [embed]}
         });
-        const message = JSON.parse(await (await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`)).text());
+        const message = JSON.parse(await discordGot(`webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`).text());
         if (message) {
-
             const end = (BigInt(message.id) >> 22n) + 1420070400000n;
             embed.fields[0].value = `${end - start} ms`;
-            await discordRequest(`https://discord.com/api/v10/webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`, {
+            await discordGot(`webhooks/${process.env["APP_ID"]}/${interaction.token}/messages/@original`, {
                 method: "PATCH",
                 body: JSON.stringify({embeds: [embed]})
             });

@@ -1,28 +1,7 @@
 {
   "transform": {
     "^.+\\.tsx?$": [
-      "@swc/jest",
-      {
-        "jsc": {
-          "parser": {
-            "syntax": "typescript"
-          },
-          "experimental": {
-            "plugins": [
-              [
-                "jest_workaround",
-                {}
-              ]
-            ]
-          },
-          "target": "es2022"
-        },
-        "module": {
-          "type": "commonjs",
-          "ignoreDynamic": true
-        },
-        "sourceMaps": true
-      }
+      "@swc/jest"
     ]
   },
   "testEnvironment": "node",
@@ -38,5 +17,9 @@
   "verbose": true,
   "testPathIgnorePatterns": [
     "dist/"
+  ],
+  "extensionsToTreatAsEsm": [
+    ".ts",
+    ".tsx"
   ]
 }

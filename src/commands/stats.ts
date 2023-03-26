@@ -4,8 +4,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {startTime} from "../utils";
-import discordRequest from "../requests";
+import {discordGot, startTime} from "../utils";
 
 export default {
     name: "stats",
@@ -16,7 +15,7 @@ export default {
         embed.title = "Global statistics";
         embed.fields = [{
             name: "Server Count",
-            value: await JSON.parse(await (await discordRequest("https://discord.com/api/v10/users/@me/guilds")).text()).length
+            value: await JSON.parse(await discordGot("users/@me/guilds").text()).length
         },
             {
                 name: "Uptime",

@@ -1,20 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import * as templates from "../ui/templates";
 import {analytics, setAnalytics} from "../analytics/segment";
 import {open} from "sqlite";
 import sqlite3 from "sqlite3";
 import {db, initDb, setDb} from "../database";
 import Analytics from "analytics-node";
-import fetchMock from "jest-fetch-mock";
+import nock from "nock";
 import {APIModalSubmitInteraction, InteractionType} from "discord-api-types/v10";
-import * as requests from "../requests";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import * as cmcApi from "../services/cmcApi";
-import SpyInstance = jest.SpyInstance;
+import {jest} from "@jest/globals";
+import esmock from "esmock";
 import Mock = jest.Mock;
+
 /*
 note to self:
 require("leaked-handles").set({
@@ -71,7 +70,6 @@ export const mockCommandInteraction: APIChatInputApplicationCommandInteraction =
 };
 export const mockReply = {send: jest.fn().mockImplementation(() => Promise.resolve())} as unknown as FastifyReply;
 export const btcEthApiData = "{\"data\":[{\"id\":1,\"name\":\"Bitcoin\",\"symbol\":\"BTC\",\"slug\":\"bitcoin\",\"cmc_rank\":5,\"num_market_pairs\":500,\"circulating_supply\":16950100,\"total_supply\":16950100,\"max_supply\":21000000,\"last_updated\":\"2018-06-02T22:51:28.209Z\",\"date_added\":\"2013-04-28T00:00:00.000Z\",\"tags\":[\"mineable\"],\"platform\":null,\"self_reported_circulating_supply\":null,\"self_reported_market_cap\":null,\"quote\":{\"USD\":{\"price\":9283.92,\"volume_24h\":7155680000,\"volume_change_24h\":-0.152774,\"percent_change_1h\":-0.152774,\"percent_change_24h\":0.518894,\"percent_change_7d\":0.986573,\"market_cap\":852164659250.2758,\"market_cap_dominance\":51,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"},\"BTC\":{\"price\":1,\"volume_24h\":772012,\"volume_change_24h\":0,\"percent_change_1h\":0,\"percent_change_24h\":0,\"percent_change_7d\":0,\"market_cap\":17024600,\"market_cap_dominance\":12,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"}}},{\"id\":1027,\"name\":\"Ethereum\",\"symbol\":\"ETH\",\"slug\":\"ethereum\",\"num_market_pairs\":6360,\"circulating_supply\":16950100,\"total_supply\":16950100,\"max_supply\":21000000,\"last_updated\":\"2018-06-02T22:51:28.209Z\",\"date_added\":\"2013-04-28T00:00:00.000Z\",\"tags\":[\"mineable\"],\"platform\":null,\"quote\":{\"USD\":{\"price\":1283.92,\"volume_24h\":7155680000,\"volume_change_24h\":-0.152774,\"percent_change_1h\":-0.152774,\"percent_change_24h\":0.518894,\"percent_change_7d\":0.986573,\"market_cap\":158055024432,\"market_cap_dominance\":51,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"},\"ETH\":{\"price\":1,\"volume_24h\":772012,\"volume_change_24h\":-0.152774,\"percent_change_1h\":0,\"percent_change_24h\":0,\"percent_change_7d\":0,\"market_cap\":17024600,\"market_cap_dominance\":12,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"}}}],\"status\":{\"timestamp\":\"2018-06-02T22:51:28.209Z\",\"error_code\":0,\"error_message\":\"\",\"elapsed\":10,\"credit_count\":1}}";
-export const mockDiscordRequest = jest.spyOn(requests, "default");
 export const addAlertModal: APIModalSubmitInteraction = {
     locale: undefined,
     id: "123456789012345678",
@@ -134,21 +132,23 @@ export const addAlertModal: APIModalSubmitInteraction = {
     application_id: "555555555555555555"
 };
 
-const globalMocks: SpyInstance[] = [];
+const globalMocks: any[] = [];
 beforeEach(() => {
-    fetchMock.resetMocks();
+    nock.cleanAll();
 });
 
 afterEach(() => {
     globalMocks.forEach(mock => mock.mockClear());
-    (mockReply.send as Mock<any, any, any>).mockClear();
-    mockDiscordRequest.mockClear();
+    (mockReply.send as Mock<any>).mockClear();
 });
 
 beforeAll(async () => {
-    fetchMock.enableMocks();
+    nock.disableNetConnect();
     setAnalytics(new Analytics("ok"));
-    globalMocks.push(jest.spyOn(templates, "getEmbedTemplate").mockReturnValue({color: 0x2374ff}));
+    esmock("../ui/templates", {
+        getEmbedTemplate: jest.fn().mockReturnValue({color: 0x2374ff})
+    });
+    //globalMocks.push(jest.spyOn(templates, "getEmbedTemplate").mockReturnValue({color: 0x2374ff}));
     globalMocks.push(jest.spyOn(analytics, "track").mockReturnValue(undefined));
     globalMocks.push(jest.spyOn(analytics, "page").mockReturnValue(undefined));
     globalMocks.push(jest.spyOn(analytics, "identify").mockReturnValue(undefined));
@@ -157,13 +157,14 @@ beforeAll(async () => {
         driver: sqlite3.Database
     }));
     await initDb();
-    fetchMock.once(btcEthApiData);
+    nock("https://pro-api.coinmarketcap.com")
+        .get("/v1/cryptocurrency/listings/latest?limit=200")
+        .reply(200, btcEthApiData);
     await cmcApi.updateCmc();
     expect((await db.get("select * from cmc_cache where id = 1"))["name"]).toBe("Bitcoin");
     expect((await db.get("select * from cmc_cache where id = 1027"))["name"]).toBe("Ethereum");
 });
 
 afterAll(async () => {
-    clearInterval(requests.requestProcessor);
     await db.close();
 });

@@ -1,14 +1,14 @@
 import {CronJob} from "cron";
-import {db, genSqlInsertCommand} from "../database";
-import {commandIds, cryptoSymbolList} from "../utils";
-import {CryptoApiData} from "../structs/cryptoapidata";
-import {UserSetting, UserSettingType} from "../structs/usersettings";
+import {commandIds, cryptoSymbolList, discordGot, Indexable} from "../utils";
+import {CmcLatestListing, CmcLatestListingModel} from "../structs/cmcLatestListing";
+import {CoinAlert, CoinAlertModel} from "../structs/coinAlert";
 import CryptoStat from "../structs/cryptoStat";
 import {formatAlert} from "../ui/alerts/interfaceCreator";
 import {getEmbedTemplate} from "../ui/templates";
-import discordRequest from "../requests";
 import {APIChannel} from "discord-api-types/v10";
 import {analytics} from "../analytics/segment";
+import got from "got";
+import {db} from "../database";
 
 let cmcKeyIndex = 1;
 export const cmcCron = new CronJob(
@@ -29,7 +29,7 @@ export function getCmcKey() {
 }
 
 export async function updateCmc() {
-    const request = await fetch(
+    const request = await got(
         "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?" +
         new URLSearchParams({
             limit: "200"
@@ -43,69 +43,42 @@ export async function updateCmc() {
                 "Content-Type": "application/json"
             }
         }
-    );
-    const json = JSON.parse(await request.text());
+    ).text();
+    const json = JSON.parse(request);
     const errorCode = json.status.error_code;
     if (errorCode != 0) {
         console.log(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
         return;
     }
-    const oldCoins: CryptoApiData[] = [];
-    await db.each("select * from cmc_cache", (err, row) => {
-        if (err) {
-            throw err;
-        }
-        oldCoins.push(row);
-    });
+    const oldCoins: CmcLatestListing[] = await CmcLatestListingModel.find({});
     cryptoSymbolList.length = 0;
-    const newCoins: CryptoApiData[] = [];
+    const newCoins: CmcLatestListing[] = [];
     for (let i = 0; i < json.data.length; i++) {
-        const data = {...json.data[i], ...json.data[i]["quote"]["USD"]} as CryptoApiData;
+        const data = new CmcLatestListingModel({...json.data[i], ...json.data[i]["quote"]["USD"]});
+        data.cmc_id = json.data[i].id;
         data.last_updated = new Date().toISOString();
         cryptoSymbolList.push(data.symbol);
         newCoins.push(data);
     }
-    const expiredAlerts: UserSetting[] = [];
+    const expiredAlerts: CoinAlert[] = [];
     for (const coin of oldCoins) {
         if (!newCoins.find(c => c.id == coin.id)) {
             console.log(`Coin ${coin.name} is no longer in the top 200`);
-            await db.each("select * from user_settings where type=? and alertToken=?", UserSettingType[UserSettingType.ALERT], coin.id, (err, row) => {
-                if (err) {
-                    throw err;
-                }
-                expiredAlerts.push(row as UserSetting);
-            });
+            (await CoinAlertModel.find({id: coin.id})).forEach(alert => expiredAlerts.push(alert));
         }
     }
-    await notifyExpiredAlerts(expiredAlerts.map(alert => alert.id), expiredAlerts);
+    await notifyExpiredAlerts(expiredAlerts.map(alert => alert.user), expiredAlerts);
 
-    await db.run("begin");
-    await db.run("delete from cmc_cache");
-    for (const coin of newCoins) {
-        await genSqlInsertCommand(coin, "cmc_cache", new CryptoApiData());
-    }
-    await db.run("commit");
-    await notifyUsers();
-    await db.run("begin");
-    await db.each("select * from user_settings where type=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], async (err, row) => {
-        if (err) {
-            throw err;
-        }
-        const setting = row as UserSetting;
-        if (!newCoins.find(c => c.id == setting.favouriteCrypto)) {
-            analytics.track({
-                userId: setting.id,
-                event: "Favourite(s) expired"
-            });
-            await db.run("delete from user_settings where id=? and favouriteCrypto=?", setting.id, setting.favouriteCrypto);
-        }
+    await db.transaction(async () => {
+        await CmcLatestListingModel.deleteMany({});
+        await CmcLatestListingModel.insertMany(newCoins);
     });
-    await db.run("commit");
+    await notifyUsers();
 }
 
-export async function notifyExpiredAlerts(toDm: string[], alerts: UserSetting[]) {
+export async function notifyExpiredAlerts(toDm: string[], alerts: CoinAlert[]) {
     for (const user of toDm) {
-        const expired = alerts.filter(alert => alert.id == user);
+        const expired = alerts.filter(alert => alert.user == user);
         const message = getEmbedTemplate();
         message.title = `⚠️ Alert${expired.length > 1 ? "s" : ""} expired!`;
         let desc = `The following alert${expired.length > 1 ? "s have" : " has"} expired:\n`;
@@ -122,11 +95,11 @@ export async function notifyExpiredAlerts(toDm: string[], alerts: UserSetting[])
             }
         });
         try {
-            const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+            const channel = await discordGot("users/@me/channels", {
                 method: "POST",
                 body: JSON.stringify({recipient_id: user})
-            });
-            await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+            }).text();
+            await discordGot(`channels/${(JSON.parse(channel) as APIChannel).id}/messages`, {
                 method: "POST",
                 body: JSON.stringify({embeds: [message]})
             });
@@ -158,24 +131,30 @@ export function evalInequality(expr: string) {
 }
 
 export async function notifyUsers() {
-    const cache: CryptoApiData[] = await db.all("select * from cmc_cache");
-    const alerts: UserSetting[] = await db.all("select * from user_settings where type=?", UserSettingType[UserSettingType.ALERT]);
+    const cache: CmcLatestListing[] = await CmcLatestListingModel.find({});
+    const alerts: CoinAlert[] = await CoinAlertModel.find({});
     const toDm = new Map<string, string[]>();
     for (const crypto of cache) {
         for (const alert of alerts) {
-            if (alert.alertToken != crypto.id) {
+            if (alert.coin != crypto.id) {
                 continue;
             }
-            if (alert.alertDisabled) {
+            if (alert.disabled) {
                 continue;
             }
-            const expr = crypto[CryptoStat.shortToDb(alert.alertStat)] + alert.alertDirection + alert.alertThreshold;
+            const expr = (crypto as Indexable)[CryptoStat.shortToDb(alert.stat)] + alert.direction + alert.threshold;
             if (evalInequality(expr)) {
-                if (!toDm.has(alert.id)) {
-                    toDm.set(alert.id, []);
+                if (!toDm.has(alert.user)) {
+                    toDm.set(alert.user, []);
                 }
-                toDm.get(alert.id).push(await formatAlert(alert));
-                await db.run("delete from user_settings where id=? and type=? and alertToken=? and alertStat=? and alertThreshold=? and alertDirection=?", alert.id, UserSettingType[UserSettingType.ALERT], alert.alertToken, alert.alertStat, alert.alertThreshold, alert.alertDirection);
+                toDm.get(alert.user).push(await formatAlert(alert));
+                await CoinAlertModel.deleteOne({
+                    user: alert.user,
+                    stat: alert.stat,
+                    threshold: alert.threshold,
+                    direction: alert.direction,
+                    coin: alert.coin
+                });
             }
         }
     }
@@ -198,12 +177,12 @@ export async function notifyUsers() {
         });
 
         try {
-            const channel = await discordRequest("https://discord.com/api/v10/users/@me/channels", {
+            const channel = await discordGot("users/@me/channels", {
                 method: "POST",
                 body: JSON.stringify({recipient_id: user})
-            });
+            }).text();
 
-            await discordRequest(`https://discord.com/api/v10/channels/${(JSON.parse(await channel.text()) as APIChannel).id}/messages`, {
+            await discordGot(`channels/${(JSON.parse(channel) as APIChannel).id}/messages`, {
                 method: "POST",
                 body: JSON.stringify({embeds: [message]})
             });

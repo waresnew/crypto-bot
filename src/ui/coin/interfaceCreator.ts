@@ -1,6 +1,4 @@
-import {db, idToCrypto} from "../../database";
-import {CryptoApiData} from "../../structs/cryptoapidata";
-import {UserSettingType} from "../../structs/usersettings";
+import {CmcLatestListing} from "../../structs/cmcLatestListing";
 import {getEmbedTemplate} from "../templates";
 import {scientificNotationToNumber} from "../../utils";
 import {
@@ -10,38 +8,8 @@ import {
     ButtonStyle,
     ComponentType
 } from "discord-api-types/v10";
-import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 
-export async function makeFavouritesMenu(interaction: APIInteraction) {
-    const selectFavs: APIActionRowComponent<APIStringSelectComponent> = {
-        type: ComponentType.ActionRow,
-        components: [{
-            type: ComponentType.StringSelect,
-            custom_id: `coin_favcoins_${interaction.user.id}`,
-            placeholder: "Quickly access your favourites...",
-            options: []
-        }]
-
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const favs = await db.all("select favouriteCrypto from user_settings where type=? and id=?", UserSettingType[UserSettingType.FAVOURITE_CRYPTO], interaction.user.id);
-
-    for (let i = 0; i < favs.length; i++) {
-        const row = favs[i];
-        const coin = await idToCrypto(row.favouriteCrypto);
-        if (coin) {
-            selectFavs.components[0].options.push({label: coin.name, value: row.favouriteCrypto.toString()});
-        }
-    }
-    if (selectFavs.components[0].options.length == 0) {
-        selectFavs.components[0].options.push({label: "Favourite a coin to add it here!", value: "default"});
-    }
-
-    return selectFavs;
-
-}
-
-export function makeEmbed(choice: CryptoApiData) {
+export function makeEmbed(choice: CmcLatestListing) {
     const embed = getEmbedTemplate();
     embed.thumbnail = {
         url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.id}.png`
@@ -83,9 +51,7 @@ export function makeEmbed(choice: CryptoApiData) {
     return embed;
 }
 
-export async function makeButtons(choice: CryptoApiData, interaction: APIInteraction) {
-    const favouritedEntry = await db.get("select exists(select 1 from user_settings where id=? and favouriteCrypto=? and type=?)", interaction.user.id, choice.id, UserSettingType[UserSettingType.FAVOURITE_CRYPTO]);
-    const favourited = Object.values(favouritedEntry)[0];
+export async function makeButtons(choice: CmcLatestListing, interaction: APIInteraction) {
     return {
         type: ComponentType.ActionRow,
         components: [
@@ -98,16 +64,6 @@ export async function makeButtons(choice: CryptoApiData, interaction: APIInterac
                     name: "🔔"
                 },
                 style: ButtonStyle.Primary
-            },
-            {
-                type: ComponentType.Button,
-                custom_id: `coin_setfav_${choice.id}_${interaction.user.id}`,
-                label: favourited ? "Unfavourite" : "Favourite",
-                emoji: {
-                    id: null,
-                    name: "⭐"
-                },
-                style: favourited ? ButtonStyle.Secondary : ButtonStyle.Primary
             },
             {
                 type: ComponentType.Button,
