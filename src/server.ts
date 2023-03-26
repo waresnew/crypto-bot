@@ -1,5 +1,4 @@
 /* istanbul ignore file */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import fastify, {FastifyRequest} from "fastify";
 import rawBody from "fastify-raw-body";
 import {
@@ -12,18 +11,16 @@ import {
     InteractionType,
     MessageFlags
 } from "discord-api-types/v10";
-import {db, initDb, openDb} from "./database";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {commands, deepInsertCustomId, deepStripCustomId, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
-import {requestProcessor} from "./requests";
 import Sentry from "@sentry/node";
+import {db, openDb} from "./database";
 
 await openDb();
-await initDb();
 initAnalytics();
 const server = fastify({logger: true});
 server.setErrorHandler((error, request, reply) => {
@@ -39,7 +36,6 @@ async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
     await server.close();
     await db.close();
-    clearInterval(requestProcessor);
     await analytics.flush();
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
@@ -53,7 +49,7 @@ server.post("/crypto-bot/interactions", async (request, response) => {
         response.status(401).send({error: "Bad request signature"});
         return;
     }
-
+//todo add userid suffix middleware here
     response.send = new Proxy(response.send, {
         apply: function (target, thisArg, argumentsList) {
             deepInsertCustomId(argumentsList[0]);

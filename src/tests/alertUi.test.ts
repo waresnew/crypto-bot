@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import alertsCmd from "../commands/alerts";
 import {mockCommandInteraction, mockDiscordRequest, mockReply} from "./testSetup";
 import AlertsInteractionProcessor from "../ui/alerts/interactionProcessor";

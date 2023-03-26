@@ -4,7 +4,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {getEmbedTemplate} from "../ui/templates";
-import {client, commandIds} from "../utils";
+import {commandIds} from "../utils";
 
 export default {
     name: "help",
@@ -21,8 +21,8 @@ To get started, simply run </coin:${commandIds.get("coin")}> to open a menu. Fro
 Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap. If a coin falls off the top 200 and you have an alert for it, you will be DM'ed and the alert will be deleted.
 
 We hope you find Botchain helpful in your cryptocurrency trading journey. If you have any questions or feedback, feel free to join the support server at https://discord.gg/mpyPadCG3q. Happy trading!`;
-        embed.thumbnail = {
-            url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
+        embed.image = {
+            url: "https://i.imgur.com/Mh8mqVt.png"
         };
         http.send({
             type: InteractionResponseType.ChannelMessageWithSource,

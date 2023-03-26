@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {mockCommandInteraction, mockReply} from "./testSetup";
 import coinCmd from "../commands/coin";
 import {

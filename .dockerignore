@@ -1,7 +1,6 @@
-node_modules
-.idea
-docker
-README.md
-LICENSE
-.github
-dist
+*
+!/src
+!.swcrc
+!package.json
+!package-lock.json
+!tsconfig.json

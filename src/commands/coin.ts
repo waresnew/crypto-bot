@@ -1,8 +1,7 @@
-import {getCmcCache} from "../database";
 import didyoumean from "didyoumean";
-import {CryptoApiData} from "../structs/cryptoapidata";
+import {CmcLatestListingModel} from "../structs/cmcLatestListing";
 import {cryptoNameList, cryptoSymbolList} from "../utils";
-import {makeButtons, makeEmbed, makeFavouritesMenu} from "../ui/coin/interfaceCreator";
+import {makeButtons, makeEmbed} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -39,8 +38,10 @@ export default {
         } else {
             coin = (input as APIApplicationCommandInteractionDataStringOption).value;
         }
-
-        const choice: CryptoApiData = await getCmcCache("select * from cmc_cache where symbol=? collate nocase or name=? collate nocase", coin, coin);
+        const choice = await CmcLatestListingModel.findOne({$or: [{symbol: coin}, {name: coin}]}).collation({
+            locale: "en",
+            strength: 2
+        });
         if (!choice) {
             const suggestion = didyoumean(coin.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
             await http.send({
@@ -56,10 +57,9 @@ export default {
 
         const embed = await makeEmbed(choice);
         const buttons = await makeButtons(choice, interaction);
-        const favourites = await makeFavouritesMenu(interaction);
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [embed], components: [buttons, favourites], fetchReply: true}
+            data: {embeds: [embed], components: [buttons]}
         });
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {

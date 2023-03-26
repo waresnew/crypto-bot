@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import InteractionProcessor from "./ui/abstractInteractionProcessor";
 import {APIUser} from "discord-api-types/v10";
+import got from "got";
 
 //avoiding circular dependencies
 export const cryptoSymbolList: string[] = [];
@@ -10,8 +10,28 @@ export const interactionProcessors = new Map<string, InteractionProcessor>();
 export let client: APIUser;
 export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const commands = new Map<string, any>();
+export const discordGot = got.extend({
+    headers: {
+        "User-Agent": "DiscordBot (http, 1.0)",
+        "Authorization": "Bot " + process.env["BOT_TOKEN"],
+        "Content-Type": "application/json"
+    },
+    prefixUrl: "https://discord.com/api/v10",
+    timeout: {
+        lookup: 100,
+        connect: 50,
+        secureConnect: 50,
+        socket: 1000,
+        send: 60000,
+        response: 60000
+    },
+    retry: {
+        limit: 5,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        statusCodes: [429]
+    }
+});
 const customIdVersions = {
     alertwizard_alertstat: "0.0.1",
     alertwizard_alertvalue: "0.0.1",
@@ -23,10 +43,8 @@ const customIdVersions = {
     alertwizard_confirmundo: "0.0.1",
     alertwizard_alertvalueundo: "0.0.1",
     alertwizard_alertdirectionundo: "0.0.1",
-    coin_setfav: "0.0.1",
     coin_refresh: "0.0.1",
     coin_alerts: "0.0.1",
-    coin_favcoins: "0.0.1",
     alerts_menu: "0.0.1",
     alerts_enable: "0.0.1",
     alerts_disable: "0.0.1",
@@ -56,7 +74,6 @@ export function scientificNotationToNumber(input: string): string {
 }
 
 export interface Indexable {
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
     [index: string]: any;
 }
 

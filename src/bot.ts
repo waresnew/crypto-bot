@@ -1,22 +1,19 @@
 /* istanbul ignore file */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import fs from "node:fs";
-import {commandIds, commands, initClient, interactionProcessors} from "./utils";
+import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
-import discordRequest from "./requests";
 import didYouMean from "didyoumean";
 import {cmcCron} from "./services/cmcApi";
 
-const request = await discordRequest(
-    "https://discord.com/api/v10/users/@me"
-);
 didYouMean.threshold = null;
-initClient(JSON.parse(await request.text()));
-const getCommands = await discordRequest(`https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`);
-if (getCommands.status == 200) {
-    JSON.parse(await getCommands.text()).forEach((command: APIApplicationCommand) => commandIds.set(command.name, command.id));
+initClient(JSON.parse(await discordGot(
+    "users/@me"
+).text()));
+const getCommands = await discordGot(`applications/${process.env["APP_ID"]}/commands`);
+if (getCommands.ok) {
+    JSON.parse(getCommands.body).forEach((command: APIApplicationCommand) => commandIds.set(command.name, command.id));
 } else {
     throw "failed to init: fetching commands from api failed";
 }

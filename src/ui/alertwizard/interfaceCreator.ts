@@ -6,12 +6,12 @@ import {
     InteractionResponseType,
     MessageFlags
 } from "discord-api-types/v10";
-import {CryptoApiData} from "../../structs/cryptoapidata";
+import {CmcLatestListing} from "../../structs/cmcLatestListing";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {commandIds} from "../../utils";
 
-export function makeThresholdPrompt(interaction: APIInteraction, coin: CryptoApiData, what: string) {
+export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatestListing, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. At what threshold would you like to be alerted?`;
@@ -48,7 +48,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CryptoApi
     } as APIInteractionResponse;
 }
 
-export function makeDirectionPrompt(interaction: APIInteraction, coin: CryptoApiData, what: string, when: string) {
+export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatestListing, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${when}?`;
@@ -96,7 +96,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CryptoApi
     } as APIInteractionResponse;
 }
 
-export function makeStatPrompt(interaction: APIInteraction, coin: CryptoApiData) {
+export function makeStatPrompt(interaction: APIInteraction, coin: CmcLatestListing) {
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;

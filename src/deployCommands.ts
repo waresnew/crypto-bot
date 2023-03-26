@@ -4,13 +4,11 @@ import dotenv from "dotenv";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import {APIApplicationCommand} from "discord-api-types/v10";
-import discordRequest, {requestProcessor} from "./requests";
 
 dotenv.config({path: `./data/${process.env["NODE_ENV"]}.env`});
-
+const discordGot = (await import("./utils")).discordGot;
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
-    clearInterval(requestProcessor);
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
 }
@@ -41,7 +39,7 @@ process.exit();
 async function registerCommands(commands: APIApplicationCommand[], dev: boolean) {
     try {
         console.log(`Started refreshing ${commands.length} application (/) commands.`);
-        await discordRequest(dev ? `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `https://discord.com/api/v10/applications/${process.env["APP_ID"]}/commands`,
+        await discordGot(dev ? `applications/${process.env["APP_ID"]}/guilds/${process.env["GUILD_ID"]}/commands` : `applications/${process.env["APP_ID"]}/commands`,
             {
                 method: "PUT",
                 body: JSON.stringify(commands)
