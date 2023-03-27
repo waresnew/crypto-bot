@@ -19,7 +19,7 @@
   "license": "AGPL-3.0-only",
   "dependencies": {
     "@sentry/node": "^7.41.0",
-    "@sentry/tracing": "^7.41.0",
+    "@sentry/tracing": "^7.45.0",
     "analytics-node": "^6.2.0",
     "cron": "^2.2.0",
     "didyoumean": "^1.2.2",
