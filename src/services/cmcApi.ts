@@ -55,7 +55,6 @@ export async function updateCmc() {
     const newCoins: CmcLatestListing[] = [];
     for (let i = 0; i < json.data.length; i++) {
         const data = new CmcLatestListingModel({...json.data[i], ...json.data[i]["quote"]["USD"]});
-        data.cmc_id = json.data[i].id;
         data.last_updated = new Date().toISOString();
         cryptoSymbolList.push(data.symbol);
         newCoins.push(data);
@@ -64,7 +63,8 @@ export async function updateCmc() {
     for (const coin of oldCoins) {
         if (!newCoins.find(c => c.id == coin.id)) {
             console.log(`Coin ${coin.name} is no longer in the top 200`);
-            (await CoinAlertModel.find({id: coin.id})).forEach(alert => expiredAlerts.push(alert));
+            ((await CoinAlertModel.find({coin: coin.id})) as CoinAlert[]).forEach(alert => expiredAlerts.push(alert));
+            await CoinAlertModel.deleteMany({coin: coin.id});
         }
     }
     await notifyExpiredAlerts(expiredAlerts.map(alert => alert.user), expiredAlerts);

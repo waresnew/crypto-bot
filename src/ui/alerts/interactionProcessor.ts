@@ -5,10 +5,8 @@ import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
-    ComponentType,
     InteractionResponseType,
-    MessageFlags,
-    TextInputStyle
+    MessageFlags
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
@@ -128,61 +126,6 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [await makeEmbed(selected, interaction)],
                     components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
-                }
-            });
-        } else if (interaction.data.custom_id.startsWith("alerts_edit")) {
-            if (selected.length != 1) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Attempted to illegally edit multiple alerts",
-                    properties: {
-                        count: selected.length
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: Please select only one alert to edit.",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            const sortedOptions = CryptoStat.listShorts().sort((a, b) => a.length - b.length);
-            const coin = await CmcLatestListingModel.findOne({id: selected[0].coin});
-            await http.send({
-                type: InteractionResponseType.Modal,
-                data: {
-                    title: `Editing alert for ${coin.name}`,
-                    custom_id: `alerts_editmodal_${interaction.user.id}`,
-                    components: [
-                        {
-                            type: ComponentType.ActionRow,
-                            components: [
-                                {
-                                    type: ComponentType.TextInput,
-                                    label: "Which stat do you want to track?",
-                                    custom_id: `alerts_editmodalstat_${interaction.user.id}`,
-                                    style: TextInputStyle.Short,
-                                    placeholder: sortedOptions.join(", "),
-                                    required: false
-                                }
-                            ]
-                        },
-                        {
-                            type: ComponentType.ActionRow,
-                            components: [
-                                {
-                                    type: ComponentType.TextInput,
-                                    custom_id: `alerts_editmodalvalue_${interaction.user.id}`,
-                                    label: "At what threshold should you be alerted?",
-                                    style: TextInputStyle.Short,
-                                    placeholder: "eg. <-20 for less than -20, >10 for greater than 10",
-                                    required: false
-                                }
-                            ]
-                        }
-                    ]
-
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_refresh")) {
