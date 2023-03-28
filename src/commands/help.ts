@@ -16,12 +16,12 @@ export default {
         embed.description =
             `Welcome to Botchain, the Discord bot that keeps you informed about the price of your favorite cryptocurrencies! With Botchain, you can set up alerts for specific cryptocurrencies and get DM'ed when the price (or some other statistic) reaches a certain threshold. With this in mind, please ensure that you always share a server with the bot and have it unblocked, or else some alerts may silently fail.
 
-To get started, simply run </coin:${commandIds.get("coin")}> to open a menu. From there, you can set up an alert for the cryptocurrency. You can choose from a variety of different statistics to track. The user interface is mainly point-and-click to make it as easy to use as possible.
+To get started, simply run </track:${commandIds.get("coin")}> to open a menu. From there, you can set up an alert for the cryptocurrency. You can choose from a variety of different statistics to track. The user interface is mainly point-and-click to make it as easy to use as possible.
 
 Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap. If a coin falls off the top 200 and you have an alert for it, you will be DM'ed and the alert will be deleted.
 
 We hope you find Botchain helpful in your cryptocurrency trading journey. If you have any questions or feedback, feel free to join the support server at https://discord.gg/mpyPadCG3q. Happy trading!`;
-        embed.image = {
+        embed.thumbnail = {
             url: "https://i.imgur.com/Mh8mqVt.png"
         };
         http.send({
