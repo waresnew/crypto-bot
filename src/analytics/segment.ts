@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import Analytics from "analytics-node";
 
 export let analytics: Analytics = null;

@@ -1,5 +1,4 @@
-// @ts-ignore
-import mongoose, {HydratedDocument, InferSchemaType, Schema} from "mongoose";
+import mongoose, {HydratedDocument, Schema} from "mongoose";
 
 /**
  * Wrapper for https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest endpoint
@@ -37,5 +36,24 @@ const schema = new Schema({
     /**24 hour change in the specified currencies volume. */
     volume_change_24h: {type: Number, required: true}
 }, {id: false});
-export const CmcLatestListingModel = mongoose.model("CmcLatestListing", schema);
-export type CmcLatestListing = HydratedDocument<InferSchemaType<typeof schema>>;
+
+interface CmcLatestListingInterface {
+    cmc_rank: number;
+    id: number;
+    name: string;
+    slug: string;
+    symbol: string;
+    fully_diluted_market_cap: number;
+    last_updated: string;
+    market_cap: number;
+    market_cap_dominance: number;
+    percent_change_1h: number;
+    percent_change_24h: number;
+    percent_change_7d: number;
+    price: number;
+    volume_24h: number;
+    volume_change_24h: number;
+}
+
+export const CmcLatestListingModel = mongoose.model<CmcLatestListingInterface>("CmcLatestListing", schema);
+export type CmcLatestListing = HydratedDocument<CmcLatestListingInterface>;

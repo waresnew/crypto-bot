@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {CmcLatestListing} from "../../structs/cmcLatestListing";
 import {getEmbedTemplate} from "../templates";
 import {scientificNotationToNumber} from "../../utils";
@@ -57,17 +58,7 @@ export async function makeButtons(choice: CmcLatestListing, interaction: APIInte
         components: [
             {
                 type: ComponentType.Button,
-                custom_id: `coin_alerts_${choice.id}_${interaction.user.id}`,
-                label: "Add alert",
-                emoji: {
-                    id: null,
-                    name: "🔔"
-                },
-                style: ButtonStyle.Primary
-            },
-            {
-                type: ComponentType.Button,
-                custom_id: `coin_refresh_${choice.id}_${interaction.user.id}`,
+                custom_id: `coin_refresh_${choice.id}`,
                 label: "Refresh",
                 emoji: {
                     id: null,

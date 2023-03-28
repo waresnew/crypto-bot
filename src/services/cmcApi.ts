@@ -47,8 +47,7 @@ export async function updateCmc() {
     const json = JSON.parse(request);
     const errorCode = json.status.error_code;
     if (errorCode != 0) {
-        console.log(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
-        return;
+        throw new Error(`Error code ${errorCode} from the CoinMarketCap API occured at ${json.status.timestamp}`);
     }
     const oldCoins: CmcLatestListing[] = await CmcLatestListingModel.find({});
     cryptoSymbolList.length = 0;

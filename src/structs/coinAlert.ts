@@ -1,5 +1,4 @@
-// @ts-ignore
-import mongoose, {HydratedDocument, InferSchemaType, Schema} from "mongoose";
+import mongoose, {HydratedDocument, Schema} from "mongoose";
 
 const schema = new Schema({
     user: {type: String, required: true},
@@ -9,5 +8,15 @@ const schema = new Schema({
     direction: {type: String, required: true, enum: [">", "<"]},
     disabled: {type: Boolean, default: false}
 });
-export const CoinAlertModel = mongoose.model("CoinAlert", schema);
-export type CoinAlert = HydratedDocument<InferSchemaType<typeof schema>>;
+
+interface CoinAlertInterface {
+    user: string;
+    coin: number;
+    stat: string;
+    threshold: number;
+    direction: string;
+    disabled: boolean;
+}
+
+export const CoinAlertModel = mongoose.model<CoinAlertInterface>("CoinAlert", schema);
+export type CoinAlert = HydratedDocument<CoinAlertInterface>;

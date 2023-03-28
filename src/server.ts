@@ -14,7 +14,7 @@ import {
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {commands, deepInsertCustomId, deepStripCustomId, interactionProcessors} from "./utils";
+import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
 import Sentry from "@sentry/node";
@@ -43,117 +43,117 @@ async function closeGracefully(signal: string | number) {
 
 process.once("SIGINT", closeGracefully);
 process.once("SIGTERM", closeGracefully);
-
-server.post("/crypto-bot/interactions", async (request, response) => {
-    if (!validateSignature(request)) {
-        response.status(401).send({error: "Bad request signature"});
-        return;
-    }
-//todo add userid suffix middleware here
-    response.send = new Proxy(response.send, {
-        apply: function (target, thisArg, argumentsList) {
-            deepInsertCustomId(argumentsList[0]);
-            Reflect.apply(target, thisArg, argumentsList);
+server.route({
+    method: "POST",
+    url: "/crypto-bot/interactions",
+    preHandler: async (request, response) => {
+        if (!validateSignature(request)) {
+            await response.status(401).send({error: "Bad request signature"});
+            return;
         }
-    });
-    const message: APIInteraction = JSON.parse(JSON.stringify(request.body));
-    if (!message.user && message.member) {
-        message.user = message.member.user;
-    }
-    if (message.user) {
-        analytics.identify({
-            userId: message.user.id,
-            traits: {
-                username: message.user.username,
-                discriminator: message.user.discriminator
+        const message = request.body as APIInteraction;
+        if (!message.user && message.member) {
+            message.user = message.member.user;
+        }
+        if (message.type == InteractionType.MessageComponent || message.type == InteractionType.ModalSubmit) {
+            if (!deepValidateCustomId(request.body)) {
+                await response.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: A bot update has caused this embed to become invalid. Please regenerate it and try again.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
             }
-        });
-
-        analytics.page({
-            userId: message.user.id,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            name: Object.keys(InteractionType).find(key => InteractionType[key] == message.type)
-        });
-    }
-    if (message.type == InteractionType.Ping) {
-        response.send({
-            type: InteractionResponseType.Pong
-        });
-    } else if (message.type == InteractionType.ApplicationCommand) {
-        analytics.track({
-            userId: message.user.id,
-            event: "Ran command",
-            properties: {
-                command: (message as APIChatInputApplicationCommandInteraction).data.name
+        }
+        if (message.type == InteractionType.MessageComponent) {
+            const interaction: APIMessageComponentInteraction = message;
+            if (interaction.message.embeds.length == 0) {
+                await response.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: Expected an embed on this message, but none was found. Was the embed deleted?",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
             }
-        });
-        await commands.get((message as APIChatInputApplicationCommandInteraction).data.name).execute(message, response);
-    } else if (message.type == InteractionType.ApplicationCommandAutocomplete) {
-        const command = commands.get((message as APIApplicationCommandAutocompleteInteraction).data.name);
-        if (command && typeof command.autocomplete == "function") {
-            await command.autocomplete(message, response);
+            const tokens = interaction.data.custom_id.split("_");
+            if (tokens[tokens.length - 1] != message.user.id) {
+                await response.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: You do not have permission to interact with this!",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
         }
-    } else if (message.type == InteractionType.MessageComponent) {
-        const interaction = message as APIMessageComponentInteraction;
-        if (!deepStripCustomId(interaction)) {
-            response.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: "Error: A bot update has caused this embed to become invalid. Please regenerate it and try again.",
-                    flags: MessageFlags.Ephemeral
+    },
+    preSerialization: async (request, response, payload) => {
+        const message = request.body as APIInteraction;
+        if (!message.user && message.member) {
+            message.user = message.member.user;
+        }
+        return deepPatchCustomId(payload, message.user.id);
+    },
+    handler: async (request, response) => {
+        const message = request.body as APIInteraction;
+        if (!message.user && message.member) {
+            message.user = message.member.user;
+        }
+        if (message.user) {
+            analytics.identify({
+                userId: message.user.id,
+                traits: {
+                    username: message.user.username,
+                    discriminator: message.user.discriminator
                 }
             });
-            return;
         }
-        const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
-        if (interaction.message.embeds.length == 0) {
+        if (message.type == InteractionType.Ping) {
             response.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: "Error: Expected an embed on this message, but none was found. Was the embed deleted?",
-                    flags: MessageFlags.Ephemeral
+                type: InteractionResponseType.Pong
+            });
+        } else if (message.type == InteractionType.ApplicationCommand) {
+            analytics.track({
+                userId: message.user.id,
+                event: "Ran command",
+                properties: {
+                    command: (message as APIChatInputApplicationCommandInteraction).data.name
                 }
             });
-            return;
-        }
-        if (!interaction.data.custom_id.endsWith(interaction.user.id.toString())) {
-            response.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: "Error: You do not have permission to interact with this!",
-                    flags: MessageFlags.Ephemeral
+            await commands.get((message as APIChatInputApplicationCommandInteraction).data.name).execute(message, response);
+        } else if (message.type == InteractionType.ApplicationCommandAutocomplete) {
+            const command = commands.get((message as APIApplicationCommandAutocompleteInteraction).data.name);
+            if (command && typeof command.autocomplete == "function") {
+                await command.autocomplete(message, response);
+            }
+        } else if (message.type == InteractionType.MessageComponent) {
+            const interaction = message as APIMessageComponentInteraction;
+            const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
+
+            if (interaction.data.component_type == ComponentType.Button) {
+                const processor = interactionProcessors.get(origin) as any;
+                if (processor) {
+                    await processor.processButton(interaction, response);
                 }
-            });
-            return;
-        }
-        if (interaction.data.component_type == ComponentType.Button) {
+
+            } else if (interaction.data.component_type == ComponentType.StringSelect) {
+                const processor = interactionProcessors.get(origin) as any;
+                if (processor) {
+                    await processor.processStringSelect(interaction, response);
+                }
+            }
+        } else if (message.type == InteractionType.ModalSubmit) {
+            const interaction = message as APIModalSubmitInteraction;
+            const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
             const processor = interactionProcessors.get(origin) as any;
             if (processor) {
-                await processor.processButton(interaction, response);
+                await processor.processModal(message, response);
             }
-
-        } else if (interaction.data.component_type == ComponentType.StringSelect) {
-            const processor = interactionProcessors.get(origin) as any;
-            if (processor) {
-                await processor.processStringSelect(interaction, response);
-            }
+        } else {
+            response.status(400).send({error: "Unknown Type"});
         }
-    } else if (message.type == InteractionType.ModalSubmit) {
-        const interaction = message as APIModalSubmitInteraction;
-        if (!deepStripCustomId(interaction)) {
-            response.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: "Error: A bot update has caused this embed to become invalid. Please regenerate it and try again.",
-                    flags: MessageFlags.Ephemeral
-                }
-            });
-            return;
-        }
-        const origin = interaction.data.custom_id.substring(0, interaction.data.custom_id.indexOf("_"));
-        const processor = interactionProcessors.get(origin) as any;
-        if (processor) {
-            await processor.processModal(message, response);
-        }
-    } else {
-        response.status(400).send({error: "Unknown Type"});
     }
 });
 

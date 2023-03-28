@@ -17,14 +17,14 @@ import {analytics} from "../../analytics/segment";
 import {commandIds} from "../../utils";
 import {makeDirectionPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
 import {CmcLatestListingModel} from "../../structs/cmcLatestListing";
-import {CoinAlertModel} from "../../structs/coinAlert";
+import {CoinAlert, CoinAlertModel} from "../../structs/coinAlert";
 
-export default class AlertWizardInteractionProcessor extends InteractionProcessor {
+export default class TrackInteractionProcessor extends InteractionProcessor {
     static validateWhen(when: string) {
         if (!when) {
             throw "Error: You did not specify a threshold. Please try again.";
         }
-        if (when.length > 9) {
+        if (when.length > 10) {
             throw "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.";
         }
         if (isNaN(Number(when)) || isNaN(parseFloat(when))) {
@@ -35,8 +35,9 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
         }
     }
 
+    /* istanbul ignore next */
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
-        if (interaction.data.custom_id.startsWith("alertwizard_alertthresholdmodal")) {
+        if (interaction.data.custom_id.startsWith("track_alertthresholdmodal")) {
             let when = interaction.data.components[0].components[0].value;
             if (when.length > 1 && when[0] == "$") {
                 when = when.substring(1);
@@ -69,6 +70,7 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
         }
     }
 
+    /* istanbul ignore next */
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         if (interaction.data.custom_id.split("_")[1].endsWith("undo")) {
             const split = interaction.data.custom_id.split("_");
@@ -89,20 +91,20 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
             }
             return;
         }
-        if (interaction.data.custom_id.startsWith("alertwizard_alertvalue")) {
+        if (interaction.data.custom_id.startsWith("track_alertvalue")) {
             const coin = await CmcLatestListingModel.findOne({id: interaction.data.custom_id.split("_")[2]});
             const what = interaction.data.custom_id.split("_")[3];
             http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${CryptoStat.shortToLong(what)}`,
-                    custom_id: `alertwizard_alertthresholdmodal_${coin.id}_${what}_${interaction.user.id}`,
+                    custom_id: `track_alertthresholdmodal_${coin.id}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
                             type: ComponentType.TextInput,
                             label: "At what threshold should you be alerted?",
-                            custom_id: `alertwizard_alertthresholdmodalvalue_${interaction.user.id}`,
+                            custom_id: "track_alertthresholdmodalvalue",
                             style: TextInputStyle.Short,
                             required: true,
                             placeholder: "Enter a number"
@@ -110,8 +112,8 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
                     }]
                 }
             } as APIModalInteractionResponse);
-        } else if (interaction.data.custom_id.startsWith("alertwizard_alertdirection")) {
-            const direction = interaction.data.custom_id.startsWith("alertwizard_alertdirectiongreater") ? ">" : "<";
+        } else if (interaction.data.custom_id.startsWith("track_alertdirection")) {
+            const direction = interaction.data.custom_id.startsWith("track_alertdirectiongreater") ? ">" : "<";
             const what = interaction.data.custom_id.split("_")[3], when = interaction.data.custom_id.split("_")[4];
             const coin = await CmcLatestListingModel.findOne({id: interaction.data.custom_id.split("_")[2]});
             const message = getEmbedTemplate();
@@ -133,11 +135,11 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
                                 },
                                 style: ButtonStyle.Primary,
                                 label: "Go back",
-                                custom_id: `alertwizard_confirmundo_${coin.id}_${what}_${when}_${interaction.user.id}`
+                                custom_id: `track_confirmundo_${coin.id}_${what}_${when}`
                             },
                             {
                                 type: ComponentType.Button,
-                                custom_id: `alertwizard_confirm_${coin.id}_${what}_${when}_${direction}_${interaction.user.id}`,
+                                custom_id: `track_confirm_${coin.id}_${what}_${when}_${direction}`,
                                 label: "Confirm",
                                 style: ButtonStyle.Success,
                                 emoji: {
@@ -149,7 +151,7 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
                     }]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("alertwizard_confirm")) {
+        } else if (interaction.data.custom_id.startsWith("track_confirm")) {
             const coin = await CmcLatestListingModel.findOne({id: interaction.data.custom_id.split("_")[2]});
             const what = interaction.data.custom_id.split("_")[3];
             const when = interaction.data.custom_id.split("_")[4];
@@ -159,44 +161,14 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
             alert.coin = coin.id;
             alert.stat = what;
             alert.threshold = Number(when);
-            alert.direction = direction as ">" | "<";
+            alert.direction = direction;
             const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
-            if ((await CoinAlertModel.find({user: alert.user})).length >= 25) {
-                //limit to 25 bc stringselectmenus hax a max of 25 entries
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Too many alerts"
-                    }
-                });
+            try {
+                await this.validateAlert(alert);
+            } catch (e) {
                 await http.send({
                     type: InteractionResponseType.UpdateMessage, data: {
-                        content: `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`,
-                        flags: MessageFlags.Ephemeral,
-                        embeds: [],
-                        components: []
-                    }
-                });
-                return;
-            }
-            if ((await CoinAlertModel.find({
-                user: alert.user,
-                coin: alert.coin,
-                stat: alert.stat,
-                threshold: alert.threshold,
-                direction: alert.direction
-            })).length > 0) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Alert Creation Failed",
-                    properties: {
-                        reason: "Duplicate alert"
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.UpdateMessage, data: {
-                        content: `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`,
+                        content: e,
                         flags: MessageFlags.Ephemeral,
                         embeds: [],
                         components: []
@@ -226,8 +198,40 @@ export default class AlertWizardInteractionProcessor extends InteractionProcesso
         }
     }
 
+    static async validateAlert(alert: CoinAlert) {
+        const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
+        if ((await CoinAlertModel.find({user: alert.user})).length >= 25) {
+            analytics.track({
+                userId: alert.user,
+                event: "Alert Creation Failed",
+                properties: {
+                    reason: "Too many alerts"
+                }
+            });
+            throw `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`;
+        }
+        if ((await CoinAlertModel.find({
+            user: alert.user,
+            coin: alert.coin,
+            stat: alert.stat,
+            threshold: alert.threshold,
+            direction: alert.direction
+        })).length > 0) {
+            analytics.track({
+                userId: alert.user,
+                event: "Alert Creation Failed",
+                properties: {
+                    reason: "Duplicate alert"
+                }
+            });
+            throw `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`;
+        }
+    }
+
+    /* istanbul ignore next */
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-        if (interaction.data.custom_id.startsWith("alertwizard_alertstat")) {
+
+        if (interaction.data.custom_id.startsWith("track_alertstat")) {
             const coin = await CmcLatestListingModel.findOne({id: interaction.data.custom_id.split("_")[2]});
             const what = interaction.data.values[0];
             const response = makeThresholdPrompt(interaction, coin, what);

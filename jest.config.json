@@ -1,10 +1,9 @@
 {
   "transform": {
-    "^.+\\.tsx?$": [
+    "^.+\\.(t|j)sx?$": [
       "@swc/jest"
     ]
   },
-  "testEnvironment": "node",
   "setupFilesAfterEnv": [
     "<rootDir>/src/tests/testSetup.ts"
   ],
@@ -18,6 +17,7 @@
   "testPathIgnorePatterns": [
     "dist/"
   ],
+  "preset": "@shelf/jest-mongodb",
   "extensionsToTreatAsEsm": [
     ".ts",
     ".tsx"
