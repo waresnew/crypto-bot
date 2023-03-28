@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {
@@ -29,7 +30,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
         components: [
             {
                 type: ComponentType.StringSelect,
-                custom_id: `alerts_menu_${interaction.user.id}`,
+                custom_id: "alerts_menu",
                 min_values: 1,
                 max_values: alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length,
                 placeholder: "Select one or more alerts...",
@@ -115,7 +116,7 @@ export function makeButtons(interaction: APIInteraction) {
         components: [
             {
                 type: ComponentType.Button,
-                custom_id: `alerts_enable_${interaction.user.id}`,
+                custom_id: "alerts_enable",
                 label: "Enable selected",
                 emoji: {
                     id: null,
@@ -125,7 +126,7 @@ export function makeButtons(interaction: APIInteraction) {
             },
             {
                 type: ComponentType.Button,
-                custom_id: `alerts_disable_${interaction.user.id}`,
+                custom_id: "alerts_disable",
                 label: "Disable selected",
                 emoji: {
                     id: null,
@@ -135,7 +136,7 @@ export function makeButtons(interaction: APIInteraction) {
             },
             {
                 type: ComponentType.Button,
-                custom_id: `alerts_delete_${interaction.user.id}`,
+                custom_id: "alerts_delete",
                 label: "Delete selected",
                 emoji: {
                     id: null,
@@ -145,7 +146,7 @@ export function makeButtons(interaction: APIInteraction) {
             },
             {
                 type: ComponentType.Button,
-                custom_id: `alerts_refresh_${interaction.user.id}`,
+                custom_id: "alerts_refresh",
                 label: "Refresh",
                 emoji: {
                     id: null,

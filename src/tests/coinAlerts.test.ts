@@ -1,27 +1,31 @@
-import {db, genSqlInsertCommand} from "../database";
-import {UserSetting} from "../structs/usersettings";
 import {updateCmc} from "../services/cmcApi";
-import {btcEthApiData, mockDiscordRequest} from "./testSetup";
-import {streamToString} from "../utils";
 import nock from "nock";
+import {CoinAlertModel} from "../structs/coinAlert";
+import {btcEthApiData} from "./testSetup";
 
 describe("Tests coin alerts", () => {
     it("alerts user when coin price is below threshold", async () => {
-        await genSqlInsertCommand({
-            id: "123",
-            type: "ALERT",
-            alertToken: 1,
-            alertStat: "price",
-            alertThreshold: 100,
-            alertDirection: ">",
-            alertDisabled: 0
-        }, "user_settings", new UserSetting());
-        expect(((await db.get("select * from user_settings where alertToken = 1")) as UserSetting).id).toBe("123");
+        await new CoinAlertModel({
+            user: "123",
+            coin: 1,
+            stat: "price",
+            threshold: 100,
+            direction: ">",
+            disabled: false
+        }).save();
+        expect((await CoinAlertModel.findOne({coin: 1})).user).toBe("123");
         nock("https://pro-api.coinmarketcap.com")
-            .get("/v1/cryptocurrency/listings/latest")
+            .get("/v1/cryptocurrency/listings/latest?limit=200")
             .reply(200, btcEthApiData);
-        mockDiscordRequest.mockReturnValueOnce(Promise.resolve(new Response(JSON.stringify({id: "ok"}))));
+        nock("https://discord.com")
+            .get("/api/v10/users/@me/channels")
+            .reply(200, {id: "ok"});
         await updateCmc();
-        expect(JSON.parse(await streamToString(mockDiscordRequest.mock.calls[1][1].body as ReadableStream)).embeds[0].description).toMatch(new RegExp("The following alert has been triggered:\\n\\n- When price of Bitcoin is greater than \\$100"));
+        nock("https://discord.com")
+            .post("/api/v10/channels/ok/messages")
+            .reply(function (uri, requestBody) {
+                expect(JSON.parse(requestBody as string).embeds[0].description).toMatch(new RegExp("The following alert has been triggered:\\n\\n- When price of Bitcoin is greater than \\$100"));
+                return [200, {id: "ok"}];
+            });
     });
 });

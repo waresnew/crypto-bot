@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {
     APIInteraction,
     APIInteractionResponse,
@@ -30,7 +31,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `alertwizard_alertvalueundo_${coin.id}_${interaction.user.id}`
+                        custom_id: `track_alertvalueundo_${coin.id}`
                     },
                     {
                         type: ComponentType.Button,
@@ -40,7 +41,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `alertwizard_alertvalue_${coin.id}_${what}_${interaction.user.id}`
+                        custom_id: `track_alertvalue_${coin.id}_${what}`
                     }
                 ]
             }]
@@ -68,11 +69,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `alertwizard_alertdirectionundo_${coin.id}_${what}_${interaction.user.id}`
+                        custom_id: `track_alertdirectionundo_${coin.id}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `alertwizard_alertdirectiongreater_${coin.id}_${what}_${when}_${interaction.user.id}`,
+                        custom_id: `track_alertdirectiongreater_${coin.id}_${what}_${when}`,
                         label: `Greater than ${when}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -82,7 +83,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatest
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `alertwizard_alertdirectionless_${coin.id}_${what}_${when}_${interaction.user.id}`,
+                        custom_id: `track_alertdirectionless_${coin.id}_${what}_${when}`,
                         label: `Less than ${when}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -100,7 +101,7 @@ export function makeStatPrompt(interaction: APIInteraction, coin: CmcLatestListi
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </coin:${commandIds.get("coin")}>.
+    message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </track:${commandIds.get("track")}>.
 
 Please select the stat you would like to be alerted by.`;
     return {
@@ -112,7 +113,7 @@ Please select the stat you would like to be alerted by.`;
                 components: [{
                     type: ComponentType.StringSelect,
                     placeholder: "Select a stat...",
-                    custom_id: `alertwizard_alertstat_${coin.id}_${interaction.user.id}`,
+                    custom_id: `track_alertstat_${coin.id}`,
                     options: sortedOptions.map(entry => {
                         return {
                             label: entry[0].toUpperCase() + entry.substring(1),

@@ -1,5 +1,4 @@
 import {autocompleteCoins, parseCoinCommandArg} from "../utils";
-import {makeButtons, makeEmbed} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -11,11 +10,12 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
+import {makeStatPrompt} from "../ui/track/interfaceCreator";
 
 export default {
-    name: "coin",
+    name: "track",
     type: ApplicationCommandType.ChatInput,
-    description: "Gets information about a cryptocurrency",
+    description: "Setup an alert for a cryptocurrency (interactive)",
     options: [
         {
             name: "name",
@@ -26,9 +26,9 @@ export default {
         }
     ],
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
-        let choice;
+        let coin;
         try {
-            choice = await parseCoinCommandArg(interaction);
+            coin = await parseCoinCommandArg(interaction);
         } catch (e) {
             await http.send({
                 type: InteractionResponseType.ChannelMessageWithSource, data: {
@@ -36,13 +36,7 @@ export default {
                 }
             });
         }
-
-        const embed = await makeEmbed(choice);
-        const buttons = await makeButtons(choice, interaction);
-        await http.send({
-            type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [embed], components: [buttons]}
-        });
+        await http.send(makeStatPrompt(interaction, coin));
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
         await http.send(autocompleteCoins(interaction));

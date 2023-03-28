@@ -26,7 +26,7 @@ describe("Test nock", () => {
 
         try {
             await got("https://google.com");
-            fail("should have thrown");
+            fail();
         } catch (e: any) {
             expect(e.response.statusCode).toBe(404);
             expect(e.response.body).toBe("no");

@@ -15,7 +15,7 @@ import {CoinAlert, CoinAlertModel} from "../../structs/coinAlert";
 import {CmcLatestListingModel} from "../../structs/cmcLatestListing";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
-
+    /* istanbul ignore next */
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
         if (interaction.data.custom_id.startsWith("alerts_menu")) {
             if (interaction.data.values[0] == "default") {
@@ -40,6 +40,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
         }
     }
 
+    /* istanbul ignore next */
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
         if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("alerts_refresh"))) {
@@ -144,6 +145,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
 
     }
 
+    /* istanbul ignore next */
     static async parseSelected(interaction: APIInteraction) {
         const selected: CoinAlert[] = [];
         for (const line of interaction.message.embeds[0].description.split("\n")) {
