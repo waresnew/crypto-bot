@@ -29,7 +29,6 @@
     "fastify-raw-body": "^4.2.0",
     "got": "^12.6.0",
     "mongodb": "^5.1.0",
-    "mongoose": "^7.0.3",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

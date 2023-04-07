@@ -18,7 +18,7 @@ import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
 import Sentry from "@sentry/node";
-import {db, openDb} from "./database";
+import {mongoClient, openDb} from "./database";
 
 await openDb();
 initAnalytics();
@@ -35,7 +35,7 @@ await server.register(rawBody, {
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
     await server.close();
-    await db.close();
+    await mongoClient.close();
     await analytics.flush();
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
@@ -77,16 +77,6 @@ server.route({
                 });
                 return;
             }
-            const tokens = interaction.data.custom_id.split("_");
-            if (tokens[tokens.length - 1] != message.user.id) {
-                await response.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: You do not have permission to interact with this!",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
         }
     },
     preSerialization: async (request, response, payload) => {
@@ -94,7 +84,7 @@ server.route({
         if (!message.user && message.member) {
             message.user = message.member.user;
         }
-        return deepPatchCustomId(payload, message.user.id);
+        return deepPatchCustomId(payload);
     },
     handler: async (request, response) => {
         const message = request.body as APIInteraction;

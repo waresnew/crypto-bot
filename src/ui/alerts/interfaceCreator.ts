@@ -10,16 +10,17 @@ import {
     ComponentType
 } from "discord-api-types/v10";
 import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
-import {CoinAlert, CoinAlertModel} from "../../structs/coinAlert";
-import {CmcLatestListingModel} from "../../structs/cmcLatestListing";
+import {CoinAlert} from "../../structs/coinAlert";
+import {idToMeta} from "../../structs/coinMetadata";
+import {CoinAlerts} from "../../database";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
-    const alerts: CoinAlert[] = await CoinAlertModel.find({user: interaction.user.id});
+    const alerts: CoinAlert[] = await CoinAlerts.find({user: interaction.user.id}).toArray();
     const alertMenuOptions: APISelectMenuOption[] = [];
     for (const alert of alerts) {
         const fancyStat = CryptoStat.shortToLong(alert.stat);
         alertMenuOptions.push({
-            label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await CmcLatestListingModel.findOne({id: alert.coin})).name}`,
+            label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
             description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : ""),
             value: `${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}_${alert.user}`
         });
@@ -45,14 +46,14 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
 }
 
 export async function parseAlertId(id: string) {
-    const alert = new CoinAlertModel();
+    const alert = new CoinAlert();
     const tokens = id.split("_");
     alert.coin = Number(tokens[0]);
     alert.stat = tokens[1];
     alert.threshold = Number(tokens[2]);
     alert.direction = tokens[3] as "<" | ">";
     alert.user = tokens[4];
-    const old = await CoinAlertModel.findOne({
+    const old = await CoinAlerts.findOne({
         coin: alert.coin,
         stat: alert.stat,
         threshold: alert.threshold,
@@ -74,13 +75,13 @@ export async function makeEmbed(values: string[] | CoinAlert[], interaction: API
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values) {
-        let alert = new CoinAlertModel();
+        let alert = new CoinAlert();
         if (values.length > 0 && typeof values[0] == "string") {
             alert = await parseAlertId(value as string);
         } else {
             alert = value as CoinAlert;
         }
-        if (!alert || await CoinAlertModel.findOne({
+        if (!alert || await CoinAlerts.findOne({
             coin: alert.coin,
             stat: alert.stat,
             threshold: alert.threshold,
@@ -160,5 +161,5 @@ export function makeButtons(interaction: APIInteraction) {
 
 export async function formatAlert(alert: CoinAlert) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${(await CmcLatestListingModel.findOne({id: alert.coin})).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${idToMeta(alert.coin).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
 }

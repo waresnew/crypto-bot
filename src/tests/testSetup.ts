@@ -11,7 +11,7 @@ import {jest} from "@jest/globals";
 import {CmcLatestListingModel} from "../structs/cmcLatestListing";
 import {initClient} from "../utils";
 import mongoose from "mongoose";
-import {CoinAlertModel} from "../structs/coinAlert";
+import {CoinAlerts} from "../structs/coinAlert";
 import Mock = jest.Mock;
 
 /*
@@ -133,7 +133,7 @@ export const addAlertModal: APIModalSubmitInteraction = {
 };
 const globalMocks: any[] = [];
 beforeEach(async () => {
-    CoinAlertModel.deleteMany({});
+    CoinAlerts.deleteMany({});
     CmcLatestListingModel.deleteMany({});
     nock.cleanAll();
 });

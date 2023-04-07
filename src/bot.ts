@@ -5,7 +5,7 @@ import fs from "node:fs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import didYouMean from "didyoumean";
-import {cmcCron} from "./services/cmcApi";
+import {cleanBinanceCacheCron, updateBinanceApi} from "./services/coinApi";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -28,7 +28,10 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
-cmcCron.start();
+//cmcCron.start();
+// binanceApiCron.start();
+await updateBinanceApi();
+cleanBinanceCacheCron.start();
 console.log("Ready!");
 
 /**use type any for modules*/

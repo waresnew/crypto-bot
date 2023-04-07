@@ -9,7 +9,6 @@ export default class CryptoStat {
     static percent_change_24h = new CryptoStat("24h%", "24 hour price change");
     static percent_change_7d = new CryptoStat("7d%", "7 day price change");
     static volume_change_24h = new CryptoStat("volume%", "24 hour volume change");
-    static market_cap_dominance = new CryptoStat("dominance%", "market cap dominance");
 
     shortForm: string;
     longForm: string;
@@ -37,9 +36,5 @@ export default class CryptoStat {
 
     static longToShort(long: string) {
         return CryptoStat.getProp(Object.keys(CryptoStat).find(c => CryptoStat.getProp(c).longForm == long)).shortForm;
-    }
-
-    static shortToDb(short: string) {
-        return Object.keys(CryptoStat).find(c => CryptoStat.getProp(c).shortForm == short);
     }
 }

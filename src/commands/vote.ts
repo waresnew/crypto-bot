@@ -23,7 +23,7 @@ export default {
                 embeds: [{
                     ...getEmbedTemplate(),
                     title: "Vote for Botchain",
-                    description: "Thanks for supporting the bot! Click on one of the buttons below to vote!"
+                    description: "Thanks for supporting the bot! Click the button below to vote!"
                 }],
                 components: [{
                     type: ComponentType.ActionRow,
@@ -33,12 +33,6 @@ export default {
                             label: "top.gg",
                             style: ButtonStyle.Link,
                             url: "https://top.gg/bot/1058388231273590885/vote"
-                        },
-                        {
-                            type: ComponentType.Button,
-                            label: "discordbotlist",
-                            style: ButtonStyle.Link,
-                            url: "https://discordbotlist.com/bots/botchain/upvote"
                         }
                     ]
                 }]
