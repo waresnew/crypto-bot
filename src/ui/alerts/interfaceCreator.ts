@@ -13,6 +13,7 @@ import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import {CoinAlert} from "../../structs/coinAlert";
 import {idToMeta} from "../../structs/coinMetadata";
 import {CoinAlerts} from "../../database";
+import {commandIds} from "../../utils";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: CoinAlert[] = await CoinAlerts.find({user: interaction.user.id}).toArray();
@@ -71,7 +72,7 @@ export async function parseAlertId(id: string) {
 export async function makeEmbed(values: string[] | CoinAlert[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
-    let desc = "Toggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅. If you only select one alert, you may directly edit it with the `Edit alert` button.";
+    let desc = "Looking to add an alert? Run </track:" + commandIds.get("track") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅. If you only select one alert, you may directly edit it with the `Edit alert` button.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const value of values) {

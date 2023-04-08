@@ -12,9 +12,7 @@ export let CoinAlerts: Collection<CoinAlert> = null;
 export let LatestCoins: Collection<LatestCoin> = null;
 
 export async function openDb() {
-    mongoClient = await MongoClient.connect(process.env["MONGO_URL"], {
-        connectTimeoutMS: 10000
-    });
+    mongoClient = await MongoClient.connect(process.env["MONGO_URL"]);
     await mongoClient.db("admin").command({ping: 1});
     console.log("Connected to MongoDb");
     db = mongoClient.db(`crypto-bot-${process.env["NODE_ENV"]}`);

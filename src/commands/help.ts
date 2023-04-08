@@ -18,7 +18,7 @@ export default {
 
 To get started, simply run </track:${commandIds.get("track")}> to open a menu. From there, you can set up an alert for the cryptocurrency.
 
-Botchain supports a wide range of popular cryptocurrencies, including Bitcoin, Ethereum, Litecoin, and many more. Specifically, we support the top 200 cryptocurrencies by market cap, as listed on CoinMarketCap. If a coin falls off the top 200 and you have an alert for it, you will be DM'ed and the alert will be deleted.
+Botchain supports most cryptocurrencies listed on popular exchanges, including Bitcoin, Ethereum, Litecoin, and many more.
 
 We hope you find Botchain helpful in your cryptocurrency trading journey. If you have any questions or feedback, feel free to join the support server at https://discord.gg/mpyPadCG3q. Happy trading!`;
         embed.image = {

@@ -1,7 +1,13 @@
 FROM node:18.13.0-bullseye-slim as base
 LABEL org.opencontainers.image.source=https://github.com/waresnew/crypto-bot
-RUN apt-get update && apt-get install -y --no-install-recommends dumb-init
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dumb-init python \
+    && useradd -u 1001 newwares \
+    && mkdir /home/newwares \
+    && chown -R newwares /home/newwares \
+    && chown newwares -R /app
+USER newwares
 COPY package*.json ./
 
 FROM base as build

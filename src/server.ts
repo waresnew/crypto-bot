@@ -20,6 +20,7 @@ import {analytics, initAnalytics} from "./analytics/segment";
 import Sentry from "@sentry/node";
 import {mongoClient, openDb} from "./database";
 import {setRetry, ws} from "./services/binanceWs";
+import got from "got";
 
 await openDb();
 initAnalytics();
@@ -38,6 +39,9 @@ async function closeGracefully(signal: string | number) {
     await server.close();
     await mongoClient.close();
     await analytics.flush();
+    await got("127.0.0.1:3001/shutdown", {
+        method: "POST"
+    });
     setRetry(false);
     ws.close();
     console.log("All services closed, exiting...");

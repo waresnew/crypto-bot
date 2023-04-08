@@ -11,20 +11,19 @@ import {CoinMetadata} from "../../structs/coinMetadata";
 import {Candles, LatestCoins} from "../../database";
 import {scientificNotationToNumber} from "../../utils";
 import {lastUpdated} from "../../services/binanceRest";
+import got from "got";
 
 export async function makeEmbed(choice: CoinMetadata) {
     const embed = getEmbedTemplate();
     embed.thumbnail = {
         url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.cmc_id}.png`
     };
+    embed.description = await makeChart(choice);
     const coin = await LatestCoins.findOne({coin: choice.cmc_id});
     const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
     embed.color = coin.weekPriceChangePercent < 0 ? 0xed4245 : 0x3ba55c;
     embed.title = `${choice.name} (${choice.symbol}/USDT)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
-    embed.image = {
-        url: makeChart(choice)
-    };
     embed.fields = [{
         name: "Price",
         value: `$${formatPrice(latestCandle.close_price)} ${coin.weekPriceChangePercent < 0 ? "🔴" : "🟢"}`
@@ -71,7 +70,16 @@ export function formatPrice(price: number) {
     return price < 1 ? scientificNotationToNumber(Number(price).toPrecision(4)) : Math.round(price * 100) / 100;
 }
 
-export function makeChart(coin: CoinMetadata) {
+export async function makeChart(coin: CoinMetadata) {
+    const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 100}).toArray();
+    const image = await got("127.0.0.1:3001", {
+        method: "POST",
+        body: JSON.stringify({
+            meta: coin,
+            candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
+        })
+    }).text();
+    return image;
 
 }
 
