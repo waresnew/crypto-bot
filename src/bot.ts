@@ -5,7 +5,8 @@ import fs from "node:fs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import didYouMean from "didyoumean";
-import {cleanBinanceCacheCron, updateBinanceApi} from "./services/coinApi";
+import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
+import {initBinanceWs} from "./services/binanceWs";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -28,9 +29,8 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
-//cmcCron.start();
-// binanceApiCron.start();
-await updateBinanceApi();
+binanceApiCron.start();
+initBinanceWs();
 cleanBinanceCacheCron.start();
 console.log("Ready!");
 

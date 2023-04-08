@@ -2,11 +2,11 @@ import {CoinAlert} from "../structs/coinAlert";
 import {getEmbedTemplate} from "../ui/templates";
 import {formatAlert} from "../ui/alerts/interfaceCreator";
 import {analytics} from "../analytics/segment";
-import {commandIds, cryptoMetadataList, discordGot, getLatestCandle, Indexable} from "../utils";
+import {commandIds, cryptoMetadataList, discordGot, getLatestCandle} from "../utils";
 import {APIChannel} from "discord-api-types/v10";
 import CryptoStat from "../structs/cryptoStat";
-import {Candle} from "../structs/candle";
-import {CoinAlerts} from "../database";
+import {CoinAlerts, LatestCoins} from "../database";
+import {CoinMetadata} from "../structs/coinMetadata";
 
 export async function notifyExpiredAlerts(toDm: string[], alerts: CoinAlert[]) {
     for (const user of toDm) {
@@ -63,21 +63,31 @@ export function evalInequality(expr: string) {
 }
 
 export async function notifyUsers() {
-    const cache: Candle[] = [];
-    for (const meta of cryptoMetadataList) {
-        cache.push(await getLatestCandle(meta.cmc_id));
-    }
+    const cache: CoinMetadata[] = [];
+    cache.push(...cryptoMetadataList);
     const alerts: CoinAlert[] = await CoinAlerts.find({}).toArray();
     const toDm = new Map<string, string[]>();
     for (const crypto of cache) {
         for (const alert of alerts) {
-            if (alert.coin != crypto.coin) {
+            if (alert.coin != crypto.cmc_id) {
                 continue;
             }
             if (alert.disabled) {
                 continue;
             }
-            const expr = (crypto as Indexable)[CryptoStat.shortToDb(alert.stat)] + alert.direction + alert.threshold;
+            let left = 0;
+            const candle = await getLatestCandle(crypto.cmc_id);
+            const latest = await LatestCoins.findOne({coin: crypto.cmc_id});
+            if (alert.stat == CryptoStat.price.shortForm) {
+                left = candle.close_price;
+            } else if (alert.stat == CryptoStat.percent_change_1h.shortForm) {
+                left = latest.hourPriceChangePercent;
+            } else if (alert.stat == CryptoStat.percent_change_24h.shortForm) {
+                left = latest.dayPriceChangePercent;
+            } else if (alert.stat == CryptoStat.percent_change_7d.shortForm) {
+                left = latest.weekPriceChangePercent;
+            }
+            const expr = left + alert.direction + alert.threshold;
             if (evalInequality(expr)) {
                 if (!toDm.has(alert.user)) {
                     toDm.set(alert.user, []);

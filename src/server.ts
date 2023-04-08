@@ -19,6 +19,7 @@ import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./analytics/segment";
 import Sentry from "@sentry/node";
 import {mongoClient, openDb} from "./database";
+import {setRetry, ws} from "./services/binanceWs";
 
 await openDb();
 initAnalytics();
@@ -37,6 +38,8 @@ async function closeGracefully(signal: string | number) {
     await server.close();
     await mongoClient.close();
     await analytics.flush();
+    setRetry(false);
+    ws.close();
     console.log("All services closed, exiting...");
     process.kill(process.pid, signal);
 }

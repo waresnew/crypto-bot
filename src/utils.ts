@@ -15,7 +15,6 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {CoinMetadata} from "./structs/coinMetadata";
 import {Candles} from "./database";
-
 //avoiding circular dependencies
 export const cryptoMetadataList: CoinMetadata[] = [];
 export const validCryptos: CoinMetadata[] = [];
@@ -65,9 +64,14 @@ export function initClient(input: APIUser) {
     startTime = Date.now();
 }
 
-/** only accepts <1*/
 export function scientificNotationToNumber(input: string): string {
     const tokens = input.split("e");
+    if (tokens.length == 1) {
+        return input;
+    }
+    if (Number(input) >= 1) {
+        return input;
+    }
     const left = tokens[0].indexOf(".");
     let ans = "0.";
     for (let i = 0; i < Math.abs(Number(tokens[1])) - left; i++) {

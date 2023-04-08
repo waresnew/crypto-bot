@@ -5,15 +5,14 @@ import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFl
 import {FastifyReply} from "fastify";
 import {analytics} from "../../analytics/segment";
 import {idToMeta} from "../../structs/coinMetadata";
-import {LatestCoins} from "../../database";
-import {processing} from "../../services/coinApi";
+import {lastUpdated, processing} from "../../services/binanceRest";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
         const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
         if (interaction.data.custom_id.startsWith("coin_refresh")) {
-            const latestTime = Math.floor((await LatestCoins.findOne({coin: coin}, {sort: {open_time: -1}})).open_time / 1000);
+            const latestTime = Math.floor(lastUpdated / 1000);
             const curTime = Number(interaction.message.embeds[0].fields.find(field => field.name === "Last Updated").value.replaceAll("<t:", "").replaceAll(":R>", ""));
             if (latestTime == curTime) {
                 analytics.track({
@@ -26,7 +25,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource,
                     data: {
-                        content: "This coin has not been updated since the last time you refreshed it.\nPlease try again in " + (processing ? 5 : Math.ceil(curTime / 60) * 60 - curTime) + " seconds.",
+                        content: "This coin has not been updated since the last time you refreshed it.\nPlease try again <t:" + (processing ? Math.round(Date.now() / 1000 + 3) : Math.round(Math.ceil(Date.now() / 1000 / 60) * 60)) + ":R>.",
                         flags: MessageFlags.Ephemeral
                     }
                 });
