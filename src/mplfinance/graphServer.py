@@ -68,7 +68,6 @@ class Server(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
 
-
-server = HTTPServer(('127.0.0.1', 3001), Server)
 print("Python server started")
+server = HTTPServer(('127.0.0.1', 3001), Server)
 server.serve_forever()
