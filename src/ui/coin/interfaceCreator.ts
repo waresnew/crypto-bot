@@ -4,9 +4,9 @@ import {
     APIActionRowComponent,
     APIButtonComponent,
     APIInteraction,
+    APIInteractionResponse,
     ButtonStyle,
-    ComponentType,
-    InteractionResponseType
+    ComponentType
 } from "discord-api-types/v10";
 import {CoinMetadata} from "../../structs/coinMetadata";
 import {Candles, LatestCoins} from "../../database";
@@ -70,15 +70,9 @@ export async function makeEmbed(choice: CoinMetadata) {
     return embed;
 }
 
-export async function makeFormData(coin: CoinMetadata, interaction: APIInteraction) {
-    const embed = await makeEmbed(coin);
-    const buttons = await makeButtons(coin, interaction);
-    const chart = await makeChart(coin);
+export async function makeFormData(payload: APIInteractionResponse, coin: CoinMetadata) {
     const form = new FormData();
-    const payload = {
-        type: InteractionResponseType.ChannelMessageWithSource,
-        data: {embeds: [embed], components: [buttons]}
-    };
+    const chart = await makeChart(coin);
     deepPatchCustomId(payload);
     form.set("payload_json", JSON.stringify(payload));
     form.set("files[0]", new Blob([chart]), "chart.png");
@@ -92,13 +86,16 @@ export function formatPrice(price: number) {
 export async function makeChart(coin: CoinMetadata) {
     const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 60}).toArray();
     candles.sort((a, b) => a.open_time - b.open_time);
-    return got("http://127.0.0.1:3001/chart", {
+    const start = Date.now();
+    const result = await got("http://127.0.0.1:3001/chart", {
         method: "POST",
         body: JSON.stringify({
             meta: coin,
             candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
         })
     }).buffer();
+    console.log(`Chart took ${Date.now() - start} ms`);
+    return result;
 }
 
 export async function makeButtons(choice: CoinMetadata, interaction: APIInteraction) {
