@@ -94,7 +94,8 @@ export async function updateBinanceApi() {
             return {
                 cmc_id: meta.id,
                 symbol: meta.symbol,
-                name: meta.name
+                name: meta.name,
+                slug: meta.slug
             } as CoinMetadata;
         }));
         if (symbols.length >= 500) {
