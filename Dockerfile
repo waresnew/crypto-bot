@@ -9,6 +9,7 @@ RUN apt-get update \
     && chown newwares -R /app
 USER newwares
 COPY package*.json ./
+COPY src/mplfinance/graphServer.py ./
 COPY requirements.txt ./
 
 FROM base as build
