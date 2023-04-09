@@ -1,11 +1,13 @@
 /* istanbul ignore file */
+
 import InteractionProcessor from "../abstractInteractionProcessor";
-import {makeButtons, makeEmbed} from "./interfaceCreator";
+import {makeFormData} from "./interfaceCreator";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {analytics} from "../../analytics/segment";
 import {idToMeta} from "../../structs/coinMetadata";
 import {lastUpdated, processing} from "../../services/binanceRest";
+import {Readable} from "node:stream";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
 
@@ -39,12 +41,8 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     coin: coin.symbol
                 }
             });
-            await http.send({
-                type: InteractionResponseType.UpdateMessage, data: {
-                    components: [await makeButtons(idToMeta(Number(interaction.data.custom_id.split("_")[2])), interaction)],
-                    embeds: [await makeEmbed(coin)]
-                }
-            });
+            const encoded = await makeFormData(coin, interaction);
+            await http.headers(encoded.headers).send(Readable.from(encoded.encode()));
         }
     }
 }

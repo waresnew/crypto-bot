@@ -30,7 +30,14 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
-spawn("python", ["./mplfinance/server.py"]);
+const child = spawn("python3", ["src/mplfinance/graphServer.py"]);
+child.stdout.setEncoding("utf8");
+child.stdout.on("data", data => {
+    console.log(data.toString());
+});
+child.stderr.on("data", data => {
+    console.error(data.toString());
+});
 binanceApiCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();

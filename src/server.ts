@@ -39,7 +39,7 @@ async function closeGracefully(signal: string | number) {
     await server.close();
     await mongoClient.close();
     await analytics.flush();
-    await got("127.0.0.1:3001/shutdown", {
+    await got("http://127.0.0.1:3001/shutdown", {
         method: "POST"
     });
     setRetry(false);
