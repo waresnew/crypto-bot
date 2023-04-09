@@ -13,7 +13,7 @@ def make_chart(data):
     df = pd.DataFrame(candles, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
     df['date'] = pd.to_datetime(df['date'], unit='ms')
     df.set_index('date', inplace=True, verify_integrity=True)
-    colours = mpf.make_marketcolors(inherit=True, up='#26a69a', down='#ef5350', volume='#ffffff')
+    colours = mpf.make_marketcolors(inherit=True, up='#26a69a', down='#ef5350')
     style = mpf.make_mpf_style(base_mpf_style='binance', marketcolors=colours, figcolor='#151924', facecolor='#151924',
                                edgecolor='#1b1f2a', gridcolor='#1b1f2a',
                                rc={'axes.labelcolor': '#a0a4ad', 'xtick.color': '#a0a4ad', 'ytick.color': '#a0a4ad'})
