@@ -1,5 +1,5 @@
 import {autocompleteCoins, parseCoinCommandArg} from "../utils";
-import {makeFormData} from "../ui/coin/interfaceCreator";
+import {makeButtons, makeEmbed, makeFormData} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -37,7 +37,12 @@ export default {
                 }
             });
         }
-        const encoded = await makeFormData(choice, interaction);
+        const embed = await makeEmbed(choice);
+        const buttons = await makeButtons(choice, interaction);
+        const encoded = await makeFormData({
+            type: InteractionResponseType.ChannelMessageWithSource,
+            data: {embeds: [embed], components: [buttons]}
+        }, choice);
         await http.headers(encoded.headers).send(Readable.from(encoded.encode()));
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {

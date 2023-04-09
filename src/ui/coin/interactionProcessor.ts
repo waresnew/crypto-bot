@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 
 import InteractionProcessor from "../abstractInteractionProcessor";
-import {makeFormData} from "./interfaceCreator";
+import {makeButtons, makeEmbed, makeFormData} from "./interfaceCreator";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {analytics} from "../../analytics/segment";
@@ -41,7 +41,12 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                     coin: coin.symbol
                 }
             });
-            const encoded = await makeFormData(coin, interaction);
+            const embed = await makeEmbed(coin);
+            const buttons = await makeButtons(coin, interaction);
+            const encoded = await makeFormData({
+                type: InteractionResponseType.UpdateMessage,
+                data: {embeds: [embed], components: [buttons]}
+            }, coin);
             await http.headers(encoded.headers).send(Readable.from(encoded.encode()));
         }
     }

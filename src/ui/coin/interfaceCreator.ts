@@ -4,9 +4,9 @@ import {
     APIActionRowComponent,
     APIButtonComponent,
     APIInteraction,
+    APIInteractionResponse,
     ButtonStyle,
-    ComponentType,
-    InteractionResponseType
+    ComponentType
 } from "discord-api-types/v10";
 import {CoinMetadata} from "../../structs/coinMetadata";
 import {Candles, LatestCoins} from "../../database";
@@ -70,15 +70,9 @@ export async function makeEmbed(choice: CoinMetadata) {
     return embed;
 }
 
-export async function makeFormData(coin: CoinMetadata, interaction: APIInteraction) {
-    const embed = await makeEmbed(coin);
-    const buttons = await makeButtons(coin, interaction);
-    const chart = await makeChart(coin);
+export async function makeFormData(payload: APIInteractionResponse, coin: CoinMetadata) {
     const form = new FormData();
-    const payload = {
-        type: InteractionResponseType.ChannelMessageWithSource,
-        data: {embeds: [embed], components: [buttons]}
-    };
+    const chart = await makeChart(coin);
     deepPatchCustomId(payload);
     form.set("payload_json", JSON.stringify(payload));
     form.set("files[0]", new Blob([chart]), "chart.png");
