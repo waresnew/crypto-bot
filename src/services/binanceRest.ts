@@ -38,8 +38,7 @@ function getCmcKey() {
 export async function cleanCoinDb() {
     const start = Date.now();
     const result = await Candles.deleteMany({open_time: {$lt: Date.now() - 1000 * 60 * 60 * 24 * 1000}});
-    const latest = await LatestCoins.deleteMany({open_time: {$lt: Date.now() - 1000 * 60 * 60 * 24 * 2}});
-    console.log(`Deleted ${result.deletedCount} old candles and ${latest.deletedCount} old minute candles in ${Date.now() - start} ms`);
+    console.log(`Deleted ${result.deletedCount} old candles in ${Date.now() - start} ms`);
 }
 
 export async function updateBinanceApi() {
@@ -138,7 +137,6 @@ export async function updateBinanceApi() {
         console.log(`Weight used: ${weightUsed}/1200`);
         const responses = await Promise.all(binancePromises);
         const promises = [];
-        await LatestCoins.deleteMany({});
         for (const response of responses) {
             const toWrite: AnyBulkWriteOperation<Candle>[] = [];
             const json = JSON.parse(response.response);
@@ -177,14 +175,17 @@ export async function updateBinanceApi() {
                 for (const item of json) {
                     const coin = symbolToMeta(item.symbol.replace("USDT", ""));
                     toWrite.push({
-                        insertOne: {
-                            document: {
-                                coin: coin.cmc_id,
-                                weekPriceChangePercent: item.priceChangePercent,
-                                weekWeightedAvgPrice: item.weightedAvgPrice,
-                                weekHighPrice: item.highPrice,
-                                weekLowPrice: item.lowPrice
-                            }
+                        updateOne: {
+                            filter: {coin: coin.cmc_id},
+                            update: {
+                                $set: {
+                                    weekPriceChangePercent: item.priceChangePercent,
+                                    weekWeightedAvgPrice: item.weightedAvgPrice,
+                                    weekHighPrice: item.highPrice,
+                                    weekLowPrice: item.lowPrice
+                                }
+                            },
+                            upsert: true
                         }
                     });
                 }
