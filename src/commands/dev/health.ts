@@ -3,15 +3,23 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
+import {getEmbedTemplate} from "../../ui/templates";
 
 export default {
-    name: "dev",
+    name: "health",
     type: ApplicationCommandType.ChatInput,
-    description: "Run test commands",
+    description: "Get bot health",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
+        const embed = getEmbedTemplate();
+        embed.title = "Bot Health";
+        embed.fields = [{
+            name: "Ram usage",
+            value: process.memoryUsage().heapUsed / 1000000 + "MB",
+            inline: true
+        }];
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {content: "ok"}
+            data: {embeds: [embed]}
         });
     }
 } as APIApplicationCommand;

@@ -1,64 +1,113 @@
 /* istanbul ignore file */
-import {CmcLatestListing} from "../../structs/cmcLatestListing";
 import {getEmbedTemplate} from "../templates";
-import {scientificNotationToNumber} from "../../utils";
 import {
     APIActionRowComponent,
     APIButtonComponent,
     APIInteraction,
     ButtonStyle,
-    ComponentType
+    ComponentType,
+    InteractionResponseType
 } from "discord-api-types/v10";
+import {CoinMetadata} from "../../structs/coinMetadata";
+import {Candles, LatestCoins} from "../../database";
+import {deepPatchCustomId, scientificNotationToNumber} from "../../utils";
+import {lastUpdated} from "../../services/binanceRest";
+import got from "got";
+import {FormDataEncoder} from "form-data-encoder";
 
-export function makeEmbed(choice: CmcLatestListing) {
+export async function makeEmbed(choice: CoinMetadata) {
     const embed = getEmbedTemplate();
     embed.thumbnail = {
-        url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.id}.png`
+        url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.cmc_id}.png`
     };
-    embed.color = choice.percent_change_7d < 0 ? 0xed4245 : 0x3ba55c;
-    embed.title = `${choice.name} (${choice.symbol}-USD)`;
+    embed.image = {
+        url: "attachment://chart.png"
+    };
+    const coin = await LatestCoins.findOne({coin: choice.cmc_id});
+    const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
+    embed.color = coin.weekPriceChangePercent < 0 ? 0xed4245 : 0x3ba55c;
+    embed.title = `${choice.name} (${choice.symbol}/USDT)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
         name: "Price",
-        value: `$${choice.price < 1 ? scientificNotationToNumber(choice.price.toPrecision(4)) : Math.round(choice.price * 100) / 100} ${choice.percent_change_24h < 0 ? "🔴" : "🟢"}`
+        value: `$${formatPrice(latestCandle.close_price)} ${coin.weekPriceChangePercent < 0 ? "🔴" : "🟢"}`
     },
         {
+            name: "24h High",
+            value: `$${formatPrice(coin.dayHighPrice)} 🟢`,
+            inline: true
+        },
+        {
+            name: "24h Low",
+            value: `$${formatPrice(coin.dayLowPrice)} 🔴`,
+            inline: true
+        },
+        {
+            name: "\u200b",
+            value: "\u200b",
+            inline: true
+        },
+        {
             name: "1h Change",
-            value: `${Math.round(choice.percent_change_1h * 100) / 100}% ${choice.percent_change_1h < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.hourPriceChangePercent * 100) / 100}% ${coin.hourPriceChangePercent < 0 ? "🔴" : "🟢"}`,
             inline: true
         },
         {
             name: "24h Change",
-            value: `${Math.round(choice.percent_change_24h * 100) / 100}% ${choice.percent_change_24h < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.dayPriceChangePercent * 100) / 100}% ${coin.dayPriceChangePercent < 0 ? "🔴" : "🟢"}`,
             inline: true
         },
         {
             name: "7d Change",
-            value: `${Math.round(choice.percent_change_7d * 100) / 100}% ${choice.percent_change_7d < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.weekPriceChangePercent * 100) / 100}% ${coin.weekPriceChangePercent < 0 ? "🔴" : "🟢"}`,
             inline: true
         },
         {
-            name: "24h Volume Change",
-            value: `${Math.round(choice.volume_change_24h * 100) / 100}% ${choice.volume_change_24h < 0 ? "🔴" : "🟢"}`,
-            inline: true
-        },
-        {
-            name: "Market Cap Dominance",
-            value: `${Math.round(choice.market_cap_dominance * 100) / 100}%`,
-            inline: true
-        },
-        {name: "Last Updated", value: `<t:${Math.floor(new Date(choice.last_updated).getTime() / 1000)}:R>`}
+            name: "Last Updated",
+            value: `<t:${Math.floor(lastUpdated / 1000)}:R>`
+        }
     ];
     return embed;
 }
 
-export async function makeButtons(choice: CmcLatestListing, interaction: APIInteraction) {
+export async function makeFormData(coin: CoinMetadata, interaction: APIInteraction) {
+    const embed = await makeEmbed(coin);
+    const buttons = await makeButtons(coin, interaction);
+    const chart = await makeChart(coin);
+    const form = new FormData();
+    const payload = {
+        type: InteractionResponseType.ChannelMessageWithSource,
+        data: {embeds: [embed], components: [buttons]}
+    };
+    deepPatchCustomId(payload);
+    form.set("payload_json", JSON.stringify(payload));
+    form.set("files[0]", new Blob([chart]), "chart.png");
+    return new FormDataEncoder(form as any);
+}
+
+export function formatPrice(price: number) {
+    return price < 1 ? scientificNotationToNumber(Number(price).toPrecision(4)) : Math.round(price * 100) / 100;
+}
+
+export async function makeChart(coin: CoinMetadata) {
+    const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 60}).toArray();
+    candles.sort((a, b) => a.open_time - b.open_time);
+    return got("http://127.0.0.1:3001/chart", {
+        method: "POST",
+        body: JSON.stringify({
+            meta: coin,
+            candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
+        })
+    }).buffer();
+}
+
+export async function makeButtons(choice: CoinMetadata, interaction: APIInteraction) {
     return {
         type: ComponentType.ActionRow,
         components: [
             {
                 type: ComponentType.Button,
-                custom_id: `coin_refresh_${choice.id}`,
+                custom_id: `coin_refresh_${choice.cmc_id}`,
                 label: "Refresh",
                 emoji: {
                     id: null,

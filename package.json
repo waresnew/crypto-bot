@@ -27,10 +27,11 @@
     "dotenv": "^16.0.3",
     "fastify": "^4.14.1",
     "fastify-raw-body": "^4.2.0",
+    "form-data-encoder": "^2.1.4",
     "got": "^12.6.0",
     "mongodb": "^5.1.0",
-    "mongoose": "^7.0.3",
-    "tweetnacl": "^1.0.3"
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
     "@shelf/jest-mongodb": "^4.1.7",
@@ -42,6 +43,8 @@
     "@types/didyoumean": "^1.2.0",
     "@types/jest": "^29.2.6",
     "@types/node": "^18.15.0",
+    "@types/serialize-javascript": "^5.0.2",
+    "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.1",
     "eslint-plugin-no-useless-assign": "^1.0.3",

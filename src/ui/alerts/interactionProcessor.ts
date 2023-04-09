@@ -11,8 +11,9 @@ import {
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
 import {analytics} from "../../analytics/segment";
-import {CoinAlert, CoinAlertModel} from "../../structs/coinAlert";
-import {CmcLatestListingModel} from "../../structs/cmcLatestListing";
+import {nameToMeta} from "../../structs/coinMetadata";
+import {CoinAlerts} from "../../database";
+import {CoinAlert} from "../../structs/coinAlert";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
@@ -69,7 +70,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             for (const alert of selected) {
                 alert.disabled = false;
-                await CoinAlertModel.updateOne({
+                await CoinAlerts.updateOne({
                     coin: alert.coin,
                     stat: alert.stat,
                     threshold: alert.threshold,
@@ -93,7 +94,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             for (const alert of selected) {
                 alert.disabled = true;
-                await CoinAlertModel.updateOne({
+                await CoinAlerts.updateOne({
                     coin: alert.coin,
                     stat: alert.stat,
                     threshold: alert.threshold,
@@ -115,7 +116,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 }
             });
             for (const alert of selected) {
-                await CoinAlertModel.deleteOne({
+                await CoinAlerts.deleteOne({
                     coin: alert.coin,
                     stat: alert.stat,
                     threshold: alert.threshold,
@@ -153,11 +154,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             if (!input) {
                 continue;
             }
-            const alert = new CoinAlertModel();
+            const alert = new CoinAlert();
             alert.user = interaction.user.id;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
-            alert.coin = (await CmcLatestListingModel.findOne({name: input[3]})).id;
+            alert.coin = nameToMeta(input[3]).cmc_id;
             alert.threshold = Number(input[5].replace(new RegExp(/[$%]/), ""));
             alert.direction = input[4] == "less" ? "<" : ">";
             alert.disabled = input[1] == "❌";

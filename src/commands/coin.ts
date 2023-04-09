@@ -1,5 +1,5 @@
 import {autocompleteCoins, parseCoinCommandArg} from "../utils";
-import {makeButtons, makeEmbed} from "../ui/coin/interfaceCreator";
+import {makeFormData} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -11,6 +11,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
+import {Readable} from "node:stream";
 
 export default {
     name: "coin",
@@ -36,13 +37,8 @@ export default {
                 }
             });
         }
-
-        const embed = await makeEmbed(choice);
-        const buttons = await makeButtons(choice, interaction);
-        await http.send({
-            type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [embed], components: [buttons]}
-        });
+        const encoded = await makeFormData(choice, interaction);
+        await http.headers(encoded.headers).send(Readable.from(encoded.encode()));
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
         await http.send(autocompleteCoins(interaction));

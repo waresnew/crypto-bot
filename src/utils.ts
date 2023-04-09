@@ -9,15 +9,15 @@ import got from "got";
 import {
     APIApplicationCommandInteractionDataStringOption
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/_chatInput/string";
-import {CmcLatestListingModel} from "./structs/cmcLatestListing";
 import didyoumean from "didyoumean";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-
+import {CoinMetadata} from "./structs/coinMetadata";
+import {Candles} from "./database";
 //avoiding circular dependencies
-export const cryptoSymbolList: string[] = [];
-export const cryptoNameList: string[] = [];
+export const cryptoMetadataList: CoinMetadata[] = [];
+export const validCryptos: CoinMetadata[] = [];
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
 export let client: APIUser;
@@ -38,20 +38,6 @@ export const discordGot = got.extend({
         socket: 1000,
         send: 10000,
         response: 1000
-    },
-    retry: {
-        limit: 3,
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-        statusCodes: [
-            429,
-            500,
-            502,
-            503,
-            504,
-            521,
-            522,
-            524
-        ]
     }
 });
 const customIdVersions = {
@@ -78,9 +64,14 @@ export function initClient(input: APIUser) {
     startTime = Date.now();
 }
 
-/** only accepts <1*/
 export function scientificNotationToNumber(input: string): string {
     const tokens = input.split("e");
+    if (tokens.length == 1) {
+        return input;
+    }
+    if (Number(input) >= 1) {
+        return input;
+    }
     const left = tokens[0].indexOf(".");
     let ans = "0.";
     for (let i = 0; i < Math.abs(Number(tokens[1])) - left; i++) {
@@ -114,25 +105,25 @@ function validateCustomIdVer(id: string) {
     return undefined;
 }
 
-function patchCustomId(id: string, user: string) {
+function patchCustomId(id: string) {
     const key = id.split("_")[0] + "_" + id.split("_")[1];
     const latest = customIdVersions[key];
     if (!latest) {
         return undefined;
     }
-    return latest + "_" + id + "_" + user;
+    return latest + "_" + id;
 }
 
-export function deepPatchCustomId(obj: any, user: string) {
+export function deepPatchCustomId(obj: any) {
     if (obj == undefined) {
         return;
     }
     for (const key of Object.keys(obj)) {
         if (key == "custom_id") {
-            obj[key] = patchCustomId(obj[key], user);
+            obj[key] = patchCustomId(obj[key]);
         }
         if (obj[key] instanceof Object) {
-            deepPatchCustomId(obj[key], user);
+            deepPatchCustomId(obj[key]);
         }
     }
 }
@@ -161,7 +152,7 @@ export function deepValidateCustomId(obj: any) {
 /* istanbul ignore next */
 export function autocompleteCoins(interaction: APIApplicationCommandAutocompleteInteraction) {
     const focusedValue = (interaction.data.options.find(option => option.type == ApplicationCommandOptionType.String && option.focused) as APIApplicationCommandInteractionDataStringOption).value.toLowerCase();
-    const filtered = cryptoSymbolList.filter(choice => choice.toLowerCase().startsWith(focusedValue));
+    const filtered = validCryptos.map(meta => meta.symbol).filter(choice => choice.toLowerCase().startsWith(focusedValue));
     filtered.length = Math.min(filtered.length, 25);
     return {
         type: InteractionResponseType.ApplicationCommandAutocompleteResult,
@@ -178,16 +169,17 @@ export async function parseCoinCommandArg(interaction: APIChatInputApplicationCo
     } else {
         coin = (input as APIApplicationCommandInteractionDataStringOption).value;
     }
-    const choice = await CmcLatestListingModel.findOne({$or: [{symbol: coin}, {name: coin}]}).collation({
-        locale: "en",
-        strength: 2
-    });
+    const choice = validCryptos.find(meta => meta.symbol.toLowerCase() == coin.toLowerCase() || meta.name.toLowerCase() == coin.toLowerCase());
     if (!choice) {
-        const suggestion = didyoumean(coin.toLowerCase(), cryptoSymbolList.concat(cryptoNameList));
+        const suggestion = didyoumean(coin.toLowerCase(), validCryptos.map(meta => meta.symbol).concat(validCryptos.map(meta => meta.name)));
         throw `Couldn't find a coin called \`${coin}\`. ${suggestion != null
-            ? `Did you mean </coin:${interaction.data.id}> \`${suggestion}\`?`
+            ? `Did you mean \`${suggestion}\`?`
             : ""
         }`;
     }
     return choice;
+}
+
+export async function getLatestCandle(coin: number) {
+    return await Candles.findOne({coin: coin}, {sort: {open_time: -1}});
 }

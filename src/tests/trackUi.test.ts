@@ -1,5 +1,5 @@
 import TrackInteractionProcessor from "../ui/track/interactionProcessor";
-import {CoinAlertModel} from "../structs/coinAlert";
+import {CoinAlerts} from "../structs/coinAlert";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {
@@ -18,9 +18,9 @@ describe("test alert wizard", () => {
     });
 
     it("rejects duplicate/>25 alerts", async () => {
-        await new CoinAlertModel({coin: 0, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
+        await new CoinAlerts({coin: 0, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
         try {
-            await TrackInteractionProcessor.validateAlert(new CoinAlertModel({
+            await TrackInteractionProcessor.validateAlert(new CoinAlerts({
                 coin: 0,
                 stat: "price",
                 direction: ">",
@@ -32,10 +32,10 @@ describe("test alert wizard", () => {
             expect(e).toMatch("Error: You already have an alert exactly like the one you are trying to add");
         }
         for (let i = 1; i < 25; i++) {
-            await new CoinAlertModel({coin: i, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
+            await new CoinAlerts({coin: i, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
         }
         try {
-            await TrackInteractionProcessor.validateAlert(new CoinAlertModel({
+            await TrackInteractionProcessor.validateAlert(new CoinAlerts({
                 coin: 25,
                 stat: "price",
                 direction: ">",

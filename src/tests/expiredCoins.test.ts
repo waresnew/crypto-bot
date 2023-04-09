@@ -1,14 +1,14 @@
 import {APIChannel} from "discord-api-types/v10";
 import * as cmcApi from "../services/cmcApi";
 import nock from "nock";
-import {CoinAlertModel} from "../structs/coinAlert";
+import {CoinAlerts} from "../structs/coinAlert";
 import {CmcLatestListingModel} from "../structs/cmcLatestListing";
 
 describe("Checks if expired coins are handled properly", function () {
 
     it("Alerts user if they have an alert for an expired coin", async function () {
 
-        const alert = new CoinAlertModel({
+        const alert = new CoinAlerts({
             user: "1234567890",
             coin: 1,
             stat: "price",
@@ -16,7 +16,7 @@ describe("Checks if expired coins are handled properly", function () {
             direction: ">"
         });
         await alert.save();
-        expect((await CoinAlertModel.findOne({user: "1234567890"})).threshold).toBe(50);
+        expect((await CoinAlerts.findOne({user: "1234567890"})).threshold).toBe(50);
         // eslint-disable-next-line quotes
         nock("https://pro-api.coinmarketcap.com")
             .get("/v1/cryptocurrency/listings/latest?limit=200")

@@ -7,12 +7,12 @@ import {
     InteractionResponseType,
     MessageFlags
 } from "discord-api-types/v10";
-import {CmcLatestListing} from "../../structs/cmcLatestListing";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {commandIds} from "../../utils";
+import {CoinMetadata} from "../../structs/coinMetadata";
 
-export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatestListing, what: string) {
+export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. At what threshold would you like to be alerted?`;
@@ -31,7 +31,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `track_alertvalueundo_${coin.id}`
+                        custom_id: `track_alertvalueundo_${coin.cmc_id}`
                     },
                     {
                         type: ComponentType.Button,
@@ -41,7 +41,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `track_alertvalue_${coin.id}_${what}`
+                        custom_id: `track_alertvalue_${coin.cmc_id}_${what}`
                     }
                 ]
             }]
@@ -49,7 +49,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CmcLatest
     } as APIInteractionResponse;
 }
 
-export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatestListing, what: string, when: string) {
+export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${when}?`;
@@ -69,11 +69,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatest
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `track_alertdirectionundo_${coin.id}_${what}`
+                        custom_id: `track_alertdirectionundo_${coin.cmc_id}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `track_alertdirectiongreater_${coin.id}_${what}_${when}`,
+                        custom_id: `track_alertdirectiongreater_${coin.cmc_id}_${what}_${when}`,
                         label: `Greater than ${when}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -83,7 +83,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatest
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `track_alertdirectionless_${coin.id}_${what}_${when}`,
+                        custom_id: `track_alertdirectionless_${coin.cmc_id}_${what}_${when}`,
                         label: `Less than ${when}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -97,7 +97,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CmcLatest
     } as APIInteractionResponse;
 }
 
-export function makeStatPrompt(interaction: APIInteraction, coin: CmcLatestListing) {
+export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata) {
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
@@ -113,7 +113,7 @@ Please select the stat you would like to be alerted by.`;
                 components: [{
                     type: ComponentType.StringSelect,
                     placeholder: "Select a stat...",
-                    custom_id: `track_alertstat_${coin.id}`,
+                    custom_id: `track_alertstat_${coin.cmc_id}`,
                     options: sortedOptions.map(entry => {
                         return {
                             label: entry[0].toUpperCase() + entry.substring(1),

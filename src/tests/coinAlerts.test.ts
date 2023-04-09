@@ -1,11 +1,11 @@
 import {updateCmc} from "../services/cmcApi";
 import nock from "nock";
-import {CoinAlertModel} from "../structs/coinAlert";
+import {CoinAlerts} from "../structs/coinAlert";
 import {btcEthApiData} from "./testSetup";
 
 describe("Tests coin alerts", () => {
     it("alerts user when coin price is below threshold", async () => {
-        await new CoinAlertModel({
+        await new CoinAlerts({
             user: "123",
             coin: 1,
             stat: "price",
@@ -13,7 +13,7 @@ describe("Tests coin alerts", () => {
             direction: ">",
             disabled: false
         }).save();
-        expect((await CoinAlertModel.findOne({coin: 1})).user).toBe("123");
+        expect((await CoinAlerts.findOne({coin: 1})).user).toBe("123");
         nock("https://pro-api.coinmarketcap.com")
             .get("/v1/cryptocurrency/listings/latest?limit=200")
             .reply(200, btcEthApiData);
