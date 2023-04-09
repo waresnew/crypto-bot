@@ -86,13 +86,16 @@ export function formatPrice(price: number) {
 export async function makeChart(coin: CoinMetadata) {
     const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 60}).toArray();
     candles.sort((a, b) => a.open_time - b.open_time);
-    return got("http://127.0.0.1:3001/chart", {
+    const start = Date.now();
+    const result = await got("http://127.0.0.1:3001/chart", {
         method: "POST",
         body: JSON.stringify({
             meta: coin,
             candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
         })
     }).buffer();
+    console.log(`Chart took ${Date.now() - start} ms`);
+    return result;
 }
 
 export async function makeButtons(choice: CoinMetadata, interaction: APIInteraction) {
