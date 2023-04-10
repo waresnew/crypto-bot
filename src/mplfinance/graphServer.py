@@ -1,12 +1,18 @@
 import io
 import json
+import time
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+import matplotlib
 import mplfinance as mpf
 import pandas as pd
 
+matplotlib.use('Agg')
+
 
 def make_chart(data):
+    start1 = round(time.time() * 1000)
     body = json.loads(data)
     meta = body['meta']
     candles = body['candles']
@@ -23,24 +29,12 @@ def make_chart(data):
     axlist[2].set_yticks([])
     axlist[0].spines.bottom.set_visible(False)
     axlist[2].spines.top.set_visible(False)
+    start2 = round(time.time() * 1000)
     fig.savefig(buffer)
+    matplotlib.pyplot.close()
+    print("Rendered chart @ ", datetime.now().isoformat(), ":\n    Plotted in ", start2 - start1,
+          " ms\n    Rendered to png in ", round(time.time() * 1000) - start2, " ms", flush=True)
     return buffer.getvalue()
-
-
-if __name__ == '__main__':
-    make_chart(json.dumps({
-        'meta': {
-            'symbol': 'BTC',
-            'cmc_id': 1,
-            'name': 'Bitcoin'
-        },
-        'candles': [
-            [1610000000000, 1, 3, 1, 2, 100],
-            [1610086400000, 2, 9, 2, 9, 500],
-            [1610172800000, 9, 9, 1, 1, 300],
-            [1610259200000, 1, 5, 1, 5, 200],
-        ]
-    }))
 
 
 class Server(BaseHTTPRequestHandler):
@@ -56,6 +50,7 @@ class Server(BaseHTTPRequestHandler):
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(b'ok')
+            print("Python server shutting down...", flush=True)
             self.server.shutdown()
             exit(0)
         if self.path == '/chart':
@@ -68,6 +63,21 @@ class Server(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
 
-print("Python server started")
+
+print("Python server started", flush=True)
+if __name__ == '__main__':
+    make_chart(json.dumps({
+        'meta': {
+            'symbol': 'BTC',
+            'cmc_id': 1,
+            'name': 'Bitcoin'
+        },
+        'candles': [
+            [1610000000000, 1, 3, 1, 2, 100],
+            [1610086400000, 2, 9, 2, 9, 500],
+            [1610172800000, 9, 9, 1, 1, 300],
+            [1610259200000, 1, 5, 1, 5, 200],
+        ]
+    }))
 server = HTTPServer(('127.0.0.1', 3001), Server)
 server.serve_forever()

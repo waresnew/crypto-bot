@@ -16,7 +16,6 @@ import {
 import {CoinMetadata} from "./structs/coinMetadata";
 import {Candles} from "./database";
 //avoiding circular dependencies
-export const cryptoMetadataList: CoinMetadata[] = [];
 export const validCryptos: CoinMetadata[] = [];
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();

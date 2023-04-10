@@ -1,8 +1,8 @@
 import {CronJob} from "cron";
 import got, {HTTPError} from "got";
 import {Candles, CoinAlerts, LatestCoins, mongoClient} from "../database";
-import {CoinMetadata, symbolToMeta} from "../structs/coinMetadata";
-import {cryptoMetadataList, validCryptos} from "../utils";
+import {CoinMetadata} from "../structs/coinMetadata";
+import {validCryptos} from "../utils";
 import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
@@ -26,6 +26,7 @@ export const cleanBinanceCacheCron = new CronJob(
 let cmcKeyIndex = 1;
 export let processing = false;
 export let lastUpdated = 0;
+
 function getCmcKey() {
     const key = process.env[`COINMARKETCAP_KEY${cmcKeyIndex}`];
     cmcKeyIndex++;
@@ -45,24 +46,42 @@ export async function updateBinanceApi() {
     if (processing) {
         return;
     }
-    lastUpdated = Date.now();
     processing = true;
-    const session = mongoClient.startSession();
     const start1 = Date.now();
     const newValidCryptos: CoinMetadata[] = [];
-    await session.withTransaction(async () => {
-        const coinResponse = await got("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", {
+    const coinResponse = await got("https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT", {
+        headers: {
+            "Accept": "application/json",
+            "Accept-Encoding": "deflate, gzip"
+        }
+    }).text();
+    let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT");
+    const exclude: string[] = [];
+    let metadata: any[] = [];
+    try {
+        const array: any[] = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
+            symbol: symbols.map(symbol => symbol.baseAsset).join(",")
+        }), {
             headers: {
-                "Accept": "application/json",
+                "X-CMC_PRO_API_KEY": getCmcKey(),
+                Accept: "application/json",
                 "Accept-Encoding": "deflate, gzip"
             }
-        }).text();
-        let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT");
-        const exclude: string[] = [];
-        let metadata: any[] = [];
-        try {
-            metadata = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
-                symbol: symbols.map(symbol => symbol.baseAsset).join(",")
+        }).text()).data;
+        metadata = array.map(meta => {
+            return {
+                cmc_id: meta.id,
+                symbol: meta.symbol,
+                name: meta.name,
+                slug: meta.slug
+            } as CoinMetadata;
+        });
+    } catch (e) {
+        const error = JSON.parse((e as HTTPError).response.body as string);
+        if (error.status.error_code == 400 && error.status.error_message.startsWith("Invalid values for \"symbol\": ")) {
+            (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
+            const array: any[] = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
+                symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
             }), {
                 headers: {
                     "X-CMC_PRO_API_KEY": getCmcKey(),
@@ -70,79 +89,68 @@ export async function updateBinanceApi() {
                     "Accept-Encoding": "deflate, gzip"
                 }
             }).text()).data;
-        } catch (e) {
-            const error = JSON.parse((e as HTTPError).response.body as string);
-            if (error.status.error_code == 400 && error.status.error_message.startsWith("Invalid values for \"symbol\": ")) {
-                (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
-                metadata = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
-                    symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
-                }), {
-                    headers: {
-                        "X-CMC_PRO_API_KEY": getCmcKey(),
-                        Accept: "application/json",
-                        "Accept-Encoding": "deflate, gzip"
-                    }
-                }).text()).data;
-                console.log(`Excluded ${exclude.length} coins`);
-            } else {
-                throw new Error(JSON.stringify((e as HTTPError).response.body));
-            }
-        }
-        symbols = symbols.filter(symbol => !exclude.includes(symbol.baseAsset));
-        cryptoMetadataList.length = 0;
-        cryptoMetadataList.push(...metadata.map(meta => {
-            return {
-                cmc_id: meta.id,
-                symbol: meta.symbol,
-                name: meta.name,
-                slug: meta.slug
-            } as CoinMetadata;
-        }));
-        if (symbols.length >= 500) {
-            //500 reqs for candles and 600 (rounds up) for 7d rolling price change
-            throw new Error(`Too many coins to insert (${symbols.length})`);
-        }
-        const binancePromises = [];
-        let weightUsed = 0;
-        binancePromises.push(...symbols.map(async symbol => {
-            weightUsed++;
-            return got(`https://api.binance.com/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${await getLimit(symbolToMeta(symbol.baseAsset).cmc_id)}`, {
-                headers: {
-                    "Accept": "application/json",
-                    "Accept-Encoding": "deflate, gzip"
-                },
-                retry: {}
-            }).text().then(response => {
+            metadata = array.map(meta => {
                 return {
-                    type: "candles",
-                    coin: symbol.baseAsset,
-                    response: response
-                };
+                    cmc_id: meta.id,
+                    symbol: meta.symbol,
+                    name: meta.name,
+                    slug: meta.slug
+                } as CoinMetadata;
             });
-        }));
-        for (let i = 0; i < symbols.length; i += 100) {
-            weightUsed += symbols.slice(i, i + 100).length >= 50 ? 100 : symbols.slice(i, i + 100).length * 2;
-            binancePromises.push(got(`https://api.binance.com/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
-                headers: {
-                    "Accept": "application/json",
-                    "Accept-Encoding": "deflate, gzip"
-                },
-                retry: {}
-            }).text().then(response => {
-                return {
-                    type: "7d%",
-                    response: response
-                };
-            }));
+            console.log(`Excluded ${exclude.length} coins`);
+        } else {
+            throw new Error(JSON.stringify((e as HTTPError).response.body));
         }
-        console.log(`Weight used: ${weightUsed}/1200`);
-        const responses = await Promise.all(binancePromises);
+    }
+    symbols = symbols.filter(symbol => !exclude.includes(symbol.baseAsset));
+    if (symbols.length >= 500) {
+        //500 reqs for candles and 600 (rounds up) for 7d rolling price change
+        throw new Error(`Too many coins to insert (${symbols.length})`);
+    }
+    const binancePromises = [];
+    let weightUsed = 0;
+    binancePromises.push(...symbols.map(async symbol => {
+        weightUsed++;
+        return got(`https://api.binance.com/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id)}`, {
+            headers: {
+                "Accept": "application/json",
+                "Accept-Encoding": "deflate, gzip"
+            },
+            retry: {}
+        }).text().then(response => {
+            return {
+                type: "candles",
+                coin: symbol.baseAsset,
+                response: response
+            };
+        });
+    }));
+    for (let i = 0; i < symbols.length; i += 100) {
+        weightUsed += symbols.slice(i, i + 100).length >= 50 ? 100 : symbols.slice(i, i + 100).length * 2;
+        binancePromises.push(got(`https://api.binance.com/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
+            headers: {
+                "Accept": "application/json",
+                "Accept-Encoding": "deflate, gzip"
+            },
+            retry: {}
+        }).text().then(response => {
+            return {
+                type: "7d%",
+                response: response
+            };
+        }));
+    }
+    console.log(`Weight used: ${weightUsed}/1200`);
+    const responses = await Promise.all(binancePromises);
+    const start2 = Date.now();
+    const session = mongoClient.startSession();
+    await session.withTransaction(async () => {
         const promises = [];
         for (const response of responses) {
             const toWrite: AnyBulkWriteOperation<Candle>[] = [];
             const json = JSON.parse(response.response);
             if (response.type == "candles") {
-                const coin = symbolToMeta((response as any).coin);
+                const coin = metadata.find(meta => meta.symbol == (response as any).coin);
                 newValidCryptos.push(coin);
                 for (let i = 0; i < json.length; i++) {
                     const item = json[i];
@@ -174,7 +182,7 @@ export async function updateBinanceApi() {
             } else if (response.type == "7d%") {
                 const toWrite: AnyBulkWriteOperation<LatestCoin>[] = [];
                 for (const item of json) {
-                    const coin = symbolToMeta(item.symbol.replace("USDT", ""));
+                    const coin = metadata.find(meta => meta.symbol == item.symbol.replace("USDT", ""));
                     toWrite.push({
                         updateOne: {
                             filter: {coin: coin.cmc_id},
@@ -195,24 +203,29 @@ export async function updateBinanceApi() {
         }
         return Promise.all(promises);
     });
-
+    const start3 = Date.now();
     if (newValidCryptos.length == 0) {
-        console.log("newValidCryptos is empty?");
+        console.error("newValidCryptos is empty?");
         processing = false;
         return;
     }
     validCryptos.length = 0;
     validCryptos.push(...newValidCryptos);
-    console.log(`Updated coins (${validCryptos.length} valid, ${cryptoMetadataList.length - validCryptos.length} invalid) in ${Date.now() - start1} ms`);
-
     const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
     await CoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
     const removedCoins = expired.map(alert => alert.coin);
     if (removedCoins.length > 0) {
         console.log(`Removed ${removedCoins.length} expired alerts for ${removedCoins.join(", ")}`);
     }
+    const start4 = Date.now();
     await notifyExpiredAlerts(expired.map(alert => alert.user), expired);
     await notifyUsers();
+    lastUpdated = Date.now();
+    console.log(`Binance REST @ ${new Date().toISOString()}:
+        ${start2 - start1} ms to get data
+        ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${metadata.length - validCryptos.length} invalid)
+        ${start4 - start3} ms to update valid cryptos
+        ${Date.now() - start4} ms to trigger alerts`);
     processing = false;
 }
 

@@ -2,7 +2,7 @@ import {CoinAlert} from "../structs/coinAlert";
 import {getEmbedTemplate} from "../ui/templates";
 import {formatAlert} from "../ui/alerts/interfaceCreator";
 import {analytics} from "../analytics/segment";
-import {commandIds, cryptoMetadataList, discordGot, getLatestCandle} from "../utils";
+import {commandIds, discordGot, getLatestCandle, validCryptos} from "../utils";
 import {APIChannel} from "discord-api-types/v10";
 import CryptoStat from "../structs/cryptoStat";
 import {CoinAlerts, LatestCoins} from "../database";
@@ -64,7 +64,7 @@ export function evalInequality(expr: string) {
 
 export async function notifyUsers() {
     const cache: CoinMetadata[] = [];
-    cache.push(...cryptoMetadataList);
+    cache.push(...validCryptos);
     const alerts: CoinAlert[] = await CoinAlerts.find({}).toArray();
     const toDm = new Map<string, string[]>();
     for (const crypto of cache) {
