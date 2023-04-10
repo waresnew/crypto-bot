@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import WebSocket from "ws";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";

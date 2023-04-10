@@ -1,6 +1,7 @@
+/* istanbul ignore file */
 import {CronJob} from "cron";
 import got, {HTTPError} from "got";
-import {Candles, CoinAlerts, LatestCoins, mongoClient} from "../database";
+import {Candles, LatestCoins, mongoClient} from "../database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {validCryptos} from "../utils";
 import {Candle} from "../structs/candle";
@@ -27,7 +28,7 @@ let cmcKeyIndex = 1;
 export let processing = false;
 export let lastUpdated = 0;
 
-function getCmcKey() {
+export function getCmcKey() {
     const key = process.env[`COINMARKETCAP_KEY${cmcKeyIndex}`];
     cmcKeyIndex++;
     if (cmcKeyIndex > 5) {
@@ -209,16 +210,11 @@ export async function updateBinanceApi() {
         processing = false;
         return;
     }
+    const oldCryptos = validCryptos.slice();
     validCryptos.length = 0;
     validCryptos.push(...newValidCryptos);
-    const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
-    await CoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
-    const removedCoins = expired.map(alert => alert.coin);
-    if (removedCoins.length > 0) {
-        console.log(`Removed ${removedCoins.length} expired alerts for ${removedCoins.join(", ")}`);
-    }
     const start4 = Date.now();
-    await notifyExpiredAlerts(expired.map(alert => alert.user), expired);
+    await notifyExpiredAlerts(oldCryptos);
     await notifyUsers();
     lastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:

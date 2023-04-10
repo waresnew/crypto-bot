@@ -1,5 +1,5 @@
 import TrackInteractionProcessor from "../ui/track/interactionProcessor";
-import {CoinAlerts} from "../structs/coinAlert";
+import {CoinAlerts} from "../database";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {
@@ -18,30 +18,46 @@ describe("test alert wizard", () => {
     });
 
     it("rejects duplicate/>25 alerts", async () => {
-        await new CoinAlerts({coin: 0, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
+        await CoinAlerts.insertOne({
+            coin: 0,
+            stat: "price",
+            direction: ">",
+            threshold: 1,
+            user: "123",
+            disabled: false
+        });
         try {
-            await TrackInteractionProcessor.validateAlert(new CoinAlerts({
+            await TrackInteractionProcessor.validateAlert({
                 coin: 0,
                 stat: "price",
                 direction: ">",
                 threshold: 1,
-                user: "123"
-            }));
+                user: "123",
+                disabled: false
+            });
             fail();
         } catch (e) {
             expect(e).toMatch("Error: You already have an alert exactly like the one you are trying to add");
         }
         for (let i = 1; i < 25; i++) {
-            await new CoinAlerts({coin: i, stat: "price", direction: ">", threshold: 1, user: "123"}).save();
+            await CoinAlerts.insertOne({
+                coin: i,
+                stat: "price",
+                direction: ">",
+                threshold: 1,
+                user: "123",
+                disabled: false
+            });
         }
         try {
-            await TrackInteractionProcessor.validateAlert(new CoinAlerts({
+            await TrackInteractionProcessor.validateAlert({
                 coin: 25,
                 stat: "price",
                 direction: ">",
                 threshold: 1,
-                user: "123"
-            }));
+                user: "123",
+                disabled: false
+            });
             fail();
         } catch (e) {
             expect(e).toMatch("Error: You can not have more than 25 alerts set");

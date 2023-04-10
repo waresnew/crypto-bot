@@ -1,29 +1,37 @@
 import {CoinAlert} from "../structs/coinAlert";
 import {getEmbedTemplate} from "../ui/templates";
 import {formatAlert} from "../ui/alerts/interfaceCreator";
-import {analytics} from "../analytics/segment";
+import {analytics} from "../segment";
 import {commandIds, discordGot, getLatestCandle, validCryptos} from "../utils";
 import {APIChannel} from "discord-api-types/v10";
 import CryptoStat from "../structs/cryptoStat";
 import {CoinAlerts, LatestCoins} from "../database";
 import {CoinMetadata} from "../structs/coinMetadata";
 
-export async function notifyExpiredAlerts(toDm: string[], alerts: CoinAlert[]) {
+export async function notifyExpiredAlerts(oldCryptos: CoinMetadata[]) {
+    const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
+    const found = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
+    await CoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
+    const removedCoins = expired.map(alert => alert.coin);
+    if (removedCoins.length > 0) {
+        console.log(`Removed ${found.length} expired alerts for ${removedCoins.join(", ")}`);
+    }
+    const toDm = expired.map(alert => alert.user);
     for (const user of toDm) {
-        const expired = alerts.filter(alert => alert.user == user);
+        const expiredUser = expired.filter(alert => alert.user == user);
         const message = getEmbedTemplate();
-        message.title = `⚠️ Alert${expired.length > 1 ? "s" : ""} expired!`;
-        let desc = `The following alert${expired.length > 1 ? "s have" : " has"} expired:\n`;
-        for (const line of expired) {
-            desc += "\n- " + await formatAlert(line);
+        message.title = `⚠️ Alert${expiredUser.length > 1 ? "s" : ""} expired!`;
+        let desc = `The following alert${expiredUser.length > 1 ? "s have" : " has"} expired:\n`;
+        for (const line of expiredUser) {
+            desc += "\n- " + await formatAlert(line, oldCryptos);
         }
-        desc += `\n\nThe above coins are no longer in listed in major exchanges. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert${expired.length > 1 ? "s have" : " has"} been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!`;
+        desc += `\n\nThe above coins are no longer in listed in major exchanges. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert${expiredUser.length > 1 ? "s have" : " has"} been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!`;
         message.description = desc;
         analytics.track({
             userId: user,
             event: "Alert(s) expired",
             properties: {
-                alerts: expired.length
+                alerts: expiredUser.length
             }
         });
         try {
@@ -78,6 +86,7 @@ export async function notifyUsers() {
             let left = 0;
             const candle = await getLatestCandle(crypto.cmc_id);
             const latest = await LatestCoins.findOne({coin: crypto.cmc_id});
+            /* istanbul ignore next */
             if (alert.stat == CryptoStat.price.shortForm) {
                 left = candle.close_price;
             } else if (alert.stat == CryptoStat.percent_change_1h.shortForm) {

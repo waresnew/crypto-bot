@@ -3,7 +3,6 @@ import {getEmbedTemplate} from "../templates";
 import {
     APIActionRowComponent,
     APIButtonComponent,
-    APIInteraction,
     APIInteractionResponse,
     ButtonStyle,
     ComponentType
@@ -86,7 +85,7 @@ export function formatPrice(price: number) {
 export async function makeChart(coin: CoinMetadata) {
     const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 60}).toArray();
     candles.sort((a, b) => a.open_time - b.open_time);
-    return got("http://127.0.0.1:3001/chart", {
+    return got(`${process.env["OFFLOAD_URL"]}/graphserver/chart`, {
         method: "POST",
         body: JSON.stringify({
             meta: coin,
@@ -95,7 +94,7 @@ export async function makeChart(coin: CoinMetadata) {
     }).buffer();
 }
 
-export async function makeButtons(choice: CoinMetadata, interaction: APIInteraction) {
+export async function makeButtons(choice: CoinMetadata) {
     return {
         type: ComponentType.ActionRow,
         components: [

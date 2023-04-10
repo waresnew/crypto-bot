@@ -7,7 +7,6 @@ import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interaction
 import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
-import {spawn} from "node:child_process";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -30,14 +29,6 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
-const child = spawn("python3", ["dist/mplfinance/graphServer.py"]);
-child.stdout.setEncoding("utf8");
-child.stdout.on("data", data => {
-    console.log(data.toString());
-});
-child.stderr.on("data", data => {
-    console.error(data.toString());
-});
 binanceApiCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();

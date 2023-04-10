@@ -38,7 +38,7 @@ export default {
             });
         }
         const embed = await makeEmbed(choice);
-        const buttons = await makeButtons(choice, interaction);
+        const buttons = await makeButtons(choice);
         const encoded = await makeFormData({
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {embeds: [embed], components: [buttons]}

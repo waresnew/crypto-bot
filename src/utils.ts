@@ -31,9 +31,9 @@ export const discordGot = got.extend({
     },
     prefixUrl: "https://discord.com/api/v10",
     timeout: {
-        lookup: 100,
-        connect: 50,
-        secureConnect: 50,
+        lookup: 1000,
+        connect: 1000,
+        secureConnect: 1000,
         socket: 1000,
         send: 10000,
         response: 1000

@@ -16,4 +16,8 @@ describe("Test precision", () => {
     test("4", () => {
         expect(scientificNotationToNumber("5.564654322342242423254e-30")).toBe("0.000000000000000000000000000005564654322342242423254");
     });
+
+    test("5", () => {
+        expect(scientificNotationToNumber("0.999999999999")).toBe("0.999999999999");
+    });
 });

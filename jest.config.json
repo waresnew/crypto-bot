@@ -11,7 +11,8 @@
     "./src/**"
   ],
   "coveragePathIgnorePatterns": [
-    "<rootDir>/src/commands/"
+    "<rootDir>/src/commands/",
+    "<rootDir>/src/structs/"
   ],
   "verbose": true,
   "testPathIgnorePatterns": [

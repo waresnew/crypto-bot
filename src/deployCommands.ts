@@ -7,6 +7,7 @@ import {APIApplicationCommand} from "discord-api-types/v10";
 
 dotenv.config({path: `./data/${process.env["NODE_ENV"]}.env`});
 const discordGot = (await import("./utils")).discordGot;
+
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
     console.log("All services closed, exiting...");

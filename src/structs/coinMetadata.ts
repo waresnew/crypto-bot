@@ -7,14 +7,14 @@ export class CoinMetadata {
     slug: string;
 }
 
-export function symbolToMeta(symbol: string) {
-    return validCryptos.find(metadata => metadata.symbol == symbol);
+export function symbolToMeta(symbol: string, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.symbol == symbol);
 }
 
-export function nameToMeta(name: string) {
-    return validCryptos.find(metadata => metadata.name == name);
+export function nameToMeta(name: string, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.name == name);
 }
 
-export function idToMeta(id: number) {
-    return validCryptos.find(metadata => metadata.cmc_id == id);
+export function idToMeta(id: number, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.cmc_id == id);
 }

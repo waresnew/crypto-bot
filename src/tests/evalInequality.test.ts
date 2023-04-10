@@ -1,4 +1,4 @@
-import {evalInequality} from "../services/cmcApi";
+import {evalInequality} from "../services/alertChecker";
 
 describe("Test inequality evaluation", () => {
     it("1", () => {

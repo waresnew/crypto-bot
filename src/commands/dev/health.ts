@@ -14,7 +14,7 @@ export default {
         embed.title = "Bot Health";
         embed.fields = [{
             name: "Ram usage",
-            value: process.memoryUsage().heapUsed / 1000000 + "MB",
+            value: Math.floor(process.memoryUsage().heapUsed / 1000000) + "MB",
             inline: true
         }];
         await http.send({
