@@ -13,12 +13,12 @@ import {
 import {FastifyReply} from "fastify";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
-import {analytics} from "../../segment";
-import {commandIds} from "../../utils";
+import {analytics} from "../../utils/analytics";
 import {makeDirectionPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
 import {idToMeta} from "../../structs/coinMetadata";
-import {CoinAlert} from "../../structs/coinAlert";
-import {CoinAlerts} from "../../database";
+import {CoinAlert} from "../../structs/alert/coinAlert";
+import {CoinAlerts} from "../../utils/database";
+import {commandIds} from "../../utils/discordUtils";
 
 export default class TrackInteractionProcessor extends InteractionProcessor {
     static validateWhen(when: string) {

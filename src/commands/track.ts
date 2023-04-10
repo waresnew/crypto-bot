@@ -1,4 +1,3 @@
-import {autocompleteCoins, parseCoinCommandArg} from "../utils";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -11,6 +10,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
 import {makeStatPrompt} from "../ui/track/interfaceCreator";
+import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 
 export default {
     name: "track",

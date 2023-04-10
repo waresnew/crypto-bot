@@ -9,11 +9,11 @@ import {
     MessageFlags
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {commandIds} from "../../utils";
-import {analytics} from "../../segment";
+import {analytics} from "../../utils/analytics";
 import {nameToMeta} from "../../structs/coinMetadata";
-import {CoinAlerts} from "../../database";
-import {CoinAlert} from "../../structs/coinAlert";
+import {CoinAlerts} from "../../utils/database";
+import {CoinAlert} from "../../structs/alert/coinAlert";
+import {commandIds} from "../../utils/discordUtils";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */

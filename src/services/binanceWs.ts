@@ -3,7 +3,7 @@ import WebSocket from "ws";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
 import {symbolToMeta} from "../structs/coinMetadata";
-import {LatestCoins} from "../database";
+import {LatestCoins} from "../utils/database";
 
 export let ws: WebSocket = null;
 export let retry = true;

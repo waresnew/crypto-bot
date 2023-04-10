@@ -1,9 +1,9 @@
 /* istanbul ignore file */
 
 import {Collection, Db, MongoClient} from "mongodb";
-import {Candle} from "./structs/candle";
-import {CoinAlert} from "./structs/coinAlert";
-import {LatestCoin} from "./structs/latestCoin";
+import {Candle} from "../structs/candle";
+import {CoinAlert} from "../structs/alert/coinAlert";
+import {LatestCoin} from "../structs/latestCoin";
 
 export let db: Db = null;
 export let mongoClient: MongoClient = null;

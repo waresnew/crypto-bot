@@ -4,7 +4,7 @@ import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFormData} from "./interfaceCreator";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {analytics} from "../../segment";
+import {analytics} from "../../utils/analytics";
 import {idToMeta} from "../../structs/coinMetadata";
 import {lastUpdated, processing} from "../../services/binanceRest";
 import {Readable} from "node:stream";

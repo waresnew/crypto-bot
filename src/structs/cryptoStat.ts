@@ -1,4 +1,4 @@
-import {Indexable} from "../utils";
+import {Indexable} from "../utils/utils";
 
 export default class CryptoStat {
 
