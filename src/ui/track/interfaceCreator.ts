@@ -9,8 +9,8 @@ import {
 } from "discord-api-types/v10";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
-import {commandIds} from "../../utils";
 import {CoinMetadata} from "../../structs/coinMetadata";
+import {commandIds} from "../../utils/discordUtils";
 
 export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string) {
     const message = getEmbedTemplate();

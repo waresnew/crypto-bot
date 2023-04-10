@@ -1,6 +1,6 @@
 /* istanbul ignore file */
-import {client} from "../utils";
 import {APIEmbed} from "discord-api-types/v10";
+import {client} from "../utils/discordUtils";
 
 export function getEmbedTemplate(): APIEmbed {
     return {

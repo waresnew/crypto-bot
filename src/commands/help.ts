@@ -4,7 +4,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {getEmbedTemplate} from "../ui/templates";
-import {commandIds} from "../utils";
+import {commandIds} from "../utils/discordUtils";
 
 export default {
     name: "help",

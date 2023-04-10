@@ -1,5 +1,5 @@
 import TrackInteractionProcessor from "../ui/track/interactionProcessor";
-import {CoinAlerts} from "../database";
+import {CoinAlerts} from "../utils/database";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {

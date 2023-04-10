@@ -1,8 +1,8 @@
 import {APIChannel} from "discord-api-types/v10";
 import nock from "nock";
-import {CoinAlerts} from "../database";
-import {notifyExpiredAlerts} from "../services/alertChecker";
-import {validCryptos} from "../utils";
+import {CoinAlerts} from "../utils/database";
+import {notifyExpiredCoins} from "../services/alertChecker";
+import {validCryptos} from "../utils/coinUtils";
 
 describe("Checks if expired coins are handled properly", function () {
 
@@ -35,7 +35,7 @@ describe("Checks if expired coins are handled properly", function () {
             } as APIChannel);
         const oldCryptos = validCryptos.slice();
         validCryptos.length = 0;
-        await notifyExpiredAlerts(oldCryptos);
+        await notifyExpiredCoins(oldCryptos);
         expect((await CoinAlerts.find({}).toArray()).length).toBe(0);
     });
 });

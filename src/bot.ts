@@ -2,11 +2,11 @@
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import fs from "node:fs";
-import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
+import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(

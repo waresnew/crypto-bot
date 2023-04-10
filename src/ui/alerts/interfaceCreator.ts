@@ -10,10 +10,10 @@ import {
     ComponentType
 } from "discord-api-types/v10";
 import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
-import {CoinAlert} from "../../structs/coinAlert";
+import {CoinAlert} from "../../structs/alert/coinAlert";
 import {idToMeta} from "../../structs/coinMetadata";
-import {CoinAlerts} from "../../database";
-import {commandIds, validCryptos} from "../../utils";
+import {CoinAlerts} from "../../utils/database";
+import {commandIds} from "../../utils/discordUtils";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: CoinAlert[] = await CoinAlerts.find({user: interaction.user.id}).toArray();
@@ -89,9 +89,9 @@ export async function makeEmbed(values: string[] | CoinAlert[]) {
             direction: alert.direction,
             user: alert.user
         }) == null) {
-            removed += "\n- " + await formatAlert(alert);
+            removed += "\n- " + await alert.format();
         } else {
-            choices.push(`${alert.disabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
+            choices.push(`${alert.disabled ? "❌" : "✅"} ${await alert.format()}`);
         }
 
     }
@@ -160,7 +160,3 @@ export function makeButtons() {
     } as APIActionRowComponent<APIButtonComponent>;
 }
 
-export async function formatAlert(alert: CoinAlert, cryptoList = validCryptos) {
-    const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
-}

@@ -1,4 +1,4 @@
-import {evalInequality} from "../services/alertChecker";
+import {evalInequality} from "../utils/alertUtils";
 
 describe("Test inequality evaluation", () => {
     it("1", () => {

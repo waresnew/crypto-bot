@@ -1,4 +1,4 @@
-import {validCryptos} from "../utils";
+import {validCryptos} from "../utils/coinUtils";
 
 export class CoinMetadata {
     cmc_id: number;

@@ -14,12 +14,12 @@ import {
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
-import {analytics, initAnalytics} from "./segment";
+import {analytics, initAnalytics} from "./utils/analytics";
 import Sentry from "@sentry/node";
-import {mongoClient, openDb} from "./database";
+import {mongoClient, openDb} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
+import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils/discordUtils";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();

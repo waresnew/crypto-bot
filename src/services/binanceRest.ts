@@ -1,13 +1,13 @@
 /* istanbul ignore file */
 import {CronJob} from "cron";
 import got, {HTTPError} from "got";
-import {Candles, LatestCoins, mongoClient} from "../database";
+import {Candles, LatestCoins, mongoClient} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
-import {validCryptos} from "../utils";
 import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
-import {notifyExpiredAlerts, notifyUsers} from "./alertChecker";
+import {notifyExpiredCoins, triggerAlerts} from "./alertChecker";
+import {validCryptos} from "../utils/coinUtils";
 
 export const binanceApiCron = new CronJob(
     "* * * * *",
@@ -214,8 +214,8 @@ export async function updateBinanceApi() {
     validCryptos.length = 0;
     validCryptos.push(...newValidCryptos);
     const start4 = Date.now();
-    await notifyExpiredAlerts(oldCryptos);
-    await notifyUsers();
+    await notifyExpiredCoins(oldCryptos);
+    await triggerAlerts();
     lastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:
         ${start2 - start1} ms to get data

@@ -1,6 +1,6 @@
 import nock from "nock";
-import {notifyUsers} from "../services/alertChecker";
-import {Candles, CoinAlerts, LatestCoins} from "../database";
+import {triggerAlerts} from "../services/alertChecker";
+import {Candles, CoinAlerts, LatestCoins} from "../utils/database";
 
 describe("Tests coin alerts", () => {
     it("alerts user when threshold", async () => {
@@ -55,7 +55,7 @@ describe("Tests coin alerts", () => {
                 expect(JSON.parse(requestBody as string).embeds[0].description).toMatch(new RegExp("The following alert has been triggered:\\n\\n- When price of Bitcoin is greater than \\$100"));
                 return [200, {id: "ok"}];
             });
-        await notifyUsers();
+        await triggerAlerts();
         expect(await CoinAlerts.findOne({coin: 1})).toBe(null);
 
     });
