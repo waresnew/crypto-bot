@@ -15,8 +15,8 @@ export default {
     type: ApplicationCommandType.ChatInput,
     description: "Manage your alerts",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
-        const instructions = await makeEmbed([], interaction);
-        const actions = makeButtons(interaction);
+        const instructions = await makeEmbed([]);
+        const actions = makeButtons();
         const menu = await makeAlertsMenu(interaction);
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,

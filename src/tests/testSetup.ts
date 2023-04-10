@@ -1,17 +1,15 @@
-import {analytics, setAnalytics} from "../analytics/segment";
+import {analytics, setAnalytics} from "../segment";
 import Analytics from "analytics-node";
 import nock from "nock";
-import {APIModalSubmitInteraction, APIUser, InteractionType} from "discord-api-types/v10";
+import {APIUser, InteractionType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import * as cmcApi from "../services/cmcApi";
 import {jest} from "@jest/globals";
-import {CmcLatestListingModel} from "../structs/cmcLatestListing";
-import {initClient} from "../utils";
-import mongoose from "mongoose";
-import {CoinAlerts} from "../structs/coinAlert";
+import {initClient, validCryptos} from "../utils";
+import {Candles, CoinAlerts, LatestCoins, mongoClient, openDb} from "../database";
+import {CoinMetadata} from "../structs/coinMetadata";
 import Mock = jest.Mock;
 
 /*
@@ -21,24 +19,7 @@ require("leaked-handles").set({
 });
 put ^ that at the top of the setup file to find out open handles
  */
-export const btcData = {
-    dummy: 0,
-    cmc_rank: 1,
-    id: 1,
-    name: "Bitcoin",
-    slug: "bitcoin",
-    symbol: "BTC",
-    fully_diluted_market_cap: 100000000000,
-    last_updated: "2022-02-28T00:00:00.000Z",
-    market_cap: 200000000000,
-    market_cap_dominance: 0.5,
-    percent_change_1h: 0.01,
-    percent_change_24h: 0.02,
-    percent_change_7d: -0.03,
-    price: 50000,
-    volume_24h: 10000000000,
-    volume_change_24h: 0.1
-};
+
 export const mockCommandInteraction: APIChatInputApplicationCommandInteraction = {
     type: InteractionType.ApplicationCommand,
     id: "123",
@@ -69,72 +50,20 @@ export const mockCommandInteraction: APIChatInputApplicationCommandInteraction =
     }
 };
 export const mockReply = {send: jest.fn().mockImplementation(() => Promise.resolve())} as unknown as FastifyReply;
-export const btcEthApiData = "{\"data\":[{\"id\":1,\"name\":\"Bitcoin\",\"symbol\":\"BTC\",\"slug\":\"bitcoin\",\"cmc_rank\":5,\"num_market_pairs\":500,\"circulating_supply\":16950100,\"total_supply\":16950100,\"max_supply\":21000000,\"last_updated\":\"2018-06-02T22:51:28.209Z\",\"date_added\":\"2013-04-28T00:00:00.000Z\",\"tags\":[\"mineable\"],\"platform\":null,\"self_reported_circulating_supply\":null,\"self_reported_market_cap\":null,\"quote\":{\"USD\":{\"price\":9283.92,\"volume_24h\":7155680000,\"volume_change_24h\":-0.152774,\"percent_change_1h\":-0.152774,\"percent_change_24h\":0.518894,\"percent_change_7d\":0.986573,\"market_cap\":852164659250.2758,\"market_cap_dominance\":51,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"},\"BTC\":{\"price\":1,\"volume_24h\":772012,\"volume_change_24h\":0,\"percent_change_1h\":0,\"percent_change_24h\":0,\"percent_change_7d\":0,\"market_cap\":17024600,\"market_cap_dominance\":12,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"}}},{\"id\":1027,\"name\":\"Ethereum\",\"cmc_rank\":\"6\",\"symbol\":\"ETH\",\"slug\":\"ethereum\",\"num_market_pairs\":6360,\"circulating_supply\":16950100,\"total_supply\":16950100,\"max_supply\":21000000,\"last_updated\":\"2018-06-02T22:51:28.209Z\",\"date_added\":\"2013-04-28T00:00:00.000Z\",\"tags\":[\"mineable\"],\"platform\":null,\"quote\":{\"USD\":{\"price\":1283.92,\"volume_24h\":7155680000,\"volume_change_24h\":-0.152774,\"percent_change_1h\":-0.152774,\"percent_change_24h\":0.518894,\"percent_change_7d\":0.986573,\"market_cap\":158055024432,\"market_cap_dominance\":51,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"},\"ETH\":{\"price\":1,\"volume_24h\":772012,\"volume_change_24h\":-0.152774,\"percent_change_1h\":0,\"percent_change_24h\":0,\"percent_change_7d\":0,\"market_cap\":17024600,\"market_cap_dominance\":12,\"fully_diluted_market_cap\":952835089431.14,\"last_updated\":\"2018-08-09T22:53:32.000Z\"}}}],\"status\":{\"timestamp\":\"2018-06-02T22:51:28.209Z\",\"error_code\":0,\"error_message\":\"\",\"elapsed\":10,\"credit_count\":1}}";
-export const addAlertModal: APIModalSubmitInteraction = {
-    locale: undefined,
-    id: "123456789012345678",
-    token: "abcdefg1234567890",
-    type: InteractionType.ModalSubmit,
-    message: {
-        id: "123456789012345678",
-        channel_id: "111111111111111111",
-        author: null,
-        content: "",
-        timestamp: "2021-08-09T22:53:32.000Z",
-        edited_timestamp: null,
-        tts: false,
-        mention_everyone: false,
-        mentions: [],
-        mention_roles: [],
-        attachments: [],
-        embeds: [],
-        reactions: [],
-        nonce: null,
-        pinned: false,
-        webhook_id: null,
-        type: 0
-    },
-    data: {
-        custom_id: "coin_alertsmodal_1",
-        components: [
-            {
-                type: 1,
-                components: [
-                    {
-                        type: 3,
-                        custom_id: "coin_alertsmodalstat_1234567890",
-                        value: "price"
-                    }
-                ]
-            },
-            {
-                type: 1,
-                components: [
-                    {
-                        type: 3,
-                        custom_id: "coin_alertsmodalvalue_1234567890",
-                        value: "<50"
-                    }
-                ]
-            }
-        ]
-
-    },
-    guild_id: "222222222222222222",
-    channel_id: "111111111111111111",
-    user: {
-        id: "1234567890",
-        username: "TestUser",
-        discriminator: "1234",
-        avatar: "avatar-hash"
-    },
-    version: 1,
-    application_id: "555555555555555555"
-};
 const globalMocks: any[] = [];
 beforeEach(async () => {
-    CoinAlerts.deleteMany({});
-    CmcLatestListingModel.deleteMany({});
+    await CoinAlerts.deleteMany({});
+    await LatestCoins.deleteMany({});
+    await Candles.deleteMany({});
+    const btc = new CoinMetadata(), eth = new CoinMetadata();
+    btc.cmc_id = 1;
+    btc.name = "Bitcoin";
+    btc.symbol = "BTC";
+    eth.cmc_id = 1027;
+    eth.name = "Ethereum";
+    eth.symbol = "ETH";
+    validCryptos.length = 0;
+    validCryptos.push(btc, eth);
     nock.cleanAll();
 });
 
@@ -152,15 +81,9 @@ beforeAll(async () => {
     globalMocks.push(jest.spyOn(analytics, "identify").mockReturnValue(undefined));
     expect(process.env["SEGMENT_KEY"]).toBeUndefined();
     expect(globalThis.__MONGO_URI__).toMatch("127.0.0.1");
-    await mongoose.connect(globalThis.__MONGO_URI__, {dbName: globalThis.__MONGO_DB_NAME__});
-    nock("https://pro-api.coinmarketcap.com")
-        .get("/v1/cryptocurrency/listings/latest?limit=200")
-        .reply(200, btcEthApiData);
-    await cmcApi.updateCmc();
-    expect((await CmcLatestListingModel.findOne({id: 1})).name).toBe("Bitcoin");
-    expect((await CmcLatestListingModel.findOne({id: 1027})).name).toBe("Ethereum");
+    await openDb(globalThis.__MONGO_URI__, globalThis.__MONGO_DB_NAME__);
 });
 
 afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoClient.close();
 });

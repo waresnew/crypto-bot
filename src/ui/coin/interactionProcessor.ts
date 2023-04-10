@@ -4,7 +4,7 @@ import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFormData} from "./interfaceCreator";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
-import {analytics} from "../../analytics/segment";
+import {analytics} from "../../segment";
 import {idToMeta} from "../../structs/coinMetadata";
 import {lastUpdated, processing} from "../../services/binanceRest";
 import {Readable} from "node:stream";
@@ -42,7 +42,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
                 }
             });
             const embed = await makeEmbed(coin);
-            const buttons = await makeButtons(coin, interaction);
+            const buttons = await makeButtons(coin);
             const encoded = await makeFormData({
                 type: InteractionResponseType.UpdateMessage,
                 data: {embeds: [embed], components: [buttons]}

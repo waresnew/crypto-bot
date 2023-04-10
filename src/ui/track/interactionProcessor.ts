@@ -13,7 +13,7 @@ import {
 import {FastifyReply} from "fastify";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
-import {analytics} from "../../analytics/segment";
+import {analytics} from "../../segment";
 import {commandIds} from "../../utils";
 import {makeDirectionPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
 import {idToMeta} from "../../structs/coinMetadata";

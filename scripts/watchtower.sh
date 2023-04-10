@@ -1,0 +1,1 @@
+docker run --restart=unless-stopped --detach --name watchtower --volume /var/run/docker.sock:/var/run/docker.sock --volume /home/newwares/.docker/config.json:/config.json containrrr/watchtower --cleanup --interval 300

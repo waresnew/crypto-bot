@@ -1,4 +1,3 @@
-
 export interface LatestCoin {
     //rest data
     coin: number;

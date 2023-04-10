@@ -16,13 +16,12 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils";
 import nacl from "tweetnacl";
-import {analytics, initAnalytics} from "./analytics/segment";
+import {analytics, initAnalytics} from "./segment";
 import Sentry from "@sentry/node";
 import {mongoClient, openDb} from "./database";
 import {setRetry, ws} from "./services/binanceWs";
-import got from "got";
 
-await openDb();
+await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();
 const server = fastify({logger: true});
 server.setErrorHandler((error, request, reply) => {
@@ -39,9 +38,6 @@ async function closeGracefully(signal: string | number) {
     await server.close();
     await mongoClient.close();
     await analytics.flush();
-    await got("http://127.0.0.1:3001/shutdown", {
-        method: "POST"
-    });
     setRetry(false);
     ws.close();
     console.log("All services closed, exiting...");

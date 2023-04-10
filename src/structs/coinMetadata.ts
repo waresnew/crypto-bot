@@ -1,4 +1,4 @@
-import {cryptoMetadataList} from "../utils";
+import {validCryptos} from "../utils";
 
 export class CoinMetadata {
     cmc_id: number;
@@ -7,14 +7,14 @@ export class CoinMetadata {
     slug: string;
 }
 
-export function symbolToMeta(symbol: string) {
-    return cryptoMetadataList.find(metadata => metadata.symbol == symbol);
+export function symbolToMeta(symbol: string, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.symbol == symbol);
 }
 
-export function nameToMeta(name: string) {
-    return cryptoMetadataList.find(metadata => metadata.name == name);
+export function nameToMeta(name: string, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.name == name);
 }
 
-export function idToMeta(id: number) {
-    return cryptoMetadataList.find(metadata => metadata.cmc_id == id);
+export function idToMeta(id: number, cryptoList = validCryptos) {
+    return cryptoList.find(metadata => metadata.cmc_id == id);
 }

@@ -11,11 +11,10 @@ export let Candles: Collection<Candle> = null;
 export let CoinAlerts: Collection<CoinAlert> = null;
 export let LatestCoins: Collection<LatestCoin> = null;
 
-export async function openDb() {
-    mongoClient = await MongoClient.connect(process.env["MONGO_URL"]);
-    await mongoClient.db("admin").command({ping: 1});
+export async function openDb(url: string, dbName: string) {
+    mongoClient = await MongoClient.connect(url);
     console.log("Connected to MongoDb");
-    db = mongoClient.db(`crypto-bot-${process.env["NODE_ENV"]}`);
+    db = mongoClient.db(dbName);
     Candles = db.collection("candles");
     CoinAlerts = db.collection("coinalerts");
     LatestCoins = db.collection("latestcoins");

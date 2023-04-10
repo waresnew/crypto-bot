@@ -10,7 +10,7 @@ import {
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {commandIds} from "../../utils";
-import {analytics} from "../../analytics/segment";
+import {analytics} from "../../segment";
 import {nameToMeta} from "../../structs/coinMetadata";
 import {CoinAlerts} from "../../database";
 import {CoinAlert} from "../../structs/coinAlert";
@@ -30,11 +30,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 return;
             }
 
-            const instructions = await makeEmbed(interaction.data.values, interaction);
+            const instructions = await makeEmbed(interaction.data.values);
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)],
+                    components: [await makeAlertsMenu(interaction), await makeButtons()],
                     flags: MessageFlags.Ephemeral
                 }
             });
@@ -80,8 +80,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+                    embeds: [await makeEmbed(selected)],
+                    components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_disable")) {
@@ -103,8 +103,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+                    embeds: [await makeEmbed(selected)],
+                    components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_delete")) {
@@ -126,8 +126,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             selected.length = 0;
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons(interaction)]
+                    embeds: [await makeEmbed(selected)],
+                    components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
         } else if (interaction.data.custom_id.startsWith("alerts_refresh")) {
@@ -137,8 +137,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    components: [await makeAlertsMenu(interaction), makeButtons(interaction)],
-                    embeds: [await makeEmbed(selected, interaction)],
+                    components: [await makeAlertsMenu(interaction), makeButtons()],
+                    embeds: [await makeEmbed(selected)],
                     flags: MessageFlags.Ephemeral
                 }
             });

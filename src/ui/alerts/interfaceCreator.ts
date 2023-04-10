@@ -13,7 +13,7 @@ import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import {CoinAlert} from "../../structs/coinAlert";
 import {idToMeta} from "../../structs/coinMetadata";
 import {CoinAlerts} from "../../database";
-import {commandIds} from "../../utils";
+import {commandIds, validCryptos} from "../../utils";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
     const alerts: CoinAlert[] = await CoinAlerts.find({user: interaction.user.id}).toArray();
@@ -69,7 +69,7 @@ export async function parseAlertId(id: string) {
     return alert;
 }
 
-export async function makeEmbed(values: string[] | CoinAlert[], interaction: APIInteraction) {
+export async function makeEmbed(values: string[] | CoinAlert[]) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
     let desc = "Looking to add an alert? Run </track:" + commandIds.get("track") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
@@ -112,7 +112,7 @@ export async function makeEmbed(values: string[] | CoinAlert[], interaction: API
     return instructions;
 }
 
-export function makeButtons(interaction: APIInteraction) {
+export function makeButtons() {
     return {
         type: ComponentType.ActionRow,
         components: [
@@ -160,7 +160,7 @@ export function makeButtons(interaction: APIInteraction) {
     } as APIActionRowComponent<APIButtonComponent>;
 }
 
-export async function formatAlert(alert: CoinAlert) {
+export async function formatAlert(alert: CoinAlert, cryptoList = validCryptos) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${idToMeta(alert.coin).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
 }
