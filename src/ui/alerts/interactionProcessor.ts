@@ -70,8 +70,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             for (const alert of selected) {
                 alert.disabled = false;
-                await CoinAlerts.updateOne({
-                    filter: {
+                await CoinAlerts.updateOne(
+                    {
                         coin: alert.coin,
                         stat: alert.stat,
                         threshold: alert.threshold,
@@ -80,7 +80,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     $set: {
                         disabled: false
                     }
-                });
+                );
 
             }
             await http.send({
@@ -99,8 +99,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             for (const alert of selected) {
                 alert.disabled = true;
-                await CoinAlerts.updateOne({
-                    filter: {
+                await CoinAlerts.updateOne(
+                    {
                         coin: alert.coin,
                         stat: alert.stat,
                         threshold: alert.threshold,
@@ -109,7 +109,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     $set: {
                         disabled: true
                     }
-                });
+                );
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
