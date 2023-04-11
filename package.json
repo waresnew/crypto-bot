@@ -23,7 +23,7 @@
     "analytics-node": "^6.2.0",
     "cron": "^2.2.0",
     "didyoumean": "^1.2.2",
-    "discord-api-types": "^0.37.35",
+    "discord-api-types": "^0.37.38",
     "dotenv": "^16.0.3",
     "fastify": "^4.14.1",
     "fastify-raw-body": "^4.2.0",
