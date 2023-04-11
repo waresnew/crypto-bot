@@ -154,7 +154,6 @@ export async function updateBinanceApi() {
                 for (let i = 0; i < json.length; i++) {
                     const item = json[i];
                     const candle = {
-                        _id: `${coin.cmc_id}_${item[0]}`,
                         coin: coin.cmc_id,
                         open_time: item[0],
                         open_price: parseFloat(item[1]),
@@ -171,7 +170,7 @@ export async function updateBinanceApi() {
                     };
                     toWrite.push({
                         replaceOne: {
-                            filter: {_id: candle._id},
+                            filter: {coin: candle.coin, open_time: candle.open_time},
                             replacement: candle,
                             upsert: true
                         }
@@ -228,6 +227,6 @@ export async function getLimit(coin: number) {
     if (!result) {
         return 1000;
     }
-    return Math.min(1000, Math.ceil((Date.now() - result.open_time) / (24 * 60 * 60 * 1000)));
+    return 1 + Math.min(1000, Math.ceil((Date.now() - result.open_time) / (24 * 60 * 60 * 1000)));
 }
 

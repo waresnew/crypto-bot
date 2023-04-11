@@ -1,11 +1,11 @@
-import {CoinAlert} from "../structs/alert/coinAlert";
 import {getEmbedTemplate} from "../ui/templates";
 import {analytics} from "../utils/analytics";
 import {APIChannel} from "discord-api-types/v10";
-import {CoinAlerts} from "../utils/database";
+import {CoinAlerts, GasAlerts} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {commandIds, discordGot} from "../utils/discordUtils";
 import {validCryptos} from "../utils/coinUtils";
+import {checkAlert, deleteAlert, formatAlert, formatCoinAlert} from "../utils/alertUtils";
 
 export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
     const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
@@ -21,8 +21,9 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
         const message = getEmbedTemplate();
         message.title = `⚠️ Alert${expiredUser.length > 1 ? "s" : ""} expired!`;
         let desc = `The following alert${expiredUser.length > 1 ? "s have" : " has"} expired:\n`;
+
         for (const line of expiredUser) {
-            desc += "\n- " + await line.format(oldCryptos);
+            desc += "\n- " + formatCoinAlert(line, oldCryptos);
         }
         desc += `\n\nThe above coins are no longer in listed in major exchanges. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert${expiredUser.length > 1 ? "s have" : " has"} been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!`;
         message.description = desc;
@@ -47,31 +48,16 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
         }
     }
 }
-
 export async function triggerAlerts() {
-    const cache: CoinMetadata[] = [];
-    cache.push(...validCryptos);
-    const alerts: CoinAlert[] = await CoinAlerts.find({}).toArray();
     const toDm = new Map<string, string[]>();
-    for (const crypto of cache) {
-        for (const alert of alerts) {
-            if (alert.coin != crypto.cmc_id) {
-                continue;
+    const alerts = [...await CoinAlerts.find({}).toArray(), ...await GasAlerts.find({}).toArray()];
+    for (const alert of alerts) {
+        if (await checkAlert(alert)) {
+            if (!toDm.has(alert.user)) {
+                toDm.set(alert.user, []);
             }
-
-            if (await alert.shouldTrigger()) {
-                if (!toDm.has(alert.user)) {
-                    toDm.set(alert.user, []);
-                }
-                toDm.get(alert.user).push(await alert.format());
-                await CoinAlerts.deleteOne({
-                    user: alert.user,
-                    stat: alert.stat,
-                    threshold: alert.threshold,
-                    direction: alert.direction,
-                    coin: alert.coin
-                });
-            }
+            toDm.get(alert.user).push(formatAlert(alert));
+            await deleteAlert(alert);
         }
     }
     for (const user of toDm.keys()) {

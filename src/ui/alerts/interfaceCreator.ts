@@ -1,6 +1,5 @@
 /* istanbul ignore file */
 import {getEmbedTemplate} from "../templates";
-import CryptoStat from "../../structs/cryptoStat";
 import {
     APIActionRowComponent,
     APIButtonComponent,
@@ -11,21 +10,14 @@ import {
 } from "discord-api-types/v10";
 import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import {CoinAlert} from "../../structs/alert/coinAlert";
-import {idToMeta} from "../../structs/coinMetadata";
-import {CoinAlerts} from "../../utils/database";
+import {CoinAlerts, GasAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
+import {formatAlert, makeAlertSelectEntry} from "../../utils/alertUtils";
+import {GasAlert} from "../../structs/alert/gasAlert";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
-    const alerts: CoinAlert[] = await CoinAlerts.find({user: interaction.user.id}).toArray();
-    const alertMenuOptions: APISelectMenuOption[] = [];
-    for (const alert of alerts) {
-        const fancyStat = CryptoStat.shortToLong(alert.stat);
-        alertMenuOptions.push({
-            label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
-            description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : ""),
-            value: `${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}_${alert.user}`
-        });
-    }
+    const alerts = [...await CoinAlerts.find({user: interaction.user.id}).toArray(), ...await GasAlerts.find({user: interaction.user.id}).toArray()];
+    const alertMenuOptions: APISelectMenuOption[] = alerts.map(alert => makeAlertSelectEntry(alert));
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
     return {
         type: ComponentType.ActionRow,
@@ -46,52 +38,21 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
 
 }
 
-export async function parseAlertId(id: string) {
-    const alert = new CoinAlert();
-    const tokens = id.split("_");
-    alert.coin = Number(tokens[0]);
-    alert.stat = tokens[1];
-    alert.threshold = Number(tokens[2]);
-    alert.direction = tokens[3] as "<" | ">";
-    alert.user = tokens[4];
-    const old = await CoinAlerts.findOne({
-        coin: alert.coin,
-        stat: alert.stat,
-        threshold: alert.threshold,
-        direction: alert.direction,
-        user: alert.user
-    });
-    if (!old) {
-        alert.disabled = undefined;
-    } else {
-        alert.disabled = old["disabled"];
-    }
-    return alert;
-}
-
-export async function makeEmbed(values: string[] | CoinAlert[]) {
+export async function makeEmbed(values: (CoinAlert | GasAlert)[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
     let desc = "Looking to add an alert? Run </track:" + commandIds.get("track") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
-    for (const value of values) {
-        let alert = new CoinAlert();
-        if (values.length > 0 && typeof values[0] == "string") {
-            alert = await parseAlertId(value as string);
+    for (const alert of values) {
+        const disabled = alert.disabled;
+        delete alert.disabled;
+        const noExist = await CoinAlerts.findOne(alert) == null;
+        alert.disabled = disabled;
+        if (noExist) {
+            removed += "\n- " + formatAlert(alert);
         } else {
-            alert = value as CoinAlert;
-        }
-        if (!alert || await CoinAlerts.findOne({
-            coin: alert.coin,
-            stat: alert.stat,
-            threshold: alert.threshold,
-            direction: alert.direction,
-            user: alert.user
-        }) == null) {
-            removed += "\n- " + await alert.format();
-        } else {
-            choices.push(`${alert.disabled ? "❌" : "✅"} ${await alert.format()}`);
+            choices.push(`${alert.disabled ? "❌" : "✅"} ${formatAlert(alert)}`);
         }
 
     }

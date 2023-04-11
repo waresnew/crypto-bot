@@ -1,17 +1,19 @@
 import nock from "nock";
 import {triggerAlerts} from "../services/alertChecker";
 import {Candles, CoinAlerts, LatestCoins} from "../utils/database";
+import {checkCoinAlert} from "../utils/alertUtils";
 
 describe("Tests coin alerts", () => {
     it("alerts user when threshold", async () => {
-        await CoinAlerts.insertOne({
+        const firstAlert = {
             user: "123",
             coin: 1,
             stat: "price",
             threshold: 100,
             direction: ">",
             disabled: false
-        });
+        };
+        await CoinAlerts.insertOne(firstAlert);
         await CoinAlerts.insertOne({
             user: "123",
             coin: 1,
@@ -25,7 +27,6 @@ describe("Tests coin alerts", () => {
             .get("/api/v10/users/@me/channels")
             .reply(200, {id: "ok"});
         await Candles.insertOne({
-            _id: "boomer",
             base_volume: 0,
             close_time: 0,
             ignore: 0,
@@ -55,6 +56,8 @@ describe("Tests coin alerts", () => {
                 expect(JSON.parse(requestBody as string).embeds[0].description).toMatch(new RegExp("The following alert has been triggered:\\n\\n- When price of Bitcoin is greater than \\$100"));
                 return [200, {id: "ok"}];
             });
+        expect(await checkCoinAlert(firstAlert)).toBe(true);
+
         await triggerAlerts();
         expect(await CoinAlerts.findOne({coin: 1})).toBe(null);
 

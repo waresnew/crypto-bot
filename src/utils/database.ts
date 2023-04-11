@@ -24,6 +24,6 @@ export async function openDb(url: string, dbName: string) {
     await Candles.createIndex({coin: 1, open_time: -1}, {unique: true});
     await CoinAlerts.createIndex({coin: 1, user: 1, stat: 1, threshold: 1, direction: 1, disabled: 1}, {unique: true});
     await LatestCoins.createIndex({coin: 1}, {unique: true});
-    await GasAlerts.createIndex({user: 1});
+    await GasAlerts.createIndex({user: 1, speed: 1, threshold: 1}, {unique: true});
 
 }

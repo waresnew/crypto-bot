@@ -1,5 +1,4 @@
 export interface Candle {
-    _id: string;
     coin: number;
     open_time: number;
     open_price: number;

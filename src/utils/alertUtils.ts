@@ -1,3 +1,12 @@
+import {CoinAlert} from "../structs/alert/coinAlert";
+import {getLatestCandle, validCryptos} from "./coinUtils";
+import {CoinAlerts, GasAlerts, LatestCoins} from "./database";
+import CryptoStat from "../structs/cryptoStat";
+import {idToMeta, nameToMeta} from "../structs/coinMetadata";
+import {GasAlert} from "../structs/alert/gasAlert";
+import {gasPrices} from "../services/etherscanRest";
+import {APIInteraction} from "discord-api-types/v10";
+
 /**
  * Evaluates an inequality expression safely
  * @param expr only numbers, <, >, are allowed (no equal signs)
@@ -17,4 +26,191 @@ export function evalInequality(expr: string) {
             return a < b;
     }
     return false;
+}
+
+export async function checkCoinAlert(alert: CoinAlert) {
+    if (alert.disabled) {
+        return false;
+    }
+    let left = 0;
+    const candle = await getLatestCandle(alert.coin);
+    const latest = await LatestCoins.findOne({coin: alert.coin});
+    /* istanbul ignore next */
+    if (alert.stat == CryptoStat.price.shortForm) {
+        left = candle.close_price;
+    } else if (alert.stat == CryptoStat.percent_change_1h.shortForm) {
+        left = latest.hourPriceChangePercent;
+    } else if (alert.stat == CryptoStat.percent_change_24h.shortForm) {
+        left = latest.dayPriceChangePercent;
+    } else if (alert.stat == CryptoStat.percent_change_7d.shortForm) {
+        left = latest.weekPriceChangePercent;
+    }
+    const expr = left + alert.direction + alert.threshold;
+    return evalInequality(expr);
+}
+
+//only to be used by expired coin handler
+export function formatCoinAlert(alert: CoinAlert, cryptoList = validCryptos) {
+    const fancyStat = CryptoStat.shortToLong(alert.stat);
+    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
+}
+
+export function checkGasAlert(alert: GasAlert) {
+    if (alert.disabled) {
+        return false;
+    }
+    return gasPrices[alert.speed] <= alert.threshold;
+}
+
+function formatGasAlert(alert: GasAlert) {
+    return `When gas for a ${alert.speed} transaction is ${alert.threshold} gwei`;
+}
+
+async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
+    const alert = new CoinAlert();
+    const tokens = id.split("_").slice(1); //remove coin_ prefix
+    alert.coin = Number(tokens[0]);
+    alert.stat = tokens[1];
+    alert.threshold = Number(tokens[2]);
+    alert.direction = tokens[3] as "<" | ">";
+    alert.user = interaction.user.id;
+    const old = await CoinAlerts.findOne({
+        coin: alert.coin,
+        stat: alert.stat,
+        threshold: alert.threshold,
+        direction: alert.direction,
+        user: alert.user
+    });
+    if (!old) {
+        alert.disabled = undefined;
+    } else {
+        alert.disabled = old["disabled"];
+    }
+    return alert;
+}
+
+async function parseIdGasAlert(id: string, interaction: APIInteraction) {
+    const alert = new GasAlert();
+    const tokens = id.split("_").slice(1); //remove gas_ prefix
+    alert.speed = tokens[0];
+    alert.threshold = Number(tokens[1]);
+    alert.user = interaction.user.id;
+    const old = await GasAlerts.findOne({
+        speed: alert.speed,
+        threshold: alert.threshold,
+        user: alert.user
+    });
+    if (!old) {
+        alert.disabled = undefined;
+    } else {
+        alert.disabled = old["disabled"];
+    }
+    return alert;
+}
+
+function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction) {
+    const input = pretty.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));
+    const alert = new CoinAlert();
+    alert.user = interaction.user.id;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
+    alert.coin = nameToMeta(input[3]).cmc_id;
+    alert.threshold = Number(input[5].replace(new RegExp(/[$%]/), ""));
+    alert.direction = input[4] == "less" ? "<" : ">";
+    alert.disabled = input[1] == "❌";
+    return alert;
+}
+
+function parsePrettyGasAlert(pretty: string, interaction: APIInteraction) {
+    const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is (.+) gwei/));
+    const alert = new GasAlert();
+    alert.user = interaction.user.id;
+    alert.speed = input[2];
+    alert.threshold = Number(input[3]);
+    alert.disabled = input[1] == "❌";
+    return alert;
+}
+
+function makeCoinAlertSelectEntry(alert: CoinAlert) {
+    const fancyStat = CryptoStat.shortToLong(alert.stat);
+
+    return {
+        label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
+        description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : ""),
+        value: `coin_${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}`
+    };
+}
+
+function makeGasAlertSelectEntry(alert: GasAlert) {
+    return {
+        label: `${alert.disabled ? "❌" : "✅"} ${alert.speed.charAt(0).toUpperCase() + alert.speed.substring(1)} transaction gas fee of ETH`,
+        description: `Less than ${alert.threshold} Gwei`,
+        value: `gas_${alert.speed}_${alert.threshold}`
+    };
+}
+
+export function makeAlertSelectEntry(alert: CoinAlert | GasAlert) {
+    if ("coin" in alert) {
+        return makeCoinAlertSelectEntry(alert);
+    } else if ("speed" in alert) {
+        return makeGasAlertSelectEntry(alert);
+    }
+    throw new Error("Invalid alert type");
+}
+
+export function parsePrettyAlert(pretty: string, interaction: APIInteraction) {
+    const stats = CryptoStat.listLongs().join("|");
+    if (new RegExp(`When (${stats})`).test(pretty)) {
+        return parsePrettyCoinAlert(pretty, interaction);
+    } else if (pretty.startsWith("When gas")) {
+        return parsePrettyGasAlert(pretty, interaction);
+    } else {
+        return null;
+    }
+}
+
+export async function parseAlertId(id: string, interaction: APIInteraction) {
+    if (id.startsWith("gas")) {
+        return parseIdGasAlert(id, interaction);
+    } else if (id.startsWith("coin")) {
+        return parseIdCoinAlert(id, interaction);
+    }
+    throw new Error("Invalid alert type");
+}
+
+//duck typing :vomit:
+export function formatAlert(alert: CoinAlert | GasAlert) {
+    if ("coin" in alert) {
+        return formatCoinAlert(alert);
+    } else if ("speed" in alert) {
+        return formatGasAlert(alert);
+    }
+    throw new Error("Invalid alert type");
+}
+
+export async function checkAlert(alert: CoinAlert | GasAlert) {
+    if ("coin" in alert) {
+        return checkCoinAlert(alert);
+    } else if ("speed" in alert) {
+        return checkGasAlert(alert);
+    }
+    throw new Error("Invalid alert type");
+}
+
+export async function deleteAlert(alert: CoinAlert | GasAlert) {
+    if ("coin" in alert) {
+        await CoinAlerts.deleteOne({
+            coin: alert.coin,
+            stat: alert.stat,
+            threshold: alert.threshold,
+            direction: alert.direction,
+            user: alert.user
+        });
+    } else if ("speed" in alert) {
+        await GasAlerts.deleteOne({
+            speed: alert.speed,
+            threshold: alert.threshold,
+            user: alert.user
+        });
+    }
 }

@@ -1,6 +1,5 @@
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeAlertsMenu, makeButtons, makeEmbed} from "./interfaceCreator";
-import CryptoStat from "../../structs/cryptoStat";
 import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
@@ -10,10 +9,9 @@ import {
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {analytics} from "../../utils/analytics";
-import {nameToMeta} from "../../structs/coinMetadata";
 import {CoinAlerts} from "../../utils/database";
-import {CoinAlert} from "../../structs/alert/coinAlert";
 import {commandIds} from "../../utils/discordUtils";
+import {parseAlertId, parsePrettyAlert} from "../../utils/alertUtils";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
@@ -29,8 +27,8 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 });
                 return;
             }
-
-            const instructions = await makeEmbed(interaction.data.values);
+            const converted = await Promise.all(interaction.data.values.map(async value => await parseAlertId(value, interaction)));
+            const instructions = await makeEmbed(converted, interaction);
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     embeds: [instructions],
@@ -71,12 +69,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             for (const alert of selected) {
                 alert.disabled = false;
                 await CoinAlerts.updateOne(
-                    {
-                        coin: alert.coin,
-                        stat: alert.stat,
-                        threshold: alert.threshold,
-                        user: alert.user
-                    },
+                    alert,
                     {
                         $set: {
                             disabled: false
@@ -87,7 +80,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected)],
+                    embeds: [await makeEmbed(selected, interaction)],
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
@@ -102,12 +95,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             for (const alert of selected) {
                 alert.disabled = true;
                 await CoinAlerts.updateOne(
-                    {
-                        coin: alert.coin,
-                        stat: alert.stat,
-                        threshold: alert.threshold,
-                        user: alert.user
-                    },
+                    alert,
                     {
                         $set: {
                             disabled: true
@@ -117,7 +105,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected)],
+                    embeds: [await makeEmbed(selected, interaction)],
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
@@ -130,17 +118,12 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 }
             });
             for (const alert of selected) {
-                await CoinAlerts.deleteOne({
-                    coin: alert.coin,
-                    stat: alert.stat,
-                    threshold: alert.threshold,
-                    user: alert.user
-                });
+                await CoinAlerts.deleteOne(alert);
             }
             selected.length = 0;
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected)],
+                    embeds: [await makeEmbed(selected, interaction)],
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
@@ -152,7 +135,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     components: [await makeAlertsMenu(interaction), makeButtons()],
-                    embeds: [await makeEmbed(selected)],
+                    embeds: [await makeEmbed(selected, interaction)],
                     flags: MessageFlags.Ephemeral
                 }
             });
@@ -162,21 +145,12 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
 
     /* istanbul ignore next */
     static async parseSelected(interaction: APIInteraction) {
-        const selected: CoinAlert[] = [];
+        const selected = [];
         for (const line of interaction.message.embeds[0].description.split("\n")) {
-            const input = line.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));
-            if (!input) {
-                continue;
+            const result = parsePrettyAlert(line, interaction);
+            if (result != null) {
+                selected.push(result);
             }
-            const alert = new CoinAlert();
-            alert.user = interaction.user.id;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
-            alert.coin = nameToMeta(input[3]).cmc_id;
-            alert.threshold = Number(input[5].replace(new RegExp(/[$%]/), ""));
-            alert.direction = input[4] == "less" ? "<" : ">";
-            alert.disabled = input[1] == "❌";
-            selected.push(alert);
         }
         return selected;
     }
