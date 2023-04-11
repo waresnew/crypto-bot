@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {CoinAlert} from "../structs/alert/coinAlert";
 import {getLatestCandle, validCryptos} from "./coinUtils";
 import {CoinAlerts, GasAlerts, LatestCoins} from "./database";

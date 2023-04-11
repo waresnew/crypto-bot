@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {makeButtons, makeEmbed, makeFormData} from "./interfaceCreator";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
