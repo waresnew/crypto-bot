@@ -116,8 +116,7 @@ export async function updateBinanceApi() {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
-            },
-            retry: {}
+            }
         }).text().then(response => {
             return {
                 type: "candles",
@@ -132,8 +131,7 @@ export async function updateBinanceApi() {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
-            },
-            retry: {}
+            }
         }).text().then(response => {
             return {
                 type: "7d%",
