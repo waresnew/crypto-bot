@@ -3,9 +3,9 @@ import {LatestCoins} from "../../utils/database";
 import CryptoStat from "../cryptoStat";
 import {evalInequality} from "../../utils/alertUtils";
 import {idToMeta} from "../coinMetadata";
+import {Alert} from "./alert";
 
 export class CoinAlert extends Alert {
-    override type = "COIN" as const;
     coin: number;
     stat: string;
     threshold: number;
