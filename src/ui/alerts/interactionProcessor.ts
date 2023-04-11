@@ -71,11 +71,16 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             for (const alert of selected) {
                 alert.disabled = false;
                 await CoinAlerts.updateOne({
-                    coin: alert.coin,
-                    stat: alert.stat,
-                    threshold: alert.threshold,
-                    user: alert.user
-                }, {disabled: false});
+                    filter: {
+                        coin: alert.coin,
+                        stat: alert.stat,
+                        threshold: alert.threshold,
+                        user: alert.user
+                    },
+                    $set: {
+                        disabled: false
+                    }
+                });
 
             }
             await http.send({
@@ -95,11 +100,16 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             for (const alert of selected) {
                 alert.disabled = true;
                 await CoinAlerts.updateOne({
-                    coin: alert.coin,
-                    stat: alert.stat,
-                    threshold: alert.threshold,
-                    user: alert.user
-                }, {disabled: true});
+                    filter: {
+                        coin: alert.coin,
+                        stat: alert.stat,
+                        threshold: alert.threshold,
+                        user: alert.user
+                    },
+                    $set: {
+                        disabled: true
+                    }
+                });
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
