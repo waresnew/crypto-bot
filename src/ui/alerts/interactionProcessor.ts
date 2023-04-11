@@ -77,8 +77,10 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                         threshold: alert.threshold,
                         user: alert.user
                     },
-                    $set: {
-                        disabled: false
+                    {
+                        $set: {
+                            disabled: false
+                        }
                     }
                 );
 
@@ -106,8 +108,10 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                         threshold: alert.threshold,
                         user: alert.user
                     },
-                    $set: {
-                        disabled: true
+                    {
+                        $set: {
+                            disabled: true
+                        }
                     }
                 );
             }
