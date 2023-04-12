@@ -4,7 +4,7 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {discordGot} from "../utils";
+import {discordGot} from "../utils/discordUtils";
 
 export default {
     name: "ping",

@@ -5,8 +5,8 @@ import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "url";
 import {APIApplicationCommand} from "discord-api-types/v10";
 
-dotenv.config({path: `./data/${process.env["NODE_ENV"]}.env`});
-const discordGot = (await import("./utils")).discordGot;
+dotenv.config({path: "./data/development.env"});
+const discordGot = (await import("./utils/discordUtils")).discordGot;
 
 async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);

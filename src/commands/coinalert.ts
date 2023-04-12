@@ -1,4 +1,3 @@
-import {autocompleteCoins, parseCoinCommandArg} from "../utils";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
@@ -10,10 +9,11 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {makeStatPrompt} from "../ui/track/interfaceCreator";
+import {makeStatPrompt} from "../ui/coinalert/interfaceCreator";
+import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 
 export default {
-    name: "track",
+    name: "coinalert",
     type: ApplicationCommandType.ChatInput,
     description: "Setup an alert for a cryptocurrency (interactive)",
     options: [

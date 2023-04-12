@@ -1,13 +1,13 @@
 /* istanbul ignore file */
 import {CronJob} from "cron";
 import got, {HTTPError} from "got";
-import {Candles, LatestCoins, mongoClient} from "../database";
+import {Candles, LatestCoins, mongoClient} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
-import {validCryptos} from "../utils";
 import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
-import {notifyExpiredAlerts, notifyUsers} from "./alertChecker";
+import {notifyExpiredCoins, triggerAlerts} from "./alertChecker";
+import {validCryptos} from "../utils/coinUtils";
 
 export const binanceApiCron = new CronJob(
     "* * * * *",
@@ -26,7 +26,7 @@ export const cleanBinanceCacheCron = new CronJob(
 );
 let cmcKeyIndex = 1;
 export let processing = false;
-export let lastUpdated = 0;
+export let binanceLastUpdated = 0;
 
 export function getCmcKey() {
     const key = process.env[`COINMARKETCAP_KEY${cmcKeyIndex}`];
@@ -154,7 +154,6 @@ export async function updateBinanceApi() {
                 for (let i = 0; i < json.length; i++) {
                     const item = json[i];
                     const candle = {
-                        _id: `${coin.cmc_id}_${item[0]}`,
                         coin: coin.cmc_id,
                         open_time: item[0],
                         open_price: parseFloat(item[1]),
@@ -171,7 +170,7 @@ export async function updateBinanceApi() {
                     };
                     toWrite.push({
                         replaceOne: {
-                            filter: {_id: candle._id},
+                            filter: {coin: candle.coin, open_time: candle.open_time},
                             replacement: candle,
                             upsert: true
                         }
@@ -212,9 +211,9 @@ export async function updateBinanceApi() {
     validCryptos.length = 0;
     validCryptos.push(...newValidCryptos);
     const start4 = Date.now();
-    await notifyExpiredAlerts(oldCryptos);
-    await notifyUsers();
-    lastUpdated = Date.now();
+    await notifyExpiredCoins(oldCryptos);
+    await triggerAlerts();
+    binanceLastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:
         ${start2 - start1} ms to get data
         ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${metadata.length - validCryptos.length} invalid)
@@ -228,6 +227,6 @@ export async function getLimit(coin: number) {
     if (!result) {
         return 1000;
     }
-    return Math.min(1000, Math.ceil((Date.now() - result.open_time) / (24 * 60 * 60 * 1000)));
+    return 1 + Math.min(1000, Math.ceil((Date.now() - result.open_time) / (24 * 60 * 60 * 1000)));
 }
 

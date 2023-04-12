@@ -4,7 +4,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {discordGot, startTime} from "../utils";
+import {discordGot, startTime} from "../utils/discordUtils";
 
 export default {
     name: "stats",

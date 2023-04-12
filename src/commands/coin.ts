@@ -1,4 +1,3 @@
-import {autocompleteCoins, parseCoinCommandArg} from "../utils";
 import {makeButtons, makeEmbed, makeFormData} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
@@ -12,6 +11,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
 import {Readable} from "node:stream";
+import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 
 export default {
     name: "coin",

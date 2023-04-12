@@ -8,11 +8,12 @@ import {
     ComponentType
 } from "discord-api-types/v10";
 import {CoinMetadata} from "../../structs/coinMetadata";
-import {Candles, LatestCoins} from "../../database";
-import {deepPatchCustomId, scientificNotationToNumber} from "../../utils";
-import {lastUpdated} from "../../services/binanceRest";
+import {Candles, LatestCoins} from "../../utils/database";
+import {scientificNotationToNumber} from "../../utils/utils";
+import {binanceLastUpdated} from "../../services/binanceRest";
 import got from "got";
 import {FormDataEncoder} from "form-data-encoder";
+import {deepPatchCustomId} from "../../utils/discordUtils";
 
 export async function makeEmbed(choice: CoinMetadata) {
     const embed = getEmbedTemplate();
@@ -63,7 +64,7 @@ export async function makeEmbed(choice: CoinMetadata) {
         },
         {
             name: "Last Updated",
-            value: `<t:${Math.floor(lastUpdated / 1000)}:R>`
+            value: `<t:${Math.floor(binanceLastUpdated / 1000)}:R>`
         }
     ];
     return embed;
