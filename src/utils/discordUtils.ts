@@ -25,23 +25,34 @@ export const discordGot = got.extend({
         response: 1000
     }
 });
-const customIdVersions = {
-    coinalert_alertstat: "0.0.1",
-    coinalert_alertvalue: "0.0.1",
-    coinalert_alertthresholdmodal: "0.0.1",
-    coinalert_alertthresholdmodalvalue: "0.0.1",
-    coinalert_alertdirectiongreater: "0.0.1",
-    coinalert_alertdirectionless: "0.0.1",
+//only two tokens allowed
+export const customIdVersions = {
+    coinalert_stat: "0.0.1",
+    coinalert_value: "0.0.1",
+    coinalert_thresholdmodal: "0.0.1",
+    coinalert_thresholdmodalvalue: "0.0.1",
+    coinalert_directiongreater: "0.0.1",
+    coinalert_directionless: "0.0.1",
     coinalert_confirm: "0.0.1",
     coinalert_confirmundo: "0.0.1",
-    coinalert_alertvalueundo: "0.0.1",
-    coinalert_alertdirectionundo: "0.0.1",
+    coinalert_valueundo: "0.0.1",
+    coinalert_directionundo: "0.0.1",
     coin_refresh: "0.0.1",
     myalerts_menu: "0.0.2",
     myalerts_enable: "0.0.2",
     myalerts_disable: "0.0.2",
     myalerts_delete: "0.0.2",
-    myalerts_refresh: "0.0.2"
+    myalerts_refresh: "0.0.2",
+    gas_refresh: "0.0.1",
+    gasalert_speedslow: "0.0.1",
+    gasalert_speednormal: "0.0.1",
+    gasalert_speedfast: "0.0.1",
+    gasalert_thresholdundo: "0.0.1",
+    gasalert_confirmundo: "0.0.1",
+    gasalert_threshold: "0.0.1",
+    gasalert_thresholdmodal: "0.0.1",
+    gasalert_thresholdmodalvalue: "0.0.1",
+    gasalert_confirm: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {

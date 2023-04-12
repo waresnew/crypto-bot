@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {
     APIMessageComponentButtonInteraction,
@@ -19,26 +20,14 @@ import {idToMeta} from "../../structs/coinMetadata";
 import {CoinAlert} from "../../structs/alert/coinAlert";
 import {CoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
+import {validateWhen} from "../../utils/utils";
+import {validateAlert} from "../../utils/alertUtils";
 
-export default class TrackInteractionProcessor extends InteractionProcessor {
-    static validateWhen(when: string) {
-        if (!when) {
-            throw "Error: You did not specify a threshold. Please try again.";
-        }
-        if (when.length > 10) {
-            throw "Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.";
-        }
-        if (isNaN(Number(when)) || isNaN(parseFloat(when))) {
-            throw "Error: The specified threshold was not a number.";
-        }
-        if (Math.abs(Number(when)) > 1000000000) {
-            throw "Error: The threshold you specified was too high. Please ensure it is between negative one billion and positive one billion.";
-        }
-    }
+export default class CoinAlertInteractionProcessor extends InteractionProcessor {
 
     /* istanbul ignore next */
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
-        if (interaction.data.custom_id.startsWith("coinalert_alertthresholdmodal")) {
+        if (interaction.data.custom_id.startsWith("coinalert_thresholdmodal")) {
             let when = interaction.data.components[0].components[0].value;
             if (when.length > 1 && when[0] == "$") {
                 when = when.substring(1);
@@ -47,7 +36,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
                 when = when.substring(0, when.length - 1);
             }
             try {
-                this.validateWhen(when);
+                validateWhen(when);
             } catch (e) {
                 analytics.track({
                     userId: interaction.user.id,
@@ -75,12 +64,12 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         if (interaction.data.custom_id.split("_")[1].endsWith("undo")) {
             const split = interaction.data.custom_id.split("_");
-            if (split[1] == "alertvalueundo") {
+            if (split[1] == "valueundo") {
                 const coin = idToMeta(Number(split[2]));
                 const res = makeStatPrompt(interaction, coin);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
-            } else if (split[1] == "alertdirectionundo") {
+            } else if (split[1] == "directionundo") {
                 const coin = idToMeta(Number(split[2]));
                 const what = split[3];
                 await http.send(makeThresholdPrompt(interaction, coin, what));
@@ -92,20 +81,20 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
             }
             return;
         }
-        if (interaction.data.custom_id.startsWith("coinalert_alertvalue")) {
+        if (interaction.data.custom_id.startsWith("coinalert_value")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.custom_id.split("_")[3];
-            http.send({
+            await http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${CryptoStat.shortToLong(what)}`,
-                    custom_id: `coinalert_alertthresholdmodal_${coin.cmc_id}_${what}`,
+                    custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
                             type: ComponentType.TextInput,
                             label: "At what threshold should you be alerted?",
-                            custom_id: "coinalert_alertthresholdmodalvalue",
+                            custom_id: "coinalert_thresholdmodalvalue",
                             style: TextInputStyle.Short,
                             required: true,
                             placeholder: "Enter a number"
@@ -113,13 +102,13 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
                     }]
                 }
             } as APIModalInteractionResponse);
-        } else if (interaction.data.custom_id.startsWith("coinalert_alertdirection")) {
-            const direction = interaction.data.custom_id.startsWith("coinalert_alertdirectiongreater") ? ">" : "<";
+        } else if (interaction.data.custom_id.startsWith("coinalert_direction")) {
+            const direction = interaction.data.custom_id.startsWith("coinalert_directiongreater") ? ">" : "<";
             const what = interaction.data.custom_id.split("_")[3], when = interaction.data.custom_id.split("_")[4];
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
-            message.description = `Great! You will be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${when}. If you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`;
+            message.description = `Great! You will be **DM'ed** when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${when}. If you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`;
             await http.send({
                 type: InteractionResponseType.UpdateMessage,
                 data: {
@@ -163,9 +152,10 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
             alert.stat = what;
             alert.threshold = Number(when);
             alert.direction = direction;
+            alert.disabled = false;
             const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
             try {
-                await this.validateAlert(alert);
+                await validateAlert(alert);
             } catch (e) {
                 await http.send({
                     type: InteractionResponseType.UpdateMessage, data: {
@@ -190,7 +180,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
             await CoinAlerts.insertOne(alert);
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}`,
+                    content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}. Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers.`,
                     flags: MessageFlags.Ephemeral,
                     embeds: [],
                     components: []
@@ -199,40 +189,10 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
         }
     }
 
-    static async validateAlert(alert: CoinAlert) {
-        const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
-        if ((await CoinAlerts.find({user: alert.user}).toArray()).length >= 25) {
-            analytics.track({
-                userId: alert.user,
-                event: "Alert Creation Failed",
-                properties: {
-                    reason: "Too many alerts"
-                }
-            });
-            throw `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`;
-        }
-        if ((await CoinAlerts.find({
-            user: alert.user,
-            coin: alert.coin,
-            stat: alert.stat,
-            threshold: alert.threshold,
-            direction: alert.direction
-        }).toArray()).length > 0) {
-            analytics.track({
-                userId: alert.user,
-                event: "Alert Creation Failed",
-                properties: {
-                    reason: "Duplicate alert"
-                }
-            });
-            throw `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`;
-        }
-    }
-
     /* istanbul ignore next */
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
 
-        if (interaction.data.custom_id.startsWith("coinalert_alertstat")) {
+        if (interaction.data.custom_id.startsWith("coinalert_stat")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.values[0];
             const response = makeThresholdPrompt(interaction, coin, what);

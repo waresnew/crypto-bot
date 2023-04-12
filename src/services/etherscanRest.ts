@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {Indexable} from "../utils/utils";
 import {CronJob} from "cron";
 import got from "got";

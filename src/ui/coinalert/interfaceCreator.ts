@@ -31,7 +31,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `coinalert_alertvalueundo_${coin.cmc_id}`
+                        custom_id: `coinalert_valueundo_${coin.cmc_id}`
                     },
                     {
                         type: ComponentType.Button,
@@ -41,7 +41,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `coinalert_alertvalue_${coin.cmc_id}_${what}`
+                        custom_id: `coinalert_value_${coin.cmc_id}_${what}`
                     }
                 ]
             }]
@@ -69,11 +69,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `coinalert_alertdirectionundo_${coin.cmc_id}_${what}`
+                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_alertdirectiongreater_${coin.cmc_id}_${what}_${when}`,
+                        custom_id: `coinalert_directiongreater_${coin.cmc_id}_${what}_${when}`,
                         label: `Greater than ${when}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -83,7 +83,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_alertdirectionless_${coin.cmc_id}_${what}_${when}`,
+                        custom_id: `coinalert_directionless_${coin.cmc_id}_${what}_${when}`,
                         label: `Less than ${when}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -113,7 +113,7 @@ Please select the stat you would like to be alerted by.`;
                 components: [{
                     type: ComponentType.StringSelect,
                     placeholder: "Select a stat...",
-                    custom_id: `coinalert_alertstat_${coin.cmc_id}`,
+                    custom_id: `coinalert_stat_${coin.cmc_id}`,
                     options: sortedOptions.map(entry => {
                         return {
                             label: entry[0].toUpperCase() + entry.substring(1),

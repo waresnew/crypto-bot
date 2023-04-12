@@ -9,9 +9,8 @@ import {
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {analytics} from "../../utils/analytics";
-import {CoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
-import {parseAlertId, parsePrettyAlert} from "../../utils/alertUtils";
+import {getAlertDb, parseAlertId, parsePrettyAlert} from "../../utils/alertUtils";
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
@@ -67,8 +66,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 }
             });
             for (const alert of selected) {
-                alert.disabled = false;
-                await CoinAlerts.updateOne(
+                await getAlertDb(alert).updateOne(
                     alert,
                     {
                         $set: {
@@ -76,6 +74,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                         }
                     }
                 );
+                alert.disabled = false;
 
             }
             await http.send({
@@ -93,8 +92,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 }
             });
             for (const alert of selected) {
-                alert.disabled = true;
-                await CoinAlerts.updateOne(
+                await getAlertDb(alert).updateOne(
                     alert,
                     {
                         $set: {
@@ -102,6 +100,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                         }
                     }
                 );
+                alert.disabled = true;
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
@@ -118,7 +117,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                 }
             });
             for (const alert of selected) {
-                await CoinAlerts.deleteOne(alert);
+                await getAlertDb(alert).deleteOne(alert);
             }
             selected.length = 0;
             await http.send({

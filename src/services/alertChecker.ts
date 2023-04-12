@@ -5,7 +5,7 @@ import {CoinAlerts, GasAlerts} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {commandIds, discordGot} from "../utils/discordUtils";
 import {validCryptos} from "../utils/coinUtils";
-import {checkAlert, deleteAlert, formatAlert, formatCoinAlert} from "../utils/alertUtils";
+import {checkAlert, formatAlert, formatCoinAlert, getAlertDb} from "../utils/alertUtils";
 
 export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
     const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
@@ -57,7 +57,7 @@ export async function triggerAlerts() {
                 toDm.set(alert.user, []);
             }
             toDm.get(alert.user).push(formatAlert(alert));
-            await deleteAlert(alert);
+            await getAlertDb(alert).deleteOne(alert);
         }
     }
     for (const user of toDm.keys()) {

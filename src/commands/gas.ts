@@ -8,8 +8,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {getEmbedTemplate} from "../ui/templates";
-import {gasPrices} from "../services/etherscanRest";
+import {makeButtons, makeEmbed} from "../ui/gas/interfaceCreator";
 
 export default {
     name: "gas",
@@ -19,30 +18,8 @@ export default {
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {
-                embeds: [{
-                    ...getEmbedTemplate(),
-                    title: "Ethereum Gas Prices",
-                    thumbnail: {
-                        url: "https://s2.coinmarketcap.com/static/img/coins/128x128/1027.png"
-                    },
-                    fields: [
-                        {
-                            name: "Slow 🐢",
-                            value: gasPrices["slow"] + " gwei",
-                            inline: true
-                        },
-                        {
-                            name: "Normal 🚶",
-                            value: gasPrices["normal"] + " gwei",
-                            inline: true
-                        },
-                        {
-                            name: "Fast ⚡",
-                            value: gasPrices["fast"] + " gwei",
-                            inline: true
-                        }
-                    ]
-                }]
+                embeds: [makeEmbed()],
+                components: [makeButtons()]
             }
         } as APIInteractionResponse);
     }

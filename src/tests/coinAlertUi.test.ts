@@ -1,16 +1,17 @@
-import TrackInteractionProcessor from "../ui/coinalert/interactionProcessor";
 import {CoinAlerts} from "../utils/database";
+import {validateWhen} from "../utils/utils";
+import {validateAlert} from "../utils/alertUtils";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {
         try {
-            TrackInteractionProcessor.validateWhen("1000000001");
+            validateWhen("1000000001");
             fail();
         } catch (e) {
             expect(e).toMatch("Error: The threshold you specified was too high");
         }
         try {
-            TrackInteractionProcessor.validateWhen("-00000000000");
+            validateWhen("-00000000000");
             fail();
         } catch (e) {
             expect(e).toMatch("The threshold you specified was too long");
@@ -27,7 +28,7 @@ describe("test alert wizard", () => {
             disabled: false
         });
         try {
-            await TrackInteractionProcessor.validateAlert({
+            await validateAlert({
                 coin: 0,
                 stat: "price",
                 direction: ">",
@@ -50,7 +51,7 @@ describe("test alert wizard", () => {
             });
         }
         try {
-            await TrackInteractionProcessor.validateAlert({
+            await validateAlert({
                 coin: 25,
                 stat: "price",
                 direction: ">",

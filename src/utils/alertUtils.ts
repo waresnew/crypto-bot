@@ -7,6 +7,10 @@ import {idToMeta, nameToMeta} from "../structs/coinMetadata";
 import {GasAlert} from "../structs/alert/gasAlert";
 import {gasPrices} from "../services/etherscanRest";
 import {APIInteraction} from "discord-api-types/v10";
+import {commandIds} from "./discordUtils";
+import {analytics} from "./analytics";
+
+type Alert = CoinAlert | GasAlert;
 
 /**
  * Evaluates an inequality expression safely
@@ -27,6 +31,31 @@ export function evalInequality(expr: string) {
             return a < b;
     }
     return false;
+}
+
+export async function validateAlert(alert: Alert) {
+    const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
+    const alerts = [...await CoinAlerts.find({user: alert.user}).toArray(), ...await GasAlerts.find({user: alert.user}).toArray()];
+    if (alerts.length >= 25) {
+        analytics.track({
+            userId: alert.user,
+            event: "Alert Creation Failed",
+            properties: {
+                reason: "Too many alerts"
+            }
+        });
+        throw `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`;
+    }
+    if (await getAlertDb(alert).findOne(alert)) {
+        analytics.track({
+            userId: alert.user,
+            event: "Alert Creation Failed",
+            properties: {
+                reason: "Duplicate alert"
+            }
+        });
+        throw `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`;
+    }
 }
 
 export async function checkCoinAlert(alert: CoinAlert) {
@@ -64,7 +93,7 @@ export function checkGasAlert(alert: GasAlert) {
 }
 
 function formatGasAlert(alert: GasAlert) {
-    return `When gas for a ${alert.speed} transaction is ${alert.threshold} gwei`;
+    return `When gas for a ${alert.speed} transaction is less than ${alert.threshold} gwei`;
 }
 
 async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
@@ -83,7 +112,7 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
         user: alert.user
     });
     if (!old) {
-        alert.disabled = undefined;
+        alert.disabled = false;
     } else {
         alert.disabled = old["disabled"];
     }
@@ -102,7 +131,7 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction) {
         user: alert.user
     });
     if (!old) {
-        alert.disabled = undefined;
+        alert.disabled = false;
     } else {
         alert.disabled = old["disabled"];
     }
@@ -123,7 +152,7 @@ function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction) {
 }
 
 function parsePrettyGasAlert(pretty: string, interaction: APIInteraction) {
-    const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is (.+) gwei/));
+    const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/));
     const alert = new GasAlert();
     alert.user = interaction.user.id;
     alert.speed = input[2];
@@ -150,7 +179,16 @@ function makeGasAlertSelectEntry(alert: GasAlert) {
     };
 }
 
-export function makeAlertSelectEntry(alert: CoinAlert | GasAlert) {
+export function getAlertDb(alert: Alert) {
+    if ("coin" in alert) {
+        return CoinAlerts;
+    } else if ("speed" in alert) {
+        return GasAlerts;
+    }
+    throw new Error("Invalid alert type");
+}
+
+export function makeAlertSelectEntry(alert: Alert) {
     if ("coin" in alert) {
         return makeCoinAlertSelectEntry(alert);
     } else if ("speed" in alert) {
@@ -163,7 +201,7 @@ export function parsePrettyAlert(pretty: string, interaction: APIInteraction) {
     const stats = CryptoStat.listLongs().join("|");
     if (new RegExp(`When (${stats})`).test(pretty)) {
         return parsePrettyCoinAlert(pretty, interaction);
-    } else if (pretty.startsWith("When gas")) {
+    } else if (new RegExp("When gas").test(pretty)) {
         return parsePrettyGasAlert(pretty, interaction);
     } else {
         return null;
@@ -180,7 +218,7 @@ export async function parseAlertId(id: string, interaction: APIInteraction) {
 }
 
 //duck typing :vomit:
-export function formatAlert(alert: CoinAlert | GasAlert) {
+export function formatAlert(alert: Alert) {
     if ("coin" in alert) {
         return formatCoinAlert(alert);
     } else if ("speed" in alert) {
@@ -189,29 +227,11 @@ export function formatAlert(alert: CoinAlert | GasAlert) {
     throw new Error("Invalid alert type");
 }
 
-export async function checkAlert(alert: CoinAlert | GasAlert) {
+export async function checkAlert(alert: Alert) {
     if ("coin" in alert) {
         return checkCoinAlert(alert);
     } else if ("speed" in alert) {
         return checkGasAlert(alert);
     }
     throw new Error("Invalid alert type");
-}
-
-export async function deleteAlert(alert: CoinAlert | GasAlert) {
-    if ("coin" in alert) {
-        await CoinAlerts.deleteOne({
-            coin: alert.coin,
-            stat: alert.stat,
-            threshold: alert.threshold,
-            direction: alert.direction,
-            user: alert.user
-        });
-    } else if ("speed" in alert) {
-        await GasAlerts.deleteOne({
-            speed: alert.speed,
-            threshold: alert.threshold,
-            user: alert.user
-        });
-    }
 }

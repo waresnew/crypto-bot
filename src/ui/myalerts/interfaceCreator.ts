@@ -12,7 +12,7 @@ import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import {CoinAlert} from "../../structs/alert/coinAlert";
 import {CoinAlerts, GasAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
-import {formatAlert, makeAlertSelectEntry} from "../../utils/alertUtils";
+import {formatAlert, getAlertDb, makeAlertSelectEntry} from "../../utils/alertUtils";
 import {GasAlert} from "../../structs/alert/gasAlert";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
@@ -47,7 +47,7 @@ export async function makeEmbed(values: (CoinAlert | GasAlert)[], interaction: A
     for (const alert of values) {
         const disabled = alert.disabled;
         delete alert.disabled;
-        const noExist = await CoinAlerts.findOne(alert) == null;
+        const noExist = await getAlertDb(alert).findOne(alert) == null;
         alert.disabled = disabled;
         if (noExist) {
             removed += "\n- " + formatAlert(alert);

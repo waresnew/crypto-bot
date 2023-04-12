@@ -1,4 +1,4 @@
-import {deepPatchCustomId, deepValidateCustomId} from "../utils/discordUtils";
+import {customIdVersions, deepPatchCustomId, deepValidateCustomId} from "../utils/discordUtils";
 
 describe("Test customid versioning", () => {
     it("throws if customid doesn't exist", () => {
@@ -10,13 +10,13 @@ describe("Test customid versioning", () => {
     });
     it("validates version correctly", () => {
         const obj = {
-            custom_id: "0.0.2_myalerts_menu",
+            custom_id: `${customIdVersions["myalerts_menu"]}_myalerts_menu`,
             a: {
-                custom_id: "0.0.2_myalerts_enable"
+                custom_id: `${customIdVersions["myalerts_enable"]}_myalerts_enable`
             },
             b: [
                 {
-                    custom_id: "0.0.2_myalerts_disable"
+                    custom_id: `${customIdVersions["myalerts_disable"]}_myalerts_disable`
                 }
             ]
         };
@@ -25,10 +25,10 @@ describe("Test customid versioning", () => {
         expect(obj.a.custom_id).toBe("myalerts_enable");
         expect(obj.b[0].custom_id).toBe("myalerts_disable");
         const obj2 = {
-            custom_id: "0.0.1_myalerts_menu_1",
+            custom_id: "0.0.0_myalerts_menu_1",
             b: [
                 {
-                    custom_id: "0.0.9_myalerts_enable"
+                    custom_id: "0.0.0_myalerts_enable"
                 }
             ]
         };
@@ -48,8 +48,8 @@ describe("Test customid versioning", () => {
             ]
         };
         deepPatchCustomId(obj);
-        expect(obj.custom_id).toBe("0.0.2_myalerts_menu");
-        expect(obj.a.custom_id).toBe("0.0.2_myalerts_enable");
-        expect(obj.b[0].custom_id).toBe("0.0.2_myalerts_disable");
+        expect(obj.custom_id).toBe(`${customIdVersions["myalerts_menu"]}_myalerts_menu`);
+        expect(obj.a.custom_id).toBe(`${customIdVersions["myalerts_enable"]}_myalerts_enable`);
+        expect(obj.b[0].custom_id).toBe(`${customIdVersions["myalerts_disable"]}_myalerts_disable`);
     });
 });
