@@ -16,7 +16,7 @@ import {parseAlertId, parsePrettyAlert} from "../../utils/alertUtils";
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-        if (interaction.data.custom_id.startsWith("alerts_menu")) {
+        if (interaction.data.custom_id.startsWith("myalerts_menu")) {
             if (interaction.data.values[0] == "default") {
                 const coinLink = `</coin:${commandIds.get("coin")}>`;
                 await http.send({
@@ -42,7 +42,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
         const selected = await AlertsInteractionProcessor.parseSelected(interaction);
-        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("alerts_refresh"))) {
+        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("myalerts_refresh"))) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Performed batch operation with 0 selected",
@@ -58,7 +58,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             return;
         }
-        if (interaction.data.custom_id.startsWith("alerts_enable")) {
+        if (interaction.data.custom_id.startsWith("myalerts_enable")) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Enabled selected alerts",
@@ -84,7 +84,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("alerts_disable")) {
+        } else if (interaction.data.custom_id.startsWith("myalerts_disable")) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Disabled selected alerts",
@@ -109,7 +109,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("alerts_delete")) {
+        } else if (interaction.data.custom_id.startsWith("myalerts_delete")) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Deleted selected alerts",
@@ -127,10 +127,10 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
                     components: [await makeAlertsMenu(interaction), await makeButtons()]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("alerts_refresh")) {
+        } else if (interaction.data.custom_id.startsWith("myalerts_refresh")) {
             analytics.track({
                 userId: interaction.user.id,
-                event: "Refreshed /alerts page"
+                event: "Refreshed /myalerts page"
             });
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {

@@ -7,6 +7,7 @@ import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
+import {etherscanApiCron} from "./services/etherscanRest";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -32,6 +33,7 @@ await import("./server");
 binanceApiCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();
+etherscanApiCron.start();
 console.log("Ready!");
 
 /**use type any for modules*/

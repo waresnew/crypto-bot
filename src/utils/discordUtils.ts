@@ -26,22 +26,22 @@ export const discordGot = got.extend({
     }
 });
 const customIdVersions = {
-    track_alertstat: "0.0.1",
-    track_alertvalue: "0.0.1",
-    track_alertthresholdmodal: "0.0.1",
-    track_alertthresholdmodalvalue: "0.0.1",
-    track_alertdirectiongreater: "0.0.1",
-    track_alertdirectionless: "0.0.1",
-    track_confirm: "0.0.1",
-    track_confirmundo: "0.0.1",
-    track_alertvalueundo: "0.0.1",
-    track_alertdirectionundo: "0.0.1",
+    coinalert_alertstat: "0.0.1",
+    coinalert_alertvalue: "0.0.1",
+    coinalert_alertthresholdmodal: "0.0.1",
+    coinalert_alertthresholdmodalvalue: "0.0.1",
+    coinalert_alertdirectiongreater: "0.0.1",
+    coinalert_alertdirectionless: "0.0.1",
+    coinalert_confirm: "0.0.1",
+    coinalert_confirmundo: "0.0.1",
+    coinalert_alertvalueundo: "0.0.1",
+    coinalert_alertdirectionundo: "0.0.1",
     coin_refresh: "0.0.1",
-    alerts_menu: "0.0.1",
-    alerts_enable: "0.0.1",
-    alerts_disable: "0.0.1",
-    alerts_delete: "0.0.1",
-    alerts_refresh: "0.0.1"
+    myalerts_menu: "0.0.2",
+    myalerts_enable: "0.0.2",
+    myalerts_disable: "0.0.2",
+    myalerts_delete: "0.0.2",
+    myalerts_refresh: "0.0.2"
 } as Indexable;
 
 export function initClient(input: APIUser) {

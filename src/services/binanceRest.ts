@@ -26,7 +26,7 @@ export const cleanBinanceCacheCron = new CronJob(
 );
 let cmcKeyIndex = 1;
 export let processing = false;
-export let lastUpdated = 0;
+export let binanceLastUpdated = 0;
 
 export function getCmcKey() {
     const key = process.env[`COINMARKETCAP_KEY${cmcKeyIndex}`];
@@ -213,7 +213,7 @@ export async function updateBinanceApi() {
     const start4 = Date.now();
     await notifyExpiredCoins(oldCryptos);
     await triggerAlerts();
-    lastUpdated = Date.now();
+    binanceLastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:
         ${start2 - start1} ms to get data
         ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${metadata.length - validCryptos.length} invalid)

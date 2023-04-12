@@ -24,7 +24,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
         components: [
             {
                 type: ComponentType.StringSelect,
-                custom_id: "alerts_menu",
+                custom_id: "myalerts_menu",
                 min_values: 1,
                 max_values: alertMenuOptions.length == 0 ? 1 : alertMenuOptions.length,
                 placeholder: "Select one or more alerts...",
@@ -41,7 +41,7 @@ export async function makeAlertsMenu(interaction: APIInteraction) {
 export async function makeEmbed(values: (CoinAlert | GasAlert)[], interaction: APIInteraction) {
     const instructions = getEmbedTemplate();
     instructions.title = "Your alerts";
-    let desc = "Looking to add an alert? Run </track:" + commandIds.get("track") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
+    let desc = "Looking to add an alert? Run </coinalert:" + commandIds.get("coinalert") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const alert of values) {
@@ -79,7 +79,7 @@ export function makeButtons() {
         components: [
             {
                 type: ComponentType.Button,
-                custom_id: "alerts_enable",
+                custom_id: "myalerts_enable",
                 label: "Enable selected",
                 emoji: {
                     id: null,
@@ -89,7 +89,7 @@ export function makeButtons() {
             },
             {
                 type: ComponentType.Button,
-                custom_id: "alerts_disable",
+                custom_id: "myalerts_disable",
                 label: "Disable selected",
                 emoji: {
                     id: null,
@@ -99,7 +99,7 @@ export function makeButtons() {
             },
             {
                 type: ComponentType.Button,
-                custom_id: "alerts_delete",
+                custom_id: "myalerts_delete",
                 label: "Delete selected",
                 emoji: {
                     id: null,
@@ -109,7 +109,7 @@ export function makeButtons() {
             },
             {
                 type: ComponentType.Button,
-                custom_id: "alerts_refresh",
+                custom_id: "myalerts_refresh",
                 label: "Refresh",
                 emoji: {
                     id: null,

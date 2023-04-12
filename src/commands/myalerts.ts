@@ -1,4 +1,4 @@
-import {makeAlertsMenu, makeButtons, makeEmbed} from "../ui/alerts/interfaceCreator";
+import {makeAlertsMenu, makeButtons, makeEmbed} from "../ui/myalerts/interfaceCreator";
 import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
@@ -11,7 +11,7 @@ import {
 } from "discord-api-types/v10";
 
 export default {
-    name: "alerts",
+    name: "myalerts",
     type: ApplicationCommandType.ChatInput,
     description: "Manage your alerts",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {

@@ -38,7 +38,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
 
     /* istanbul ignore next */
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
-        if (interaction.data.custom_id.startsWith("track_alertthresholdmodal")) {
+        if (interaction.data.custom_id.startsWith("coinalert_alertthresholdmodal")) {
             let when = interaction.data.components[0].components[0].value;
             if (when.length > 1 && when[0] == "$") {
                 when = when.substring(1);
@@ -92,20 +92,20 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
             }
             return;
         }
-        if (interaction.data.custom_id.startsWith("track_alertvalue")) {
+        if (interaction.data.custom_id.startsWith("coinalert_alertvalue")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.custom_id.split("_")[3];
             http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${CryptoStat.shortToLong(what)}`,
-                    custom_id: `track_alertthresholdmodal_${coin.cmc_id}_${what}`,
+                    custom_id: `coinalert_alertthresholdmodal_${coin.cmc_id}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
                             type: ComponentType.TextInput,
                             label: "At what threshold should you be alerted?",
-                            custom_id: "track_alertthresholdmodalvalue",
+                            custom_id: "coinalert_alertthresholdmodalvalue",
                             style: TextInputStyle.Short,
                             required: true,
                             placeholder: "Enter a number"
@@ -113,8 +113,8 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
                     }]
                 }
             } as APIModalInteractionResponse);
-        } else if (interaction.data.custom_id.startsWith("track_alertdirection")) {
-            const direction = interaction.data.custom_id.startsWith("track_alertdirectiongreater") ? ">" : "<";
+        } else if (interaction.data.custom_id.startsWith("coinalert_alertdirection")) {
+            const direction = interaction.data.custom_id.startsWith("coinalert_alertdirectiongreater") ? ">" : "<";
             const what = interaction.data.custom_id.split("_")[3], when = interaction.data.custom_id.split("_")[4];
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const message = getEmbedTemplate();
@@ -136,11 +136,11 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
                                 },
                                 style: ButtonStyle.Primary,
                                 label: "Go back",
-                                custom_id: `track_confirmundo_${coin.cmc_id}_${what}_${when}`
+                                custom_id: `coinalert_confirmundo_${coin.cmc_id}_${what}_${when}`
                             },
                             {
                                 type: ComponentType.Button,
-                                custom_id: `track_confirm_${coin.cmc_id}_${what}_${when}_${direction}`,
+                                custom_id: `coinalert_confirm_${coin.cmc_id}_${what}_${when}_${direction}`,
                                 label: "Confirm",
                                 style: ButtonStyle.Success,
                                 emoji: {
@@ -152,7 +152,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
                     }]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("track_confirm")) {
+        } else if (interaction.data.custom_id.startsWith("coinalert_confirm")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.custom_id.split("_")[3];
             const when = interaction.data.custom_id.split("_")[4];
@@ -163,7 +163,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
             alert.stat = what;
             alert.threshold = Number(when);
             alert.direction = direction;
-            const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
+            const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
             try {
                 await this.validateAlert(alert);
             } catch (e) {
@@ -200,7 +200,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
     }
 
     static async validateAlert(alert: CoinAlert) {
-        const manageAlertLink = `</alerts:${commandIds.get("alerts")}>`;
+        const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
         if ((await CoinAlerts.find({user: alert.user}).toArray()).length >= 25) {
             analytics.track({
                 userId: alert.user,
@@ -232,7 +232,7 @@ export default class TrackInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
     static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
 
-        if (interaction.data.custom_id.startsWith("track_alertstat")) {
+        if (interaction.data.custom_id.startsWith("coinalert_alertstat")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.values[0];
             const response = makeThresholdPrompt(interaction, coin, what);

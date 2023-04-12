@@ -1,4 +1,4 @@
-import alertsCmd from "../commands/alerts";
+import alertsCmd from "../commands/myalerts";
 import {mockCommandInteraction, mockReply} from "./testSetup";
 import Mock = jest.Mock;
 

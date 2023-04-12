@@ -1,4 +1,4 @@
-import TrackInteractionProcessor from "../ui/track/interactionProcessor";
+import TrackInteractionProcessor from "../ui/coinalert/interactionProcessor";
 import {CoinAlerts} from "../utils/database";
 
 describe("test alert wizard", () => {

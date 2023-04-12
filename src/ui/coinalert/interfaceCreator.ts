@@ -31,7 +31,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `track_alertvalueundo_${coin.cmc_id}`
+                        custom_id: `coinalert_alertvalueundo_${coin.cmc_id}`
                     },
                     {
                         type: ComponentType.Button,
@@ -41,7 +41,7 @@ export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `track_alertvalue_${coin.cmc_id}_${what}`
+                        custom_id: `coinalert_alertvalue_${coin.cmc_id}_${what}`
                     }
                 ]
             }]
@@ -69,11 +69,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `track_alertdirectionundo_${coin.cmc_id}_${what}`
+                        custom_id: `coinalert_alertdirectionundo_${coin.cmc_id}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `track_alertdirectiongreater_${coin.cmc_id}_${what}_${when}`,
+                        custom_id: `coinalert_alertdirectiongreater_${coin.cmc_id}_${what}_${when}`,
                         label: `Greater than ${when}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -83,7 +83,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `track_alertdirectionless_${coin.cmc_id}_${what}_${when}`,
+                        custom_id: `coinalert_alertdirectionless_${coin.cmc_id}_${what}_${when}`,
                         label: `Less than ${when}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -101,7 +101,7 @@ export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata) 
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </track:${commandIds.get("track")}>.
+    message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </coinalert:${commandIds.get("coinalert")}>.
 
 Please select the stat you would like to be alerted by.`;
     return {
@@ -113,7 +113,7 @@ Please select the stat you would like to be alerted by.`;
                 components: [{
                     type: ComponentType.StringSelect,
                     placeholder: "Select a stat...",
-                    custom_id: `track_alertstat_${coin.cmc_id}`,
+                    custom_id: `coinalert_alertstat_${coin.cmc_id}`,
                     options: sortedOptions.map(entry => {
                         return {
                             label: entry[0].toUpperCase() + entry.substring(1),
