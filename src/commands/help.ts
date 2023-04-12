@@ -29,6 +29,10 @@ export default {
             {
                 name: `</gas:${commandIds.get("gas")}>`,
                 value: "Check the current Ethereum gas price."
+            },
+            {
+                name: `</gasalert:${commandIds.get("gasalert")}>`,
+                value: "Get notified when the Ethereum gas price for a slow/normal/fast transaction falls below a certain level."
             }
         ];
         http.send({
