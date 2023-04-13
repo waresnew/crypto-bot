@@ -15,7 +15,7 @@ export default {
         embed.title = "Global statistics";
         embed.fields = [{
             name: "Server Count",
-            value: await JSON.parse(await discordGot("users/@me/guilds").text()).length
+            value: await JSON.parse(await discordGot("applications/@me").text()).approximate_guild_count
         },
             {
                 name: "Uptime",
