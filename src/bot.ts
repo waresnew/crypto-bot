@@ -8,6 +8,7 @@ import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
 import {etherscanApiCron} from "./services/etherscanRest";
+import {postServerCountCron} from "./services/topggRest";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -31,6 +32,7 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
 binanceApiCron.start();
+postServerCountCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();
 etherscanApiCron.start();
