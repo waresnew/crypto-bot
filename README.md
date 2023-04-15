@@ -6,7 +6,7 @@ Runs on a 512 mb ram, 1 vCore VPS
 [![.github/workflows/ci.yml](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/waresnew/crypto-bot/branch/master/graph/badge.svg?token=0P4VLWTWXL)](https://codecov.io/gh/waresnew/crypto-bot)
 
-Botchain keeps you informed about the price of your favorite cryptocurrencies! This is
+Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
 
 Here are some of our features:
@@ -27,13 +27,13 @@ information.
 
 ### Price Alerts `/coinalert`
 
-Set up price alerts for your favorite coins.
+Set up price alerts for your favourite coins.
 
 ![image3](http://212.227.50.233:3000/static/image3.gif)
 
-### Easily manage your alerts
+### Easily manage your alerts `/myalerts`
 
-Lastly, you can manage all of your alerts in one place with `/myalerts`:
+Lastly, you can easily manage all of your alerts in one place!
 
 ![image4](http://212.227.50.233:3000/static/image4.gif)
 
