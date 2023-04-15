@@ -14,23 +14,23 @@ Here are some of our features:
 ### Coin Info Panels `/coin`
 
 Bring up a persistent panel with information about a coin. Click the *Refresh* button to update the information.
-image1
+![image1](http://212.227.50.233:3000/static/image1.png)
 
 ### Gas Info Panels `/gas`
 
 Bring up a persistent panel with information about the current gas prices. Click the *Refresh* button to update the
 information.
 (We support gas alerts too!)
-image2
+![image2](http://212.227.50.233:3000/static/image2.png)
 
 ### Price Alerts `/coinalert`
 
 Set up price alerts for your favorite coins.
-image3
+![image3](http://212.227.50.233:3000/static/image3.gif)
 
 ***
 Lastly, you can manage all of your alerts in one place with `/myalerts`:
-image4
+![image4](http://212.227.50.233:3000/static/image4.gif)
 
 We hope you enjoy using Botchain!
-image5
+![fullbody](http://212.227.50.233:3000/static/fullbody.png)
