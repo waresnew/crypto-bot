@@ -32,6 +32,7 @@ Set up price alerts for your favorite coins.
 ![image3](http://212.227.50.233:3000/static/image3.gif)
 
 ### Easily manage your alerts
+
 Lastly, you can manage all of your alerts in one place with `/myalerts`:
 
 ![image4](http://212.227.50.233:3000/static/image4.gif)
