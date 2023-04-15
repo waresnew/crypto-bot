@@ -20,6 +20,7 @@ import Sentry from "@sentry/node";
 import {mongoClient, openDb} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
 import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils/discordUtils";
+import fastifyStatic from "@fastify/static";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();
@@ -31,6 +32,10 @@ server.setErrorHandler((error, request, reply) => {
 });
 await server.register(rawBody, {
     runFirst: true
+});
+await server.register(fastifyStatic, {
+    root: "/app/data/static",
+    prefix: "/static/"
 });
 
 async function closeGracefully(signal: string | number) {

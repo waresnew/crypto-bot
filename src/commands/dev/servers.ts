@@ -14,7 +14,7 @@ export default {
         const mapped = result.map((a: { name: string; }) => a.name);
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {content: mapped.join(", ")}
+            data: {content: mapped.join("\n")}
         });
     }
 } as APIApplicationCommand;
