@@ -15,7 +15,8 @@ export async function postServerCount() {
     await got(`https://top.gg/api/bots/${process.env["APP_ID"]}/stats`, {
         method: "POST",
         headers: {
-            "Authorization": process.env["TOPGG_TOKEN"]
+            "Authorization": process.env["TOPGG_TOKEN"],
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             server_count: serverCount
