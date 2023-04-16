@@ -13,7 +13,7 @@ import {scientificNotationToNumber} from "../../utils/utils";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import got from "got";
 import {FormDataEncoder} from "form-data-encoder";
-import {deepPatchCustomId} from "../../utils/discordUtils";
+import {deepPatchCustomId, emojis} from "../../utils/discordUtils";
 
 export async function makeEmbed(choice: CoinMetadata) {
     const embed = getEmbedTemplate();
@@ -30,16 +30,16 @@ export async function makeEmbed(choice: CoinMetadata) {
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
         name: "Price",
-        value: `$${formatPrice(latestCandle.close_price)} ${coin.weekPriceChangePercent < 0 ? "🔴" : "🟢"}`
+        value: `$${formatPrice(latestCandle.close_price)} ${coin.weekPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`
     },
         {
             name: "24h High",
-            value: `$${formatPrice(coin.dayHighPrice)} 🟢`,
+            value: `$${formatPrice(coin.dayHighPrice)} ${emojis["bullish"]}`,
             inline: true
         },
         {
             name: "24h Low",
-            value: `$${formatPrice(coin.dayLowPrice)} 🔴`,
+            value: `$${formatPrice(coin.dayLowPrice)} ${emojis["bearish"]}`,
             inline: true
         },
         {
@@ -49,17 +49,17 @@ export async function makeEmbed(choice: CoinMetadata) {
         },
         {
             name: "1h Change",
-            value: `${Math.round(coin.hourPriceChangePercent * 100) / 100}% ${coin.hourPriceChangePercent < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.hourPriceChangePercent * 100) / 100}% ${coin.hourPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
             name: "24h Change",
-            value: `${Math.round(coin.dayPriceChangePercent * 100) / 100}% ${coin.dayPriceChangePercent < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.dayPriceChangePercent * 100) / 100}% ${coin.dayPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
             name: "7d Change",
-            value: `${Math.round(coin.weekPriceChangePercent * 100) / 100}% ${coin.weekPriceChangePercent < 0 ? "🔴" : "🟢"}`,
+            value: `${Math.round(coin.weekPriceChangePercent * 100) / 100}% ${coin.weekPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
@@ -89,13 +89,12 @@ export async function makeChart(coin: CoinMetadata) {
     return got(`${process.env["OFFLOAD_URL"]}/graphserver/chart`, {
         method: "POST",
         body: JSON.stringify({
-            meta: coin,
             candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
         })
     }).buffer();
 }
 
-export async function makeButtons(choice: CoinMetadata) {
+export function makeButtons(choice: CoinMetadata) {
     return {
         type: ComponentType.ActionRow,
         components: [

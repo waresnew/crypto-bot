@@ -1,4 +1,4 @@
-import {customIdVersions, deepPatchCustomId, deepValidateCustomId} from "../utils/discordUtils";
+import {customIdVersions, deepPatchCustomId, deepValidateCustomId} from "../src/utils/discordUtils";
 
 describe("Test customid versioning", () => {
     it("throws if customid doesn't exist", () => {

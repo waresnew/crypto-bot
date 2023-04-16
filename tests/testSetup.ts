@@ -1,4 +1,4 @@
-import {analytics, setAnalytics} from "../utils/analytics";
+import {analytics, setAnalytics} from "../src/utils/analytics";
 import Analytics from "analytics-node";
 import nock from "nock";
 import {APIUser, InteractionType} from "discord-api-types/v10";
@@ -7,10 +7,10 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {jest} from "@jest/globals";
-import {Candles, CoinAlerts, LatestCoins, mongoClient, openDb} from "../utils/database";
-import {CoinMetadata} from "../structs/coinMetadata";
-import {initClient} from "../utils/discordUtils";
-import {validCryptos} from "../utils/coinUtils";
+import {Candles, CoinAlerts, LatestCoins, mongoClient, openDb} from "../src/utils/database";
+import {CoinMetadata} from "../src/structs/coinMetadata";
+import {initClient} from "../src/utils/discordUtils";
+import {validCryptos} from "../src/utils/coinUtils";
 import Mock = jest.Mock;
 
 /*

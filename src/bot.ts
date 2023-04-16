@@ -9,6 +9,7 @@ import {initBinanceWs} from "./services/binanceWs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
 import {etherscanApiCron} from "./services/etherscanRest";
 import {postServerCountCron} from "./services/topggRest";
+import {spawn} from "node:child_process";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -31,6 +32,14 @@ await importFromDir(path.join(cwd, "commands"), (module: any) => {
 });
 await importInteractionProcessors(path.join(cwd, "ui"));
 await import("./server");
+const child = spawn("python3", ["python/pythonServer.py"]);
+child.stdout.setEncoding("utf8");
+child.stdout.on("data", data => {
+    console.log(data.toString());
+});
+child.stderr.on("data", data => {
+    console.error(data.toString());
+});
 binanceApiCron.start();
 postServerCountCron.start();
 initBinanceWs();

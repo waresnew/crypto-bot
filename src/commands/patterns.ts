@@ -1,22 +1,22 @@
-import {makeButtons, makeEmbed, makeFormData} from "../ui/coin/interfaceCreator";
 import {
     APIApplicationCommand,
     APIApplicationCommandAutocompleteInteraction,
     ApplicationCommandOptionType,
     ApplicationCommandType,
-    InteractionResponseType
+    InteractionResponseType,
+    MessageFlags
 } from "discord-api-types/v10";
+import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {FastifyReply} from "fastify";
-import {Readable} from "node:stream";
+import {makeButtons, makeEmbed} from "../ui/patterns/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
-
+// noinspection DuplicatedCode
 export default {
-    name: "coin",
+    name: "patterns",
     type: ApplicationCommandType.ChatInput,
-    description: "Gets information about a cryptocurrency",
+    description: "Finds candlestick patterns for a coin",
     options: [
         {
             name: "name",
@@ -26,6 +26,7 @@ export default {
             required: true
         }
     ],
+    voteRequired: true,
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         let choice;
         try {
@@ -37,16 +38,13 @@ export default {
                 }
             });
         }
-        const embed = await makeEmbed(choice);
-        const buttons = makeButtons(choice);
-        const encoded = await makeFormData({
+        await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [embed], components: [buttons]}
-        }, choice);
-        await http.headers(encoded.headers).send(Readable.from(encoded.encode()));
+            data: {embeds: [await makeEmbed(choice)], components: [makeButtons(choice)], flags: MessageFlags.Ephemeral}
+        });
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
         await http.send(autocompleteCoins(interaction));
     }
-
 } as APIApplicationCommand;
+

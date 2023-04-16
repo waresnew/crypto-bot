@@ -1,8 +1,8 @@
 import {APIChannel} from "discord-api-types/v10";
 import nock from "nock";
-import {CoinAlerts} from "../utils/database";
-import {notifyExpiredCoins} from "../services/alertChecker";
-import {validCryptos} from "../utils/coinUtils";
+import {CoinAlerts} from "../src/utils/database";
+import {notifyExpiredCoins} from "../src/services/alertChecker";
+import {validCryptos} from "../src/utils/coinUtils";
 
 describe("Checks if expired coins are handled properly", function () {
 

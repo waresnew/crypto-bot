@@ -5,7 +5,7 @@
     ]
   },
   "setupFilesAfterEnv": [
-    "<rootDir>/src/tests/testSetup.ts"
+    "<rootDir>/tests/testSetup.ts"
   ],
   "collectCoverageFrom": [
     "./src/**"
