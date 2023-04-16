@@ -91,7 +91,7 @@ server.route({
         if (message.type == InteractionType.ApplicationCommand) {
             const interaction = message as APIChatInputApplicationCommandInteraction;
             const cmd = commands.get(interaction.data.name);
-            if (cmd.voteRequired) {
+            if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
                 const user = await UserDatas.findOne({user: message.user.id});
                 if (!user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5)) {
                     analytics.track({
