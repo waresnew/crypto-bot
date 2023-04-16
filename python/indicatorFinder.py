@@ -9,13 +9,9 @@ from config import candle_pattern_names
 
 def find_ma(ohlcv, output):
     periods = [5, 10, 20, 50, 100, 200]
-    sma = {}
-    ema = {}
     for period in periods:
-        sma[str(period)] = SMA(ohlcv['close'], timeperiod=period)[-1]
-        ema[str(period)] = EMA(ohlcv['close'], timeperiod=period)[-1]
-    output['sma'] = sma
-    output['ema'] = ema
+        output['sma' + str(period)] = SMA(ohlcv['close'], timeperiod=period)[-1]
+        output['ema' + str(period)] = EMA(ohlcv['close'], timeperiod=period)[-1]
 
 
 def find_indicators(ohlcv):
@@ -30,11 +26,6 @@ def find_indicators(ohlcv):
     indicators['willr'] = WILLR(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # Williams' %R(14)
     indicators['cci'] = CCI(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # CCI(14)
     indicators['atr'] = ATR(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ATR(14)
-    indicators['bbands'] = {}
-    upper_bband, middle_bband, lower_bband = BBANDS(ohlcv['close'], timeperiod=20)  # BBANDS(20, 2, 2)
-    indicators['bbands']['upper'] = upper_bband[-1]
-    indicators['bbands']['middle'] = middle_bband[-1]
-    indicators['bbands']['lower'] = lower_bband[-1]
     indicators['ultosc'] = ULTOSC(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ULTOSC(7, 14, 28)
     indicators['roc'] = ROC(ohlcv['close'], timeperiod=14)[-1]  # ROC(14)
     return indicators
