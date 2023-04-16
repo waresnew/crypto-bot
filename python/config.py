@@ -6,7 +6,7 @@ candle_pattern_names = {
     "CDL3OUTSIDE": ("Three Outside Up/Down", 3),
     "CDL3STARSINSOUTH": "Three Stars In The South",
     "CDL3WHITESOLDIERS": ("Three White Soldiers", 3),
-    "CDLABANDONEDBABY": "Abandoned Baby",
+    "CDLABANDONEDBABY": ("Abandoned Baby", 3),
     "CDLADVANCEBLOCK": ("Advance Block", 2),
     "CDLBELTHOLD": ("Belt-hold", 1),
     "CDLBREAKAWAY": "Breakaway",
@@ -58,6 +58,6 @@ candle_pattern_names = {
     "CDLTHRUSTING": ("Thrusting Pattern", 1),
     "CDLTRISTAR": "Tristar Pattern",
     "CDLUNIQUE3RIVER": "Unique 3 River",
-    "CDLUPSIDEGAP2CROWS": "Upside Gap Two Crows",
+    "CDLUPSIDEGAP2CROWS": ("Upside Gap Two Crows", 3),
     "CDLXSIDEGAP3METHODS": ("Upside/Downside Gap Three Methods", 2)
 }

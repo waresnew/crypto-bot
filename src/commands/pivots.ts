@@ -9,13 +9,13 @@ import {FastifyReply} from "fastify";
 import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
-import {makeEmbed} from "../ui/patterns/interfaceCreator";
+import {makeEmbed} from "../ui/pivots/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 
 export default {
-    name: "patterns",
+    name: "pivots",
     type: ApplicationCommandType.ChatInput,
-    description: "Finds candlestick patterns for a coin",
+    description: "Calculates pivot points for a coin",
     options: [
         {
             name: "name",

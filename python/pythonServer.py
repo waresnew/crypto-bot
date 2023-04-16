@@ -1,7 +1,10 @@
+import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from graphMaker import make_chart
-from indicatorFinder import build_output
+import numpy as np
+
+from python.graph.graphMaker import make_chart
+from python.technicalanalysis import exports
 
 
 class Server(BaseHTTPRequestHandler):
@@ -28,11 +31,22 @@ class Server(BaseHTTPRequestHandler):
             self.send_header("Content-type", "image/png")
             self.end_headers()
             self.wfile.write(make_chart(data))
-        if self.path == '/indicators':
+        elif self.path == '/indicators' or self.path == '/patterns' or self.path == '/pivots':
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
-            self.wfile.write(build_output(data).encode('utf-8'))
+            body = json.loads(data)
+            # input should be in ascending chronological order
+            # noinspection DuplicatedCode
+            ohlcv = {
+                'open': np.array([float(num) for num in body['open']]),
+                'high': np.array([float(num) for num in body['high']]),
+                'low': np.array([float(num) for num in body['low']]),
+                'close': np.array([float(num) for num in body['close']]),
+                'volume': np.array([float(num) for num in body['volume']])
+            }
+
+            self.wfile.write(json.dumps(getattr(exports, 'find_' + self.path[1:])(ohlcv)).encode('utf-8'))
         else:
             self.send_response(404)
 

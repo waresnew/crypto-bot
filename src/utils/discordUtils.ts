@@ -9,6 +9,10 @@ export let client: APIUser;
 export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
 export const commands = new Map<string, any>();
+export const emojis = {
+    "bullish": "<:bullish:1097137805546758184>",
+    "bearish": "<:bearish:1097137994932178985>"
+};
 export const discordGot = got.extend({
     headers: {
         "User-Agent": "DiscordBot (http, 1.0)",

@@ -1,10 +1,5 @@
-import json
-
 import numpy as np
-import talib
-from talib import *
-
-from config import candle_pattern_names
+from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA
 
 
 def find_ma(ohlcv, output):
@@ -21,7 +16,12 @@ def find_indicators(ohlcv):
     indicators['stoch'] = STOCH(ohlcv['high'], ohlcv['low'], ohlcv['close'], fastk_period=14, slowk_period=6,
                                 slowd_period=6)[1][-1]  # STOCH(14, 6, 6)
     indicators['stochrsi'] = STOCHRSI(ohlcv['close'], fastk_period=14, fastd_period=6)[1][-1]  # STOCHRSI(14, 6, 6)
-    indicators['macd'] = MACD(ohlcv['close'])[0][-1]  # MACD(12, 26, 9)
+    macd, macdsignal, macdhist = MACD(ohlcv['close'])
+    indicators['macd'] = {}  # MACD(12, 26, 9)
+    indicators['macd']['macd'] = macd[-1]
+    indicators['macd']['macdsignal'] = macdsignal[-1]
+    indicators['macd']['macdhist'] = macdhist[-1]
+
     indicators['adx'] = ADX(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ADX(14)
     indicators['willr'] = WILLR(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # Williams' %R(14)
     indicators['cci'] = CCI(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # CCI(14)
@@ -31,39 +31,20 @@ def find_indicators(ohlcv):
     return indicators
 
 
-def find_candle_patterns(ohlcv):
-    available_patterns = get_function_groups()['Pattern Recognition']
-    patterns = {}
-    for pattern in available_patterns:
-        f = getattr(talib, pattern)
-        result = f(ohlcv['open'], ohlcv['high'], ohlcv['low'], ohlcv['close'])
-        obj = candle_pattern_names[pattern]
-        if not type(obj) is tuple:
-            continue
-        name, reliability = obj
-        patterns[name] = {"reliability": reliability, "result": result.tolist()}
-    return patterns
-
-
-# input should be in ascending chronological order
-def build_output(data):
-    body = json.loads(data)
-    ohlcv = {
+if __name__ == '__main__':
+    body = {
+        'open': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
+        'high': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
+        'low': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
+        'close': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
+        'volume': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10
+    }
+    # noinspection DuplicatedCode
+    ok = {
         'open': np.array([float(num) for num in body['open']]),
         'high': np.array([float(num) for num in body['high']]),
         'low': np.array([float(num) for num in body['low']]),
         'close': np.array([float(num) for num in body['close']]),
         'volume': np.array([float(num) for num in body['volume']])
     }
-    output = {'patterns': find_candle_patterns(ohlcv), 'indicators': find_indicators(ohlcv)}
-    return json.dumps(output)
-
-
-if __name__ == '__main__':
-    build_output(json.dumps({
-        'open': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
-        'high': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
-        'low': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
-        'close': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10,
-        'volume': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] * 10
-    }))
+    find_indicators(ok)

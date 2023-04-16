@@ -14,6 +14,7 @@ COPY package*.json ./
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 FROM base as build
+ENV PYTHONPATH "${PYTHONPATH}:/app/"
 RUN npm ci
 COPY . .
 RUN npm run build
