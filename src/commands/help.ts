@@ -18,36 +18,24 @@ export default {
         Check out the commands below to get started:
         
         - </coin:${commandIds.get("coin")}>: Check the current price of a cryptocurrency.
+        
         - </coinalert:${commandIds.get("coinalert")}>: Track a cryptocurrency and get notified when it reaches a certain price.
+        
         - </gas:${commandIds.get("gas")}>: Check the current Ethereum gas price.
+        
         - </gasalert:${commandIds.get("gasalert")}>: Get notified when the Ethereum gas price for a slow/normal/fast transaction falls below a certain level.
+        
         
         We also have some technical analysis tools that you can use to make better trading decisions. Check out the commands below:
         
         - </indicators:${commandIds.get("indicators")}>: Estimates the future price movement of a coin with a variety of technical indicators.
+        
         - </patterns:${commandIds.get("patterns")}>: Shows the recent candlestick patterns of a coin.
+        
         - </pivots:${commandIds.get("pivots")}>: Calculates the support/resistance levels of a coin.`;
         embed.image = {
             url: "https://i.imgur.com/Mh8mqVt.png"
         };
-        embed.fields = [
-            {
-                name: `</coin:${commandIds.get("coin")}>`,
-                value: "Check the current price of a cryptocurrency."
-            },
-            {
-                name: `</coinalert:${commandIds.get("coinalert")}>`,
-                value: "Track a cryptocurrency and get notified when it reaches a certain price."
-            },
-            {
-                name: `</gas:${commandIds.get("gas")}>`,
-                value: "Check the current Ethereum gas price."
-            },
-            {
-                name: `</gasalert:${commandIds.get("gasalert")}>`,
-                value: "Get notified when the Ethereum gas price for a slow/normal/fast transaction falls below a certain level."
-            }
-        ];
         http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {
