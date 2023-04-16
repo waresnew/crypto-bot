@@ -25,7 +25,6 @@ def make_chart(data):
     fig, axlist = mpf.plot(df, type='candle', style=style, volume=True, returnfig=True, xlabel='', ylabel='',
                            ylabel_lower='', tight_layout=True, volume_exponent=0)
     axlist[2].set_yticks([])
-    axlist[0].yaxis.tick_right()
     axlist[0].spines.bottom.set_visible(False)
     axlist[2].spines.top.set_visible(False)
     start2 = round(time.time() * 1000)
