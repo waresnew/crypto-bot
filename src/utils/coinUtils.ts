@@ -51,7 +51,7 @@ export async function getLatestCandle(coin: number) {
 }
 
 export function getBinanceRestUrl() {
-    return process.env["NODE_ENV"] == "production" ? `${process.env["SPAIN_SERVER"]}/binance` : "https://api.binance.com";
+    return process.env["NODE_ENV"] == "production" ? `${process.env["SPAIN_PROXY"]}/binance` : "https://api.binance.com";
 }
 
 export function getBinanceWsUrl() {
