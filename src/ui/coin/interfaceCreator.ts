@@ -89,7 +89,6 @@ export async function makeChart(coin: CoinMetadata) {
     return got(`${process.env["OFFLOAD_URL"]}/graphserver/chart`, {
         method: "POST",
         body: JSON.stringify({
-            meta: coin,
             candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
         })
     }).buffer();

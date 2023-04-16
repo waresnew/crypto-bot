@@ -1,7 +1,7 @@
 import nock from "nock";
-import {triggerAlerts} from "../services/alertChecker";
-import {Candles, CoinAlerts, LatestCoins} from "../utils/database";
-import {checkCoinAlert} from "../utils/alertUtils";
+import {triggerAlerts} from "../src/services/alertChecker";
+import {Candles, CoinAlerts, LatestCoins} from "../src/utils/database";
+import {checkCoinAlert} from "../src/utils/alertUtils";
 
 describe("Tests coin alerts", () => {
     it("alerts user when threshold", async () => {

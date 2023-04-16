@@ -1,5 +1,5 @@
-import {gasPrices} from "../services/etherscanRest";
-import {checkGasAlert} from "../utils/alertUtils";
+import {gasPrices} from "../src/services/etherscanRest";
+import {checkGasAlert} from "../src/utils/alertUtils";
 
 describe("test gas alerts", () => {
     it("alerts if gas is low enough", async () => {

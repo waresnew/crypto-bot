@@ -1,4 +1,4 @@
-import {getCmcKey} from "../services/binanceRest";
+import {getCmcKey} from "../src/services/binanceRest";
 
 describe("Tests cmcApi functions", () => {
     it("rotates keys", () => {

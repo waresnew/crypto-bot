@@ -1,4 +1,4 @@
-import {scientificNotationToNumber} from "../utils/utils";
+import {scientificNotationToNumber} from "../src/utils/utils";
 
 describe("Test precision", () => {
     test("1", () => {

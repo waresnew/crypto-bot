@@ -1,5 +1,5 @@
 import nock from "nock";
-import {discordGot} from "../utils/discordUtils";
+import {discordGot} from "../src/utils/discordUtils";
 
 describe("ratelimit handling", () => {
     const responses = [

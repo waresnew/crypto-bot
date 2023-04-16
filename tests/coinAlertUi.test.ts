@@ -1,6 +1,6 @@
-import {CoinAlerts} from "../utils/database";
-import {validateWhen} from "../utils/utils";
-import {validateAlert} from "../utils/alertUtils";
+import {CoinAlerts} from "../src/utils/database";
+import {validateWhen} from "../src/utils/utils";
+import {validateAlert} from "../src/utils/alertUtils";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {

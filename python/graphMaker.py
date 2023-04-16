@@ -2,7 +2,6 @@ import io
 import json
 import time
 from datetime import datetime
-from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import matplotlib
 import mplfinance as mpf
@@ -14,7 +13,6 @@ matplotlib.use('Agg')
 def make_chart(data):
     start1 = round(time.time() * 1000)
     body = json.loads(data)
-    meta = body['meta']
     candles = body['candles']
     df = pd.DataFrame(candles, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
     df['date'] = pd.to_datetime(df['date'], unit='ms')
@@ -27,6 +25,7 @@ def make_chart(data):
     fig, axlist = mpf.plot(df, type='candle', style=style, volume=True, returnfig=True, xlabel='', ylabel='',
                            ylabel_lower='', tight_layout=True, volume_exponent=0)
     axlist[2].set_yticks([])
+    axlist[0].yaxis.tick_right()
     axlist[0].spines.bottom.set_visible(False)
     axlist[2].spines.top.set_visible(False)
     start2 = round(time.time() * 1000)
@@ -37,34 +36,6 @@ def make_chart(data):
     return buffer.getvalue()
 
 
-class Server(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b'ok')
-
-    def do_POST(self):
-        if self.path == '/shutdown':
-            self.send_response(204)
-            self.send_header("Content-type", "text/plain")
-            self.end_headers()
-            self.wfile.write(b'ok')
-            print("Python server shutting down...", flush=True)
-            self.server.shutdown()
-            exit(0)
-        if self.path == '/chart':
-            self.send_response(200)
-            self.send_header("Content-type", "image/png")
-            self.end_headers()
-            length = int(self.headers.get('Content-Length'))
-            data = self.rfile.read(length)
-            self.wfile.write(make_chart(data))
-        else:
-            self.send_response(404)
-
-
-print("Python server started", flush=True)
 if __name__ == '__main__':
     make_chart(json.dumps({
         'meta': {
@@ -79,5 +50,3 @@ if __name__ == '__main__':
             [1610259200000, 1, 5, 1, 5, 200],
         ]
     }))
-server = HTTPServer(('127.0.0.1', 3001), Server)
-server.serve_forever()
