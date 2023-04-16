@@ -94,6 +94,10 @@ server.route({
             if (cmd.voteRequired) {
                 const user = await UserDatas.findOne({user: message.user.id});
                 if (!user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5)) {
+                    analytics.track({
+                        userId: message.user.id,
+                        event: "Ran votelocked command without voting"
+                    });
                     await response.send({
                         type: InteractionResponseType.ChannelMessageWithSource, data: {
                             content: `You must vote for the bot on top.gg to use this command. </vote:${commandIds.get("vote")}>`,
