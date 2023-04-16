@@ -21,6 +21,7 @@ import {mongoClient, openDb} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
 import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils/discordUtils";
 import fastifyStatic from "@fastify/static";
+import got from "got";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();
@@ -43,6 +44,7 @@ async function closeGracefully(signal: string | number) {
     await server.close();
     await mongoClient.close();
     await analytics.flush();
+    await got("http://127.0.0.1:3001/shutdown");
     setRetry(false);
     ws.close();
     console.log("All services closed, exiting...");
