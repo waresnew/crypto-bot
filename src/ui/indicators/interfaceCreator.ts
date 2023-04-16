@@ -34,8 +34,8 @@ export async function makeEmbed(coin: CoinMetadata) {
     const techIndicators = `RSI(14): ${indicators.rsi} - **${indicators.rsi <= 30 ? "Oversold " + emojis["bearish"] : indicators.rsi >= 70 ? "Overbought " + emojis["bullish"] : "Neutral"}**
     STOCH(14, 6, 6): ${indicators.stoch} - **${indicators.stoch <= 20 ? "Oversold " + emojis["bearish"] : indicators.stoch >= 80 ? "Overbought " + emojis["bullish"] : "Neutral"}**
     STOCHRSI(14, 6, 6): ${indicators.stochrsi} - **${indicators.stochrsi <= 20 ? "Oversold " + emojis["bearish"] : indicators.stochrsi >= 80 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-    MACD(12, 26, 9): ${formatPrice(indicators.macd.macd)} - **${indicators.macd.macdhist < 0 ? "Bearish " + emojis["bearish"] : indicators.macd.macdhist > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-    ADX(14): ${indicators.adx} - **${indicators.adx <= 25 ? "Weak Trend" : indicators.adx <= 50 ? "Strong Trend" : indicators.adx <= 75 ? "Very Strong Trend" : "Extremely Strong Trend"}**
+    MACD(12, 26, 9): ${isNaN(indicators.macd.macd) ? "Not Enough Data" : formatPrice(indicators.macd.macd)} - **${indicators.macd.macdhist < 0 ? "Bearish " + emojis["bearish"] : indicators.macd.macdhist > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
+    ADX(14): ${indicators.adx} - **${indicators.adx <= 25 ? "Weak Trend" : indicators.adx <= 50 ? "Strong Trend" : indicators.adx <= 75 ? "Very Strong Trend" : indicators.adx <= 100 ? "Extremely Strong Trend" : "Neutral"}**
     Williams' %R(14): ${indicators.willr} - **${indicators.willr <= -80 ? "Oversold " + emojis["bearish"] : indicators.willr >= -20 ? "Overbought " + emojis["bullish"] : "Neutral"}**
     CCI(14): ${indicators.cci}
     ATR(14): ${indicators.atr} - **Price fluctuates by ±$${indicators.atr} on average**
