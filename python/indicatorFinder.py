@@ -4,7 +4,7 @@ import numpy as np
 import talib
 from talib import *
 
-from python.config import candle_pattern_names
+from config import candle_pattern_names
 
 
 def find_ma(ohlcv, output):

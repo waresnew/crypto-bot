@@ -2,8 +2,16 @@ FROM node:18.13.0-bullseye-slim as base
 LABEL org.opencontainers.image.source=https://github.com/waresnew/crypto-bot
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends dumb-init
+    && apt-get install -y --no-install-recommends dumb-init python3.9-dev python3-pip wget build-essential
+RUN wget https://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+  tar -xvzf ta-lib-0.4.0-src.tar.gz && \
+  cd ta-lib/ && \
+  ./configure --prefix=/usr && \
+  make && \
+  make install
+COPY requirements.txt ./
 COPY package*.json ./
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 FROM base as build
 RUN npm ci
