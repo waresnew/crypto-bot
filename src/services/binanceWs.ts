@@ -13,7 +13,8 @@ export function setRetry(value: boolean) {
 }
 
 export function initBinanceWs() {
-    ws = new WebSocket("wss://stream.binance.com/ws");
+    // noinspection HttpUrlsUsage
+    ws = new WebSocket(`${process.env["SPAIN_PROXY"].replace("http://", "ws://")}/binancews/ws`);
     ws.on("error", console.error);
     ws.on("ping", () => {
         ws.pong();

@@ -29,6 +29,7 @@ FROM base as prod
 ENV NODE_ENV production
 RUN npm ci --omit=dev
 COPY --from=build /app/dist /app/dist
+COPY --from=build /app/python /app/python
 EXPOSE 3000
 CMD ["dumb-init","npm","run", "start"]
 
