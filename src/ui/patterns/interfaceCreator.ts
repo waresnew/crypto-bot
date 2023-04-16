@@ -37,7 +37,7 @@ export async function makeEmbed(coin: CoinMetadata) {
     }
     visiblePatterns.sort((a, b) => b.time - a.time);
     visiblePatterns.length = Math.min(visiblePatterns.length, 25);
-    let description = "Candlestick patterns are a way to identify trends in the market. We rated each pattern below from 1 ⭐ to 3 ⭐ to indicate their general reliability. https://www.investopedia.com/articles/active-trading/092315/5-most-powerful-candlestick-patterns.asp\n";
+    let description = `Candlestick patterns are a way to identify trends in the market. We rated each pattern below from 1 ⭐ to 3 ⭐ to indicate their general reliability. The symbol ${emojis["bullish"]} indicates a bullish pattern, while ${emojis["bearish"]} indicates a bearish pattern. https://www.investopedia.com/articles/active-trading/092315/5-most-powerful-candlestick-patterns.asp\n`;
     for (const pattern of visiblePatterns) {
         const date = new Date(pattern.time);
         const month = date.toLocaleString("default", {month: "long"});
