@@ -32,10 +32,10 @@ Set up price alerts for your favorite coins.
 ![image3](http://74.208.95.242:3000/static/image3.gif)
 
 ***
-Lastly, you can manage all of your alerts in one place with `/myalerts`:
-
-![image4](http://74.208.95.242:3000/static/image4.gif)
-
+We also have various technical analysis tools, such as technical indicator calculators, candlestick pattern finders, and
+pivot point calculators.
+![indicators](http://74.208.95.242:3000/static/image6.png)
+![patterns](http://74.208.95.242:3000/static/image5.png)
 We hope you enjoy using Botchain!
 
 ![fullbody](http://74.208.95.242:3000/static/fullbody.png)

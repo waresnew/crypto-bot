@@ -49,3 +49,12 @@ export async function parseCoinCommandArg(interaction: APIChatInputApplicationCo
 export async function getLatestCandle(coin: number) {
     return await Candles.findOne({coin: coin}, {sort: {open_time: -1}});
 }
+
+export function getBinanceRestUrl() {
+    return process.env["NODE_ENV"] == "production" ? `${process.env["SPAIN_SERVER"]}/binance` : "https://api.binance.com";
+}
+
+export function getBinanceWsUrl() {
+    // noinspection HttpUrlsUsage
+    return process.env["NODE_ENV"] == "production" ? `${process.env["SPAIN_PROXY"].replace("http://", "ws://")}/binancews/ws` : "wss://stream.binance.com/ws";
+}

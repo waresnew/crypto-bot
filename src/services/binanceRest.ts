@@ -7,7 +7,7 @@ import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
 import {notifyExpiredCoins, triggerAlerts} from "./alertChecker";
-import {validCryptos} from "../utils/coinUtils";
+import {getBinanceRestUrl, validCryptos} from "../utils/coinUtils";
 
 export const binanceApiCron = new CronJob(
     "* * * * *",
@@ -50,7 +50,7 @@ export async function updateBinanceApi() {
     processing = true;
     const start1 = Date.now();
     const newValidCryptos: CoinMetadata[] = [];
-    const coinResponse = await got(`${process.env["SPAIN_PROXY"]}/binance/api/v3/exchangeInfo?permissions=SPOT`, {
+    const coinResponse = await got(`${getBinanceRestUrl()}/api/v3/exchangeInfo?permissions=SPOT`, {
         headers: {
             "Accept": "application/json",
             "Accept-Encoding": "deflate, gzip"
@@ -112,7 +112,7 @@ export async function updateBinanceApi() {
     let weightUsed = 0;
     binancePromises.push(...symbols.map(async symbol => {
         weightUsed++;
-        return got(`${process.env["SPAIN_PROXY"]}/binance/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id)}`, {
+        return got(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id)}`, {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
@@ -127,7 +127,7 @@ export async function updateBinanceApi() {
     }));
     for (let i = 0; i < symbols.length; i += 100) {
         weightUsed += symbols.slice(i, i + 100).length >= 50 ? 100 : symbols.slice(i, i + 100).length * 2;
-        binancePromises.push(got(`${process.env["SPAIN_PROXY"]}/binance/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
+        binancePromises.push(got(`${getBinanceRestUrl()}/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"

@@ -4,6 +4,7 @@ import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
 import {symbolToMeta} from "../structs/coinMetadata";
 import {LatestCoins} from "../utils/database";
+import {getBinanceWsUrl} from "../utils/coinUtils";
 
 export let ws: WebSocket = null;
 export let retry = true;
@@ -14,7 +15,7 @@ export function setRetry(value: boolean) {
 
 export function initBinanceWs() {
     // noinspection HttpUrlsUsage
-    ws = new WebSocket(`${process.env["SPAIN_PROXY"].replace("http://", "ws://")}/binancews/ws`);
+    ws = new WebSocket(getBinanceWsUrl());
     ws.on("error", console.error);
     ws.on("ping", () => {
         ws.pong();
