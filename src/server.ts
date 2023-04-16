@@ -17,9 +17,15 @@ import {
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./utils/analytics";
 import Sentry from "@sentry/node";
-import {mongoClient, openDb} from "./utils/database";
+import {mongoClient, openDb, UserDatas} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
-import {commands, deepPatchCustomId, deepValidateCustomId, interactionProcessors} from "./utils/discordUtils";
+import {
+    commandIds,
+    commands,
+    deepPatchCustomId,
+    deepValidateCustomId,
+    interactionProcessors
+} from "./utils/discordUtils";
 import fastifyStatic from "@fastify/static";
 import got from "got";
 
@@ -53,6 +59,23 @@ async function closeGracefully(signal: string | number) {
 
 process.once("SIGINT", closeGracefully);
 process.once("SIGTERM", closeGracefully);
+
+server.post("/crypto-bot/vote", async (request, response) => {
+    if (request.headers["authorization"] != process.env["TOPGG_WEBHOOK_AUTH"]) {
+        await response.status(401).send({error: "Bad authorization"});
+        return;
+    }
+    await response.send("OK");
+    if ((request.body as any).type == "upvote") {
+        await UserDatas.updateOne({user: (request.body as any).user}, {
+            $set: {
+                user: (request.body as any).user,
+                lastVoted: Date.now()
+            }
+        }, {upsert: true});
+    }
+});
+
 server.route({
     method: "POST",
     url: "/crypto-bot/interactions",
@@ -64,6 +87,22 @@ server.route({
         const message = request.body as APIInteraction;
         if (!message.user && message.member) {
             message.user = message.member.user;
+        }
+        if (message.type == InteractionType.ApplicationCommand) {
+            const interaction = message as APIChatInputApplicationCommandInteraction;
+            const cmd = commands.get(interaction.data.name);
+            if (cmd.voteRequired) {
+                const user = await UserDatas.findOne({user: message.user.id});
+                if (!user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5)) {
+                    await response.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: `You must vote for the bot on top.gg to use this command. </vote:${commandIds.get("vote")}>`,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
+            }
         }
         if (message.type == InteractionType.MessageComponent || message.type == InteractionType.ModalSubmit) {
             if (!deepValidateCustomId(request.body)) {
@@ -157,7 +196,7 @@ server.route({
     }
 });
 
-server.get("/", async (request, response) => {
+server.get("/crypto-bot", async (request, response) => {
     response.send("ok");
 });
 

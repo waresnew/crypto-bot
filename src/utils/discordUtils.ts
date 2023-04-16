@@ -1,6 +1,6 @@
 import got from "got";
 import InteractionProcessor from "../ui/abstractInteractionProcessor";
-import {APIInteraction, APIUser} from "discord-api-types/v10";
+import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/v10";
 import {Indexable} from "./utils";
 import {processing} from "../services/binanceRest";
 import {analytics} from "./analytics";
@@ -10,7 +10,7 @@ export const interactionProcessors = new Map<string, InteractionProcessor>();
 export let client: APIUser;
 export const commandIds = new Map<string, string>();
 export let startTime = Infinity;
-export const commands = new Map<string, any>();
+export const commands = new Map<string, APIApplicationCommand>();
 export const emojis = {
     "bullish": "<:bullish:1097137805546758184>",
     "bearish": "<:bearish:1097137994932178985>"

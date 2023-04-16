@@ -23,7 +23,7 @@ export default {
                 embeds: [{
                     ...getEmbedTemplate(),
                     title: "Vote for Botchain",
-                    description: "Thanks for supporting the bot! Click the button below to vote!"
+                    description: "Gain access to our technical analysis suite by voting! Click the button below to vote."
                 }],
                 components: [{
                     type: ComponentType.ActionRow,

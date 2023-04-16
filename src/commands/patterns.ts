@@ -3,7 +3,8 @@ import {
     APIApplicationCommandAutocompleteInteraction,
     ApplicationCommandOptionType,
     ApplicationCommandType,
-    InteractionResponseType
+    InteractionResponseType,
+    MessageFlags
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
@@ -11,7 +12,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {makeButtons, makeEmbed} from "../ui/patterns/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
-
+// noinspection DuplicatedCode
 export default {
     name: "patterns",
     type: ApplicationCommandType.ChatInput,
@@ -25,6 +26,7 @@ export default {
             required: true
         }
     ],
+    voteRequired: true,
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         let choice;
         try {
@@ -38,7 +40,7 @@ export default {
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [await makeEmbed(choice)], components: [makeButtons(choice)]}
+            data: {embeds: [await makeEmbed(choice)], components: [makeButtons(choice)], flags: MessageFlags.Ephemeral}
         });
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {

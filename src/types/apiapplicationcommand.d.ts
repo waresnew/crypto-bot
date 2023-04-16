@@ -6,5 +6,7 @@ declare module "discord-api-types/v10" {
         execute(interaction: APIInteraction, http: FastifyReply);
 
         autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply);
+
+        voteRequired: boolean;
     }
 }
