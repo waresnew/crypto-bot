@@ -196,7 +196,7 @@ server.route({
     }
 });
 
-server.get("/crypto-bot", async (request, response) => {
+server.get("/", async (request, response) => {
     response.send("ok");
 });
 
