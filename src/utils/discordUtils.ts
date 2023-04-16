@@ -1,7 +1,9 @@
 import got from "got";
 import InteractionProcessor from "../ui/abstractInteractionProcessor";
-import {APIUser} from "discord-api-types/v10";
+import {APIInteraction, APIUser} from "discord-api-types/v10";
 import {Indexable} from "./utils";
+import {processing} from "../services/binanceRest";
+import {analytics} from "./analytics";
 
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
@@ -56,7 +58,10 @@ export const customIdVersions = {
     gasalert_threshold: "0.0.1",
     gasalert_thresholdmodal: "0.0.1",
     gasalert_thresholdmodalvalue: "0.0.1",
-    gasalert_confirm: "0.0.1"
+    gasalert_confirm: "0.0.1",
+    indicators_refresh: "0.0.1",
+    patterns_refresh: "0.0.1",
+    pivots_refresh: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {
@@ -126,4 +131,16 @@ export function deepValidateCustomId(obj: any) {
         }
     }
     return true;
+}
+
+export function validateRefresh(interaction: APIInteraction, latest: number) {
+    const latestTime = Math.floor(latest / 1000);
+    const curTime = Number(interaction.message.embeds[0].fields.find(field => field.name === "Last Updated").value.replaceAll("<t:", "").replaceAll(":R>", ""));
+    if (latestTime == curTime) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Tried to refresh something that was already up to date"
+        });
+        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (processing ? Math.round(Date.now() / 1000 + 3) : Math.round(Math.ceil(Date.now() / 1000 / 60) * 60)) + ":R>.";
+    }
 }

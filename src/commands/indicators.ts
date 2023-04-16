@@ -10,7 +10,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
-import {makeEmbed} from "../ui/indicators/interfaceCreator";
+import {makeButtons, makeEmbed} from "../ui/indicators/interfaceCreator";
 
 export default {
     name: "indicators",
@@ -38,7 +38,7 @@ export default {
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [await makeEmbed(choice)]}
+            data: {embeds: [await makeEmbed(choice)], components: [makeButtons(choice)]}
         });
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {

@@ -6,6 +6,8 @@ import got from "got";
 import {getEmbedTemplate} from "../templates";
 import {client} from "../../utils/discordUtils";
 import {formatPrice} from "../coin/interfaceCreator";
+import {binanceLastUpdated} from "../../services/binanceRest";
+import {APIActionRowComponent, APIButtonComponent, ButtonStyle, ComponentType} from "discord-api-types/v10";
 
 export async function makeEmbed(coin: CoinMetadata) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
@@ -19,7 +21,7 @@ export async function makeEmbed(coin: CoinMetadata) {
             volume: candles.map(candle => candle.quote_volume)
         })
     }).text();
-
+    const price = candles[candles.length - 1].close_price;
     const pivots = JSON.parse(result.replaceAll(new RegExp("NaN", "g"), "\"Not Enough Data\""));
     for (const key of Object.keys(pivots)) {
         for (const key2 of Object.keys(pivots[key])) {
@@ -46,21 +48,45 @@ export async function makeEmbed(coin: CoinMetadata) {
             inline: true
         };
         for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => statOrder.indexOf(a) - statOrder.indexOf(b))) {
-            field.value += `${key}: ${pivotPoints[pivot][key]}\n`;
+            field.value += `**${key}**: ${pivotPoints[pivot][key]}\n`;
         }
         field.value = field.value.trim();
         fields.push(field);
     }
-
+    fields.push({
+        name: "Last Updated",
+        value: `<t:${Math.floor(binanceLastUpdated / 1000)}:R>`
+    });
     const embed = {
         ...getEmbedTemplate(),
         title: `Pivot Points for ${coin.symbol}/USDT`,
-        description: "Pivot points are levels at which the direction of price movement may change. https://www.investopedia.com/terms/p/pivotpoint.asp",
+        description: "Pivot points are levels at which the direction of price movement may change. https://www.investopedia.com/terms/p/pivotpoint.asp\n\n**Current price**: $" + formatPrice(price),
         footer: {
             text: "This is not financial advice.",
             icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
         },
+        thumbnail: {
+            url: `https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.cmc_id}.png`
+        },
         fields: fields
     };
     return embed;
+}
+
+export function makeButtons(choice: CoinMetadata) {
+    return {
+        type: ComponentType.ActionRow,
+        components: [
+            {
+                type: ComponentType.Button,
+                custom_id: `pivots_refresh_${choice.cmc_id}`,
+                label: "Refresh",
+                emoji: {
+                    id: null,
+                    name: "🔄"
+                },
+                style: ButtonStyle.Primary
+            }
+        ]
+    } as APIActionRowComponent<APIButtonComponent>;
 }

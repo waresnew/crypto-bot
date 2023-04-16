@@ -94,7 +94,7 @@ export async function makeChart(coin: CoinMetadata) {
     }).buffer();
 }
 
-export async function makeButtons(choice: CoinMetadata) {
+export function makeButtons(choice: CoinMetadata) {
     return {
         type: ComponentType.ActionRow,
         components: [
