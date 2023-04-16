@@ -14,13 +14,13 @@ COPY package*.json ./
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 FROM base as build
-ENV PYTHONPATH "${PYTHONPATH}:/app/"
 RUN npm ci
 COPY . .
 RUN npm run build
 
 FROM build as dev
 ENV NODE_ENV development
+ENV PYTHONPATH "${PYTHONPATH}:/app/"
 EXPOSE 3000
 EXPOSE 9229
 CMD ["dumb-init","npm", "run", "debug"]
@@ -28,6 +28,7 @@ CMD ["dumb-init","npm", "run", "debug"]
 FROM base as prod
 ENV NODE_ENV production
 RUN npm ci --omit=dev
+ENV PYTHONPATH "${PYTHONPATH}:/app/"
 COPY --from=build /app/dist /app/dist
 COPY --from=build /app/python /app/python
 EXPOSE 3000

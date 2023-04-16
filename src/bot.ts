@@ -4,11 +4,12 @@ import {fileURLToPath, pathToFileURL} from "url";
 import fs from "node:fs";
 import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interactions/applicationCommands";
 import didYouMean from "didyoumean";
-import {cleanBinanceCacheCron} from "./services/binanceRest";
+import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
 import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
 import {postServerCountCron} from "./services/topggRest";
 import {spawn} from "node:child_process";
+import {etherscanApiCron} from "./services/etherscanRest";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -39,11 +40,11 @@ child.stdout.on("data", data => {
 child.stderr.on("data", data => {
     console.error(data.toString());
 });
-//binanceApiCron.start();
+binanceApiCron.start();
 postServerCountCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();
-//etherscanApiCron.start();
+etherscanApiCron.start();
 console.log("Ready!");
 
 /**use type any for modules*/
