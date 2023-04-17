@@ -140,6 +140,6 @@ export function validateOneMinuteRefresh(interaction: APIInteraction, latest: nu
             userId: interaction.user.id,
             event: "Tried to refresh something that was already up to date"
         });
-        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (curTime / 1000 + 5) + ":R>.";
+        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (curTime + 65) + ":R>.";
     }
 }
