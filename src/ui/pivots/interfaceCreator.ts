@@ -6,11 +6,27 @@ import got from "got";
 import {getEmbedTemplate} from "../templates";
 import {client} from "../../utils/discordUtils";
 import {formatPrice} from "../coin/interfaceCreator";
-import {binanceLastUpdated} from "../../services/binanceRest";
-import {APIActionRowComponent, APIButtonComponent, ButtonStyle, ComponentType} from "discord-api-types/v10";
+import {
+    APIActionRowComponent,
+    APIButtonComponent,
+    APIInteraction,
+    ButtonStyle,
+    ComponentType
+} from "discord-api-types/v10";
+import {analytics} from "../../utils/analytics";
 
-export async function makeEmbed(coin: CoinMetadata) {
+export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
+    if (candles.length < 2) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Request pivot points for a coin with <2 days of data"
+        });
+        return {
+            title: "Not Enough Data",
+            description: "Error: There is not enough data to calculate pivot points for this coin, as it has only been listed on popular exchanges for less than 2 days."
+        };
+    }
     const result = await got("http://127.0.0.1:3001/pivots", {
         method: "POST",
         body: JSON.stringify({
@@ -55,7 +71,7 @@ export async function makeEmbed(coin: CoinMetadata) {
     }
     fields.push({
         name: "Last Updated",
-        value: `<t:${Math.floor(binanceLastUpdated / 1000)}:R>`
+        value: `<t:${Math.floor(Date.now() / 1000 / 86400) * 86400}:R>`
     });
     const embed = {
         ...getEmbedTemplate(),

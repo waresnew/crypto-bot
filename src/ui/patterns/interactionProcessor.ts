@@ -3,7 +3,7 @@ import InteractionProcessor from "../abstractInteractionProcessor";
 import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFlags} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {idToMeta} from "../../structs/coinMetadata";
-import {validateOneMinuteRefresh} from "../../utils/discordUtils";
+import {validateRefresh} from "../../utils/discordUtils";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import {analytics} from "../../utils/analytics";
 import {makeButtons, makeEmbed} from "./interfaceCreator";
@@ -13,7 +13,7 @@ export default class PatternsInteractionProcessor extends InteractionProcessor {
         const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
         if (interaction.data.custom_id.startsWith("patterns_refresh")) {
             try {
-                validateOneMinuteRefresh(interaction, binanceLastUpdated);
+                validateRefresh(interaction, binanceLastUpdated);
             } catch (e) {
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource,

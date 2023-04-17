@@ -40,7 +40,11 @@ export default {
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {embeds: [await makeEmbed(choice)], components: [makeButtons(choice)], flags: MessageFlags.Ephemeral}
+            data: {
+                embeds: [await makeEmbed(choice, interaction)],
+                components: [makeButtons(choice)],
+                flags: MessageFlags.Ephemeral
+            }
         });
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
