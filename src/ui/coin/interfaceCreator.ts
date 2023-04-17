@@ -25,7 +25,7 @@ export async function makeEmbed(choice: CoinMetadata) {
     };
     const coin = await LatestCoins.findOne({coin: choice.cmc_id});
     const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
-    embed.color = coin.weekPriceChangePercent < 0 ? 0xef5350 : 0x2bbfb2;
+    embed.color = coin.weekPriceChangePercent < 0 ? 0xef5350 : 0x26a69a;
     embed.title = `${choice.name} (${choice.symbol}/USDT)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
