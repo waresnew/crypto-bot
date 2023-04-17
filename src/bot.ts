@@ -10,6 +10,7 @@ import {commandIds, commands, discordGot, initClient, interactionProcessors} fro
 import {postServerCountCron} from "./services/topggRest";
 import {spawn} from "node:child_process";
 import {etherscanApiCron} from "./services/etherscanRest";
+import {cronManager} from "./utils/utils";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -45,6 +46,7 @@ postServerCountCron.start();
 initBinanceWs();
 cleanBinanceCacheCron.start();
 etherscanApiCron.start();
+cronManager.start();
 console.log("Ready!");
 
 /**use type any for modules*/

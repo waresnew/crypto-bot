@@ -1,3 +1,29 @@
+import {CronJob} from "cron";
+import {binanceApiCron, cleanBinanceCacheCron} from "../services/binanceRest";
+import {postServerCountCron} from "../services/topggRest";
+import {etherscanApiCron} from "../services/etherscanRest";
+
+export const cronManager = new CronJob("* * * * *",
+    keepCronsAlive,
+    null,
+    false,
+    "UTC");
+
+function keepCronsAlive() {
+    if (!binanceApiCron.running) {
+        binanceApiCron.start();
+    }
+    if (!postServerCountCron.running) {
+        postServerCountCron.start();
+    }
+    if (!cleanBinanceCacheCron.running) {
+        cleanBinanceCacheCron.start();
+    }
+    if (!etherscanApiCron.running) {
+        etherscanApiCron.start();
+    }
+}
+
 export function scientificNotationToNumber(input: string): string {
     const tokens = input.split("e");
     if (tokens.length == 1) {
