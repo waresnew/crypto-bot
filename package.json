@@ -18,7 +18,6 @@
   "author": "newwares",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "@fastify/static": "^6.10.1",
     "@sentry/node": "^7.47.0",
     "@sentry/tracing": "^7.47.0",
     "analytics-node": "^6.2.0",
