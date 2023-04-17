@@ -25,7 +25,6 @@ export const cleanBinanceCacheCron = new CronJob(
     "UTC"
 );
 let cmcKeyIndex = 1;
-export let processing = false;
 export let binanceLastUpdated = 0;
 
 export function getCmcKey() {
@@ -44,10 +43,6 @@ export async function cleanCoinDb() {
 }
 
 export async function updateBinanceApi() {
-    if (processing) {
-        return;
-    }
-    processing = true;
     const start1 = Date.now();
     const newValidCryptos: CoinMetadata[] = [];
     const coinResponse = await got(`${getBinanceRestUrl()}/api/v3/exchangeInfo?permissions=SPOT`, {
@@ -204,7 +199,6 @@ export async function updateBinanceApi() {
     const start3 = Date.now();
     if (newValidCryptos.length == 0) {
         console.error("newValidCryptos is empty?");
-        processing = false;
         return;
     }
     const oldCryptos = validCryptos.slice();
@@ -219,7 +213,6 @@ export async function updateBinanceApi() {
         ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${metadata.length - validCryptos.length} invalid)
         ${start4 - start3} ms to update valid cryptos
         ${Date.now() - start4} ms to trigger alerts`);
-    processing = false;
 }
 
 export async function getLimit(coin: number) {
