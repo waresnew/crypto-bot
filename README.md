@@ -15,7 +15,7 @@ Here are some of our features:
 
 Bring up a persistent panel with information about a coin. Click the *Refresh* button to update the information.
 
-![image1](http://74.208.95.242:3000/static/image1.png)
+![image1](https://i.imgur.com/7a1Xb3i.png)
 
 ### Gas Info Panels `/gas`
 
@@ -23,21 +23,22 @@ Bring up a persistent panel with information about the current gas prices. Click
 information.
 (We support gas alerts too!)
 
-![image2](http://74.208.95.242:3000/static/image2.png)
+![image2](https://i.imgur.com/Nqk2Y7p.png)
 
 ### Price Alerts `/coinalert`
 
 Set up price alerts for your favourite coins.
 
-![image3](http://74.208.95.242:3000/static/image3.gif)
+![image3](https://i.imgur.com/O2GiBZJ.gif)
 
 ### Technical Analysis `/indicators`, `/patterns`, `/pivots`
+
 We also have various technical analysis tools, such as technical indicator calculators, candlestick pattern finders, and
 pivot point calculators.
 
-![indicators](http://74.208.95.242:3000/static/image6.png)
-![patterns](http://74.208.95.242:3000/static/image5.png)
+![indicators](https://i.imgur.com/Eg0ekw5.png)
+![patterns](https://i.imgur.com/tQGM2Sk.png)
 
 We hope you enjoy using Botchain!
 
-![fullbody](http://74.208.95.242:3000/static/fullbody.png)
+![fullbody](https://i.imgur.com/w33cucZ.png)

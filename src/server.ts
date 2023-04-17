@@ -26,7 +26,6 @@ import {
     deepValidateCustomId,
     interactionProcessors
 } from "./utils/discordUtils";
-import fastifyStatic from "@fastify/static";
 import got from "got";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
@@ -39,10 +38,6 @@ server.setErrorHandler((error, request, reply) => {
 });
 await server.register(rawBody, {
     runFirst: true
-});
-await server.register(fastifyStatic, {
-    root: "/app/data/static",
-    prefix: "/static/"
 });
 
 async function closeGracefully(signal: string | number) {
