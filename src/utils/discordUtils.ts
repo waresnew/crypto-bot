@@ -2,7 +2,6 @@ import got from "got";
 import InteractionProcessor from "../ui/abstractInteractionProcessor";
 import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/v10";
 import {Indexable} from "./utils";
-import {processing} from "../services/binanceRest";
 import {analytics} from "./analytics";
 
 /**key=command name */
@@ -141,6 +140,6 @@ export function validateRefresh(interaction: APIInteraction, latest: number) {
             userId: interaction.user.id,
             event: "Tried to refresh something that was already up to date"
         });
-        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (processing ? Math.round(Date.now() / 1000 + 3) : Math.round(Math.ceil(Date.now() / 1000 / 60) * 60)) + ":R>.";
+        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (5 + Math.round(Math.ceil(Date.now() / 1000 / 60) * 60)) + ":R>.";
     }
 }
