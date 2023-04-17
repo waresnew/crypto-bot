@@ -86,7 +86,7 @@ export function formatPrice(price: number) {
 export async function makeChart(coin: CoinMetadata) {
     const candles = await Candles.find({coin: coin.cmc_id}, {sort: {open_time: -1}, limit: 60}).toArray();
     candles.sort((a, b) => a.open_time - b.open_time);
-    return got("http://127.0.0.1:3001/chart", {
+    return got(`${process.env["OFFLOAD_URL"]}/graphserver/chart`, {
         method: "POST",
         body: JSON.stringify({
             candles: candles.map(candle => [candle.open_time, candle.open_price, candle.high_price, candle.low_price, candle.close_price, candle.quote_volume])
