@@ -132,14 +132,14 @@ export function deepValidateCustomId(obj: any) {
     return true;
 }
 
-export function validateRefresh(interaction: APIInteraction, latest: number) {
+export function validateOneMinuteRefresh(interaction: APIInteraction, latest: number) {
     const latestTime = Math.floor(latest / 1000);
     const curTime = Number(interaction.message.embeds[0].fields.find(field => field.name === "Last Updated").value.replaceAll("<t:", "").replaceAll(":R>", ""));
-    if (latestTime == curTime) {
+    if (Math.abs(latestTime - curTime) < 1) {
         analytics.track({
             userId: interaction.user.id,
             event: "Tried to refresh something that was already up to date"
         });
-        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (5 + Math.round(Math.ceil(Date.now() / 1000 / 60) * 60)) + ":R>.";
+        throw "This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (curTime / 1000 + 5) + ":R>.";
     }
 }

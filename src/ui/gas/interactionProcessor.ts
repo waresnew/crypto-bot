@@ -5,14 +5,14 @@ import {APIMessageComponentButtonInteraction, InteractionResponseType, MessageFl
 import {analytics} from "../../utils/analytics";
 import {etherscanLastUpdated} from "../../services/etherscanRest";
 import {makeButtons, makeEmbed} from "./interfaceCreator";
-import {validateRefresh} from "../../utils/discordUtils";
+import {validateOneMinuteRefresh} from "../../utils/discordUtils";
 
 export default class GasInteractionProcessor extends InteractionProcessor {
 
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
         if (interaction.data.custom_id.startsWith("gas_refresh")) {
             try {
-                validateRefresh(interaction, etherscanLastUpdated);
+                validateOneMinuteRefresh(interaction, etherscanLastUpdated);
             } catch (e) {
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource,

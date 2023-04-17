@@ -7,7 +7,7 @@ import {analytics} from "../../utils/analytics";
 import {idToMeta} from "../../structs/coinMetadata";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import {Readable} from "node:stream";
-import {validateRefresh} from "../../utils/discordUtils";
+import {validateOneMinuteRefresh} from "../../utils/discordUtils";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
 
@@ -15,7 +15,7 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
         const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
         if (interaction.data.custom_id.startsWith("coin_refresh")) {
             try {
-                validateRefresh(interaction, binanceLastUpdated);
+                validateOneMinuteRefresh(interaction, binanceLastUpdated);
             } catch (e) {
                 await http.send({
                     type: InteractionResponseType.ChannelMessageWithSource,
