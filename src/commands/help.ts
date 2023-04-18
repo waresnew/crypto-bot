@@ -33,7 +33,7 @@ We also have some technical analysis tools that you can use to make better tradi
 - </patterns:${commandIds.get("patterns")}>: Shows the recent candlestick patterns of a coin.
 
 - </pivots:${commandIds.get("pivots")}>: Calculates the support/resistance levels of a coin.`;
-        embed.image = {
+        embed.thumbnail = {
             url: "https://i.imgur.com/w33cucZ.png"
         };
         http.send({
