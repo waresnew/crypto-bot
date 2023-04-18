@@ -67,7 +67,7 @@ EMA(200): ${indicators.ema200} - **${price < indicators.ema200 ? "Bearish " + em
             text: "This is not financial advice.",
             icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
         },
-        description: `The symbol next to an indicator (${emojis["bullish"]} or ${emojis["bearish"]}) indicates in which direction the coin's price is likely to go towards.`,
+        description: `These indicators are calculated using daily prices. The symbol next to an indicator (${emojis["bullish"]} or ${emojis["bearish"]}) indicates in which direction the coin's price is likely to go towards.`,
         title: `Indicators for ${coin.symbol}/USDT`,
         fields: [
             {
