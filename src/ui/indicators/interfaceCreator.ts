@@ -67,7 +67,7 @@ EMA(200): ${indicators.ema200} - **${price < indicators.ema200 ? "Bearish " + em
             text: "This is not financial advice.",
             icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
         },
-        description: `These indicators are calculated using daily prices. The symbol next to an indicator (${emojis["bullish"]} or ${emojis["bearish"]}) indicates in which direction the coin's price is likely to go towards.`,
+        description: `Technical indicators are mathematical calculations applied to stock prices and/or volumes to identify patterns, trends, and potential price movements in the market. These indicators are calculated using daily prices. The symbol next to an indicator (${emojis["bullish"]} or ${emojis["bearish"]}) shows whether prices are likely to increase or decrease, based on that indicator.`,
         title: `Indicators for ${coin.symbol}/USDT`,
         fields: [
             {

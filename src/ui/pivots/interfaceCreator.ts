@@ -76,7 +76,7 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
     const embed = {
         ...getEmbedTemplate(),
         title: `Pivot Points for ${coin.symbol}/USDT`,
-        description: "Pivot points are levels at which the direction of price movement may change. These pivot points are calculated using daily prices. https://www.investopedia.com/terms/p/pivotpoint.asp\n\n**Current price**: $" + formatPrice(price),
+        description: "Pivot points and support/resistance levels are key price levels used in technical analysis to identify potential price movements and levels of market volatility in the financial markets. These pivot points are calculated using daily prices. https://www.investopedia.com/terms/p/pivotpoint.asp\n\n**Current price**: $" + formatPrice(price),
         footer: {
             text: "This is not financial advice.",
             icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`
