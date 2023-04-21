@@ -15,7 +15,9 @@ import {commandIds} from "../../utils/discordUtils";
 export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. At what threshold would you like to be alerted?`;
+    message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. What value should the ${CryptoStat.shortToLong(what)} rise/fall to before alerting you?
+
+eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches 500, or enter \`-5\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches -5.`;
     return {
         type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],
@@ -103,7 +105,9 @@ export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata) 
     message.title = `Adding alert for ${coin.name}`;
     message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </coinalert:${commandIds.get("coinalert")}>.
 
-Please select the stat you would like to be alerted by.`;
+Please select the stat you would like to be alerted by.
+
+eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1h%")}\` to track the 1 hour percentage change of the price.`;
     return {
         type: InteractionResponseType.ChannelMessageWithSource, data: {
             embeds: [message],

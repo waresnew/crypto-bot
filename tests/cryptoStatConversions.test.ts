@@ -6,6 +6,6 @@ describe("Test conversions", () => {
     });
 
     test("2", () => {
-        expect(CryptoStat.shortToLong("1h%")).toBe("1 hour price change");
+        expect(CryptoStat.shortToLong("1h%")).toBe("1 hour price change percentage");
     });
 });
