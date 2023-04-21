@@ -87,7 +87,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             await http.send({
                 type: InteractionResponseType.Modal,
                 data: {
-                    title: `Setting threshold for ${CryptoStat.shortToLong(what)}`,
+                    title: `Setting threshold for ${coin.symbol}`,
                     custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
