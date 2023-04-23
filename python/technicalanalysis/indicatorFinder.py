@@ -1,5 +1,6 @@
 import numpy as np
-from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA
+from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA, BOP, MFI, AROONOSC, MINUS_DI, \
+    PLUS_DI
 
 
 def find_ma(ohlcv, output):
@@ -13,8 +14,8 @@ def find_indicators(ohlcv):
     indicators = {}
     find_ma(ohlcv, indicators)
     indicators['rsi'] = RSI(ohlcv['close'], timeperiod=14)[-1]  # RSI(14)
-    indicators['stoch'] = STOCH(ohlcv['high'], ohlcv['low'], ohlcv['close'], fastk_period=14, slowk_period=6,
-                                slowd_period=6)[1][-1]  # STOCH(14, 6, 6)
+    indicators['stoch'] = STOCH(ohlcv['high'], ohlcv['low'], ohlcv['close'], fastk_period=9, slowk_period=6,
+                                slowd_period=6)[1][-1]  # STOCH(9, 6, 6)
     indicators['stochrsi'] = STOCHRSI(ohlcv['close'], fastk_period=14, fastd_period=6)[1][-1]  # STOCHRSI(14, 6, 6)
     macd, macdsignal, macdhist = MACD(ohlcv['close'])
     indicators['macd'] = {}  # MACD(12, 26, 9)
@@ -22,12 +23,22 @@ def find_indicators(ohlcv):
     indicators['macd']['macdsignal'] = macdsignal[-1]
     indicators['macd']['macdhist'] = macdhist[-1]
 
-    indicators['adx'] = ADX(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ADX(14)
+    indicators['adx'] = {}
+    indicators['adx']['adx'] = ADX(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ADX(14)
+    indicators['adx']['plus_di'] = PLUS_DI(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # PLUS_DI(14)
+    indicators['adx']['minus_di'] = MINUS_DI(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # MINUS_DI(14)
     indicators['willr'] = WILLR(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # Williams' %R(14)
     indicators['cci'] = CCI(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # CCI(14)
-    indicators['atr'] = ATR(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ATR(14)
+    atr = ATR(ohlcv['high'], ohlcv['low'], ohlcv['close'])
+    indicators['atr'] = {}
+    indicators['atr']['atr'] = atr[-1]  # ATR(14)
+    indicators['atr']['atrma14'] = SMA(atr, timeperiod=14)[-1]
+    indicators['atr']['atrma7'] = SMA(atr, timeperiod=7)[-1]
     indicators['ultosc'] = ULTOSC(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ULTOSC(7, 14, 28)
     indicators['roc'] = ROC(ohlcv['close'], timeperiod=14)[-1]  # ROC(14)
+    indicators['bop'] = BOP(ohlcv['open'], ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # BOP
+    indicators['mfi'] = MFI(ohlcv['high'], ohlcv['low'], ohlcv['close'], ohlcv['volume'])[-1]  # MFI(14)
+    indicators['aroonosc'] = AROONOSC(ohlcv['high'], ohlcv['low'], timeperiod=14)[-1]  # AROON(14)
     return indicators
 
 

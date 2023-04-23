@@ -35,22 +35,30 @@ export async function makeEmbed(coin: CoinMetadata) {
     stoch >= 80 -> overbought, <=20 -> oversold
     stochrsi >= 80 -> overbought, <=20 -> oversold
     macdhist > 0 -> bullish, < 0 -> bearish
-    adx >= 25 -> trend, < 25 -> no trend
+    adx >= 25 -> trend, < 25 -> no trend | +di > -di -> bullish, -di > +di -> bearish
     williamsr >= -20 -> overbought, <= -80 -> oversold
+    cci >= 100 -> overbought, <= -100 -> oversold
     ultosc >= 70 -> overbought, <= 30 -> oversold
     roc >= 10 -> bullish, <= -10 -> bearish
+    bop > 0 -> bullish, < 0 -> bearish
+    mfi >= 80 -> overbought, <= 20 -> oversold
+    aroonosc > 0 bullish, < 0 bearish
      */
     const techIndicators =
         `RSI(14): ${indicators.rsi} - **${indicators.rsi <= 40 ? "Oversold " + emojis["bearish"] : indicators.rsi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-STOCH(14, 6, 6): ${indicators.stoch} - **${indicators.stoch <= 40 ? "Oversold " + emojis["bearish"] : indicators.stoch >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
+STOCH(9, 6, 6): ${indicators.stoch} - **${indicators.stoch <= 40 ? "Oversold " + emojis["bearish"] : indicators.stoch >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 STOCHRSI(14, 6, 6): ${indicators.stochrsi} - **${indicators.stochrsi <= 40 ? "Oversold " + emojis["bearish"] : indicators.stochrsi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 MACD(12, 26, 9): ${isNaN(indicators.macd.macd) ? "Not Enough Data" : formatPrice(indicators.macd.macd)} - **${indicators.macd.macdhist < 0 ? "Bearish " + emojis["bearish"] : indicators.macd.macdhist > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-ADX(14): ${indicators.adx} - **${indicators.adx <= 25 ? "Weak Trend" : indicators.adx <= 50 ? "Strong Trend" : indicators.adx <= 75 ? "Very Strong Trend" : indicators.adx <= 100 ? "Extremely Strong Trend" : "Neutral"}**
+ADX(14): ${isNaN(indicators.adx.adx) ? "Not Enough Data" : formatPrice(indicators.adx.adx)} - **${indicators.adx.adx <= 25 ? "Neutral" : indicators.adx.plus_di > indicators.adx.minus_di ? "Bullish " + emojis["bullish"] : indicators.adx.minus_di > indicators.adx.plus_di ? "Bearish " + emojis["bearish"] : "Neutral"}**
 Williams' %R(14): ${indicators.willr} - **${indicators.willr <= -60 ? "Oversold " + emojis["bearish"] : indicators.willr >= -40 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-CCI(14): ${indicators.cci}
-ATR(14): ${indicators.atr} - **Price fluctuates by ±$${indicators.atr} on average**
+CCI(14): ${indicators.cci} - **${indicators.cci <= -80 ? "Oversold " + emojis["bearish"] : indicators.cci >= 80 ? "Overbought " + emojis["bullish"] : "Neutral"}**
+ATR(14): ${isNaN(indicators.atr.atr) ? "Not Enough Data" : formatPrice(indicators.atr.atr)} - **${indicators.atr.atr > indicators.atr.atrma14 ? "High Volatility" : indicators.atr.atr > indicators.atr.atrma7 ? "Moderate Volatility" : indicators.atr.atr <= indicators.atr.atrma7 ? "Less Volatility" : "Neutral"}**
 ULTOSC(7, 14, 28): ${indicators.ultosc} - **${indicators.ultosc <= 40 ? "Oversold " + emojis["bearish"] : indicators.ultosc >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-ROC(14): ${indicators.roc} - **${indicators.roc < 0 ? "Bearish " + emojis["bearish"] : indicators.roc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**`;
+ROC(14): ${indicators.roc} - **${indicators.roc < 0 ? "Bearish " + emojis["bearish"] : indicators.roc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
+BOP: ${indicators.bop} - **${indicators.bop < 0 ? "Bearish " + emojis["bearish"] : indicators.bop > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
+MFI(14): ${indicators.mfi} - **${indicators.mfi <= 40 ? "Oversold " + emojis["bearish"] : indicators.mfi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
+AROON(14): ${indicators.aroonosc} - **${indicators.aroonosc < 0 ? "Bearish " + emojis["bearish"] : indicators.aroonosc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**`;
+
     const bullishIndicatorCount = techIndicators.match(new RegExp(emojis["bullish"], "g"))?.length ?? 0;
     const bearishIndicatorCount = techIndicators.match(new RegExp(emojis["bearish"], "g"))?.length ?? 0;
     const movingAverages =
@@ -84,7 +92,7 @@ EMA(200): ${indicators.ema200} - **${price < indicators.ema200 ? "Bearish " + em
                 value:
                     `${techIndicators}
                 
-Verdict: **${bullishIndicatorCount > bearishIndicatorCount ? "Bullish " + emojis["bullish"] : bearishIndicatorCount > bullishIndicatorCount ? "Bearish " + emojis["bearish"] : "Neutral"}** (Bullish: ${bullishIndicatorCount}, Bearish: ${bearishIndicatorCount}, Neutral: ${7 - bullishIndicatorCount - bearishIndicatorCount})`
+Verdict: **${bullishIndicatorCount > bearishIndicatorCount ? "Bullish " + emojis["bullish"] : bearishIndicatorCount > bullishIndicatorCount ? "Bearish " + emojis["bearish"] : "Neutral"}** (Bullish: ${bullishIndicatorCount}, Bearish: ${bearishIndicatorCount}, Neutral: ${12 - bullishIndicatorCount - bearishIndicatorCount})`
             },
             {
                 name: "Moving Averages",
