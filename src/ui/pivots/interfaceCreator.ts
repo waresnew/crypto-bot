@@ -4,7 +4,7 @@ import {Candle} from "../../structs/candle";
 import {Candles} from "../../utils/database";
 import got from "got";
 import {getEmbedTemplate} from "../templates";
-import {client} from "../../utils/discordUtils";
+import {client, emojis} from "../../utils/discordUtils";
 import {formatPrice} from "../coin/interfaceCreator";
 import {
     APIActionRowComponent,
@@ -14,6 +14,7 @@ import {
     ComponentType
 } from "discord-api-types/v10";
 import {analytics} from "../../utils/analytics";
+import {binanceLastUpdated} from "../../services/binanceRest";
 
 export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
@@ -56,22 +57,40 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
         }
     }
     const fields = [];
-    const statOrder = ["S3", "S2", "S1", "Pivot", "R1", "R2", "R3"];
+    const displayOrder = ["S3", "S2", "S1", "Pivot", "R1", "R2", "R3"];
+    const compareOrder = ["S3", "R3", "S2", "R2", "S1", "R1", "Pivot"];
     for (const pivot of Object.keys(pivotPoints)) {
         const field = {
             name: pivot,
             value: "",
             inline: true
         };
-        for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => statOrder.indexOf(a) - statOrder.indexOf(b))) {
+        let additional = "";
+        for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => compareOrder.indexOf(a) - compareOrder.indexOf(b))) {
+            const val = parseFloat(pivotPoints[pivot][key]);
+            if (key.startsWith("S") && price < val) {
+                additional = `Price currently below **${key}** ${emojis["bearish"]}`;
+                break;
+            } else if (key.startsWith("R") && price > val) {
+                additional = `Price currently above **${key}** ${emojis["bullish"]}`;
+                break;
+            } else if (key == "Pivot") {
+                additional = price > val ? `Price currently above **${key.toLowerCase()}** ${emojis["bullish"]}` : price < val ? `Price currently below **${key.toLowerCase()}** ${emojis["bearish"]}` : "";
+                break;
+            }
+        }
+        if (additional != "") {
+            additional = "\n\n" + additional;
+        }
+        for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => displayOrder.indexOf(a) - displayOrder.indexOf(b))) {
             field.value += `**${key}**: ${pivotPoints[pivot][key]}\n`;
         }
-        field.value = field.value.trim();
+        field.value = field.value.trim() + additional;
         fields.push(field);
     }
     fields.push({
         name: "Last Updated",
-        value: `<t:${Math.floor(Date.now() / 1000 / 86400) * 86400}:R>`
+        value: `<t:${Math.floor(binanceLastUpdated / 1000)}:R>`
     });
     const embed = {
         ...getEmbedTemplate(),
