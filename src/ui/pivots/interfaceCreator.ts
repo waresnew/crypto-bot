@@ -69,13 +69,13 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
         for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => compareOrder.indexOf(a) - compareOrder.indexOf(b))) {
             const val = parseFloat(pivotPoints[pivot][key]);
             if (key.startsWith("S") && price < val) {
-                additional = `Price currently below **${key}** ${emojis["bearish"]}`;
+                additional = `Price below **${key}** ${emojis["bearish"]}`;
                 break;
             } else if (key.startsWith("R") && price > val) {
-                additional = `Price currently above **${key}** ${emojis["bullish"]}`;
+                additional = `Price above **${key}** ${emojis["bullish"]}`;
                 break;
             } else if (key == "Pivot") {
-                additional = price > val ? `Price currently above **${key.toLowerCase()}** ${emojis["bullish"]}` : price < val ? `Price currently below **${key.toLowerCase()}** ${emojis["bearish"]}` : "";
+                additional = price > val ? `Price above **${key}** ${emojis["bullish"]}` : price < val ? `Price below **${key}** ${emojis["bearish"]}` : "";
                 break;
             }
         }
