@@ -16,7 +16,7 @@ import {makeButtons, makeEmbed} from "../ui/indicators/interfaceCreator";
 export default {
     name: "indicators",
     type: ApplicationCommandType.ChatInput,
-    description: "Finds technical indicators for a coin",
+    description: "Calculate technical indicators for a coin",
     options: [
         {
             name: "name",

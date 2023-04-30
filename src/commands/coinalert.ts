@@ -15,7 +15,7 @@ import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 export default {
     name: "coinalert",
     type: ApplicationCommandType.ChatInput,
-    description: "Setup an alert for a cryptocurrency (interactive)",
+    description: "Setup an alert for a coin (interactive)",
     options: [
         {
             name: "name",

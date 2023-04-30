@@ -9,7 +9,7 @@ import {discordGot} from "../utils/discordUtils";
 export default {
     name: "ping",
     type: ApplicationCommandType.ChatInput,
-    description: "Gets bot latency",
+    description: "Get bot latency",
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const embed = getEmbedTemplate();
         embed.title = "Pong!";
