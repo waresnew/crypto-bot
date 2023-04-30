@@ -16,7 +16,7 @@ import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 export default {
     name: "pivots",
     type: ApplicationCommandType.ChatInput,
-    description: "Calculates pivot points for a coin",
+    description: "Calculate pivot points for a coin",
     options: [
         {
             name: "name",
