@@ -38,10 +38,21 @@ export default {
                 }
             });
         }
+        let embed;
+        try {
+            embed = await makeEmbed(choice, interaction);
+        } catch (e) {
+            await http.send({
+                type: InteractionResponseType.ChannelMessageWithSource, data: {
+                    embeds: [e]
+                }
+            });
+            return;
+        }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {
-                embeds: [await makeEmbed(choice, interaction)],
+                embeds: [embed],
                 components: [makeButtons(choice)],
                 flags: MessageFlags.Ephemeral
             }
