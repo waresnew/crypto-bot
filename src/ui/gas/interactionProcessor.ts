@@ -6,6 +6,7 @@ import {analytics} from "../../utils/analytics";
 import {etherscanLastUpdated} from "../../services/etherscanRest";
 import {makeButtons, makeEmbed} from "./interfaceCreator";
 import {validateRefresh} from "../../utils/discordUtils";
+import {UserError} from "../../structs/userError";
 
 export default class GasInteractionProcessor extends InteractionProcessor {
 
@@ -14,14 +15,19 @@ export default class GasInteractionProcessor extends InteractionProcessor {
             try {
                 validateRefresh(interaction, etherscanLastUpdated);
             } catch (e) {
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource,
-                    data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+
+                } else {
+                    throw e;
+                }
             }
 
             analytics.track({

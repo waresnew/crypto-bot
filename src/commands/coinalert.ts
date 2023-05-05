@@ -11,6 +11,7 @@ import {
 import {FastifyReply} from "fastify";
 import {makeStatPrompt} from "../ui/coinalert/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
+import {UserError} from "../structs/userError";
 
 export default {
     name: "coinalert",
@@ -30,11 +31,15 @@ export default {
         try {
             coin = await parseCoinCommandArg(interaction);
         } catch (e) {
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: e
-                }
-            });
+            if (e instanceof UserError) {
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: e.error
+                    }
+                });
+            } else {
+                throw e;
+            }
         }
         await http.send(makeStatPrompt(interaction, coin));
     },

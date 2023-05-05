@@ -8,6 +8,7 @@ import {idToMeta} from "../../structs/coinMetadata";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import {Readable} from "node:stream";
 import {validateRefresh} from "../../utils/discordUtils";
+import {UserError} from "../../structs/userError";
 
 export default class CoinInteractionProcessor extends InteractionProcessor {
 
@@ -17,14 +18,18 @@ export default class CoinInteractionProcessor extends InteractionProcessor {
             try {
                 validateRefresh(interaction, binanceLastUpdated);
             } catch (e) {
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource,
-                    data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
             analytics.track({
                 userId: interaction.user.id,

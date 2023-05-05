@@ -15,6 +15,7 @@ import {
 } from "discord-api-types/v10";
 import {analytics} from "../../utils/analytics";
 import {binanceLastUpdated} from "../../services/binanceRest";
+import {UserError} from "../../structs/userError";
 
 export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
@@ -23,10 +24,10 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
             userId: interaction.user.id,
             event: "Request pivot points for a coin with <2 days of data"
         });
-        throw {
+        throw new UserError({
             title: "Not Enough Data",
             description: "Error: There is not enough data to calculate pivot points for this coin, as it has only been listed on popular exchanges for less than 2 days."
-        };
+        });
     }
     const result = await got("http://127.0.0.1:3001/pivots", {
         method: "POST",

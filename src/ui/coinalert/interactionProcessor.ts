@@ -22,6 +22,7 @@ import {CoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {validateWhen} from "../../utils/utils";
 import {validateAlert} from "../../utils/alertUtils";
+import {UserError} from "../../structs/userError";
 
 export default class CoinAlertInteractionProcessor extends InteractionProcessor {
 
@@ -38,21 +39,25 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             try {
                 validateWhen(when);
             } catch (e) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Invalid alert modal input",
-                    properties: {
-                        type: "threshold",
-                        input: when
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.UpdateMessage, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Invalid alert modal input",
+                        properties: {
+                            type: "threshold",
+                            input: when
+                        }
+                    });
+                    await http.send({
+                        type: InteractionResponseType.UpdateMessage, data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const what = interaction.data.custom_id.split("_")[3];
@@ -157,15 +162,19 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             try {
                 await validateAlert(alert);
             } catch (e) {
-                await http.send({
-                    type: InteractionResponseType.UpdateMessage, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral,
-                        embeds: [],
-                        components: []
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    await http.send({
+                        type: InteractionResponseType.UpdateMessage, data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral,
+                            embeds: [],
+                            components: []
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
             analytics.track({
                 userId: interaction.user.id,

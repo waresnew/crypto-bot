@@ -12,6 +12,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {makeButtons, makeEmbed} from "../ui/pivots/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
+import {UserError} from "../structs/userError";
 // noinspection DuplicatedCode
 export default {
     name: "pivots",
@@ -32,22 +33,30 @@ export default {
         try {
             choice = await parseCoinCommandArg(interaction);
         } catch (e) {
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: e
-                }
-            });
+            if (e instanceof UserError) {
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: e.error
+                    }
+                });
+            } else {
+                throw e;
+            }
         }
         let embed;
         try {
             embed = await makeEmbed(choice, interaction);
         } catch (e) {
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    embeds: [e]
-                }
-            });
-            return;
+            if (e instanceof UserError) {
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        embeds: [e.error]
+                    }
+                });
+                return;
+            } else {
+                throw e;
+            }
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
