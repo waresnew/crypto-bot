@@ -9,6 +9,7 @@ import {gasPrices} from "../services/etherscanRest";
 import {APIInteraction} from "discord-api-types/v10";
 import {commandIds} from "./discordUtils";
 import {analytics} from "./analytics";
+import {UserError} from "../structs/userError";
 
 type Alert = CoinAlert | GasAlert;
 
@@ -44,7 +45,7 @@ export async function validateAlert(alert: Alert) {
                 reason: "Too many alerts"
             }
         });
-        throw `Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`;
+        throw new UserError(`Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
     }
     if (await getAlertDb(alert).findOne(alert)) {
         analytics.track({
@@ -54,7 +55,7 @@ export async function validateAlert(alert: Alert) {
                 reason: "Duplicate alert"
             }
         });
-        throw `Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`;
+        throw new UserError(`Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`);
     }
 }
 

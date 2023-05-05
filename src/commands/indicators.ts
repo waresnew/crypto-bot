@@ -12,6 +12,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 import {makeButtons, makeEmbed} from "../ui/indicators/interfaceCreator";
+import {UserError} from "../structs/userError";
 // noinspection DuplicatedCode
 export default {
     name: "indicators",
@@ -32,11 +33,15 @@ export default {
         try {
             choice = await parseCoinCommandArg(interaction);
         } catch (e) {
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: e
-                }
-            });
+            if (e instanceof UserError) {
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: e.error
+                    }
+                });
+            } else {
+                throw e;
+            }
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,

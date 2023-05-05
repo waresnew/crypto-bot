@@ -12,6 +12,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import didyoumean from "didyoumean";
+import {UserError} from "../structs/userError";
 
 export const validCryptos: CoinMetadata[] = [];
 
@@ -38,10 +39,10 @@ export async function parseCoinCommandArg(interaction: APIChatInputApplicationCo
     const choice = validCryptos.find(meta => meta.symbol.toLowerCase() == coin.toLowerCase() || meta.name.toLowerCase() == coin.toLowerCase());
     if (!choice) {
         const suggestion = didyoumean(coin.toLowerCase(), validCryptos.map(meta => meta.symbol).concat(validCryptos.map(meta => meta.name)));
-        throw `Couldn't find a coin called \`${coin}\`. ${suggestion != null
+        throw new UserError(`Couldn't find a coin called \`${coin}\`. ${suggestion != null
             ? `Did you mean \`${suggestion}\`?`
             : ""
-        }`;
+        }`);
     }
     return choice;
 }

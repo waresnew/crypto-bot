@@ -12,6 +12,7 @@ import {
 import {FastifyReply} from "fastify";
 import {Readable} from "node:stream";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
+import {UserError} from "../structs/userError";
 
 export default {
     name: "coin",
@@ -31,11 +32,15 @@ export default {
         try {
             choice = await parseCoinCommandArg(interaction);
         } catch (e) {
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource, data: {
-                    content: e
-                }
-            });
+            if (e instanceof UserError) {
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: e.error
+                    }
+                });
+            } else {
+                throw e;
+            }
         }
         const embed = await makeEmbed(choice);
         const buttons = makeButtons(choice);

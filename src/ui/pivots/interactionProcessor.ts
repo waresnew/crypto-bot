@@ -7,6 +7,7 @@ import {validateRefresh} from "../../utils/discordUtils";
 import {analytics} from "../../utils/analytics";
 import {makeButtons, makeEmbed} from "./interfaceCreator";
 import {binanceLastUpdated} from "../../services/binanceRest";
+import {UserError} from "../../structs/userError";
 
 export default class PivotsInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
@@ -15,14 +16,18 @@ export default class PivotsInteractionProcessor extends InteractionProcessor {
             try {
                 validateRefresh(interaction, binanceLastUpdated);
             } catch (e) {
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource,
-                    data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
 
             analytics.track({

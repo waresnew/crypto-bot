@@ -19,6 +19,7 @@ import {GasAlert} from "../../structs/alert/gasAlert";
 import {validateAlert} from "../../utils/alertUtils";
 import {GasAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
+import {UserError} from "../../structs/userError";
 
 export default class GasAlertInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
@@ -67,15 +68,19 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             try {
                 await validateAlert(alert);
             } catch (e) {
-                await http.send({
-                    type: InteractionResponseType.UpdateMessage, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral,
-                        embeds: [],
-                        components: []
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    await http.send({
+                        type: InteractionResponseType.UpdateMessage, data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral,
+                            embeds: [],
+                            components: []
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
             analytics.track({
                 userId: interaction.user.id,
@@ -107,21 +112,25 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             try {
                 validateWhen(when);
             } catch (e) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Invalid gas modal input",
-                    properties: {
-                        type: "threshold",
-                        input: when
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.UpdateMessage, data: {
-                        content: e,
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
+                if (e instanceof UserError) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Invalid gas modal input",
+                        properties: {
+                            type: "threshold",
+                            input: when
+                        }
+                    });
+                    await http.send({
+                        type: InteractionResponseType.UpdateMessage, data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                } else {
+                    throw e;
+                }
             }
             const speed = interaction.data.custom_id.split("_")[2];
             await http.send({
