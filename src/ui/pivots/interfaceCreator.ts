@@ -23,7 +23,7 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
             userId: interaction.user.id,
             event: "Request pivot points for a coin with <2 days of data"
         });
-        return {
+        throw {
             title: "Not Enough Data",
             description: "Error: There is not enough data to calculate pivot points for this coin, as it has only been listed on popular exchanges for less than 2 days."
         };

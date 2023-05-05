@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA, BOP, MFI, AROONOSC, MINUS_DI, \
     PLUS_DI
@@ -32,8 +33,9 @@ def find_indicators(ohlcv):
     atr = ATR(ohlcv['high'], ohlcv['low'], ohlcv['close'])
     indicators['atr'] = {}
     indicators['atr']['atr'] = atr[-1]  # ATR(14)
-    indicators['atr']['atrma14'] = SMA(atr, timeperiod=14)[-1]
-    indicators['atr']['atrma7'] = SMA(atr, timeperiod=7)[-1]
+
+    indicators['atr']['atrma14'] = SMA(atr, timeperiod=14)[-1] if len(atr) >= 14 else numpy.nan
+    indicators['atr']['atrma7'] = SMA(atr, timeperiod=7)[-1] if len(atr) >= 7 else numpy.nan
     indicators['ultosc'] = ULTOSC(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ULTOSC(7, 14, 28)
     indicators['roc'] = ROC(ohlcv['close'], timeperiod=14)[-1]  # ROC(14)
     indicators['bop'] = BOP(ohlcv['open'], ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # BOP
