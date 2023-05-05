@@ -1,6 +1,7 @@
 import {CoinAlerts} from "../src/utils/database";
 import {validateWhen} from "../src/utils/utils";
 import {validateAlert} from "../src/utils/alertUtils";
+import {UserError} from "../src/structs/userError";
 
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {
@@ -8,13 +9,13 @@ describe("test alert wizard", () => {
             validateWhen("1000000001");
             fail();
         } catch (e) {
-            expect(e).toMatch("Error: The threshold you specified was too high");
+            expect((e as UserError).error).toMatch("Error: The threshold you specified was too high");
         }
         try {
             validateWhen("-00000000000");
             fail();
         } catch (e) {
-            expect(e).toMatch("The threshold you specified was too long");
+            expect((e as UserError).error).toMatch("The threshold you specified was too long");
         }
     });
 
@@ -38,7 +39,7 @@ describe("test alert wizard", () => {
             });
             fail();
         } catch (e) {
-            expect(e).toMatch("Error: You already have an alert exactly like the one you are trying to add");
+            expect((e as UserError).error).toMatch("Error: You already have an alert exactly like the one you are trying to add");
         }
         for (let i = 1; i < 25; i++) {
             await CoinAlerts.insertOne({
@@ -61,7 +62,7 @@ describe("test alert wizard", () => {
             });
             fail();
         } catch (e) {
-            expect(e).toMatch("Error: You can not have more than 25 alerts set");
+            expect((e as UserError).error).toMatch("Error: You can not have more than 25 alerts set");
         }
     });
 });
