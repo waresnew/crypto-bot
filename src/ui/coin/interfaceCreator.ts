@@ -3,7 +3,8 @@ import {getEmbedTemplate} from "../templates";
 import {
     APIActionRowComponent,
     APIButtonComponent,
-    APIInteractionResponse,
+    APIInteractionResponseChannelMessageWithSource,
+    APIInteractionResponseUpdateMessage,
     ButtonStyle,
     ComponentType
 } from "discord-api-types/v10";
@@ -21,7 +22,7 @@ export async function makeEmbed(choice: CoinMetadata) {
         url: `https://s2.coinmarketcap.com/static/img/coins/128x128/${choice.cmc_id}.png`
     };
     embed.image = {
-        url: "attachment://chart.png"
+        url: `attachment://${Date.now()}.png`
     };
     const coin = await LatestCoins.findOne({coin: choice.cmc_id});
     const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
@@ -70,12 +71,18 @@ export async function makeEmbed(choice: CoinMetadata) {
     return embed;
 }
 
-export async function makeFormData(payload: APIInteractionResponse, coin: CoinMetadata) {
+export async function makeFormData(payload: APIInteractionResponseChannelMessageWithSource | APIInteractionResponseUpdateMessage, coin: CoinMetadata) {
+    const chartName = payload.data.embeds[0].image.url.replaceAll(new RegExp("attachment:\\/\\/|\\.png", "g"), "");
+    payload.data.attachments = [{
+        id: "0",
+        filename: `${chartName}.png`,
+        description: `Chart for ${coin.symbol}/USDT`
+    }];
     const form = new FormData();
     const chart = await makeChart(coin);
     deepPatchCustomId(payload);
     form.set("payload_json", JSON.stringify(payload));
-    form.set("files[0]", new Blob([chart]), "chart.png");
+    form.set("files[0]", new Blob([chart]), `${chartName}.png`);
     return new FormDataEncoder(form as any);
 }
 
