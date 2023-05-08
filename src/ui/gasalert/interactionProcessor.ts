@@ -70,11 +70,9 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             } catch (e) {
                 if (e instanceof UserError) {
                     await http.send({
-                        type: InteractionResponseType.UpdateMessage, data: {
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
                             content: e.error,
-                            flags: MessageFlags.Ephemeral,
-                            embeds: [],
-                            components: []
+                            flags: MessageFlags.Ephemeral
                         }
                     });
                     return;
@@ -122,7 +120,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                         }
                     });
                     await http.send({
-                        type: InteractionResponseType.UpdateMessage, data: {
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
                             content: e.error,
                             flags: MessageFlags.Ephemeral
                         }

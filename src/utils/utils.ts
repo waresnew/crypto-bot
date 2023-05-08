@@ -21,8 +21,8 @@ export function validateWhen(when: string) {
     if (!when) {
         throw new UserError("Error: You did not specify a threshold. Please try again.");
     }
-    if (when.length > 10) {
-        throw new UserError("Error: The threshold you specified was too long. Please note that we only support thresholds from negative one billion to positive one billion.");
+    if (when.length > 11) {
+        throw new UserError("Error: The threshold you specified was too long. Please note that your threshold must be at most 11 characters long.");
     }
     if (isNaN(Number(when)) || isNaN(parseFloat(when))) {
         throw new UserError("Error: The specified threshold was not a number.");
