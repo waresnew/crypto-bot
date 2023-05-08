@@ -200,9 +200,9 @@ export function makeAlertSelectEntry(alert: Alert) {
 
 export function parsePrettyAlert(pretty: string, interaction: APIInteraction) {
     const stats = CryptoStat.listLongs().join("|");
-    if (new RegExp(`When (${stats})`).test(pretty)) {
+    if (new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/).test(pretty)) {
         return parsePrettyCoinAlert(pretty, interaction);
-    } else if (new RegExp("When gas").test(pretty)) {
+    } else if (new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/).test(pretty)) {
         return parsePrettyGasAlert(pretty, interaction);
     } else {
         return null;
