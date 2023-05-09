@@ -59,7 +59,7 @@ describe("Tests coin alerts", () => {
         expect(await checkCoinAlert(firstAlert)).toBe(true);
 
         await triggerAlerts();
-        expect(await CoinAlerts.findOne({coin: 1})).toBe(null);
+        expect((await CoinAlerts.findOne({coin: 1})).disabled).toBe(true);
 
     });
 });
