@@ -14,6 +14,10 @@ def make_chart(data):
     start1 = round(time.time() * 1000)
     body = json.loads(data)
     candles = body['candles']
+    for candle in candles:
+        for i in range(len(candle)):
+            if type(candle[i]) is str:
+                candle[i] = float(candle[i])
     df = pd.DataFrame(candles, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
     df['date'] = pd.to_datetime(df['date'], unit='ms')
     df.set_index('date', inplace=True, verify_integrity=True)
@@ -28,7 +32,7 @@ def make_chart(data):
     axlist[0].spines.bottom.set_visible(False)
     axlist[2].spines.top.set_visible(False)
     start2 = round(time.time() * 1000)
-    fig.savefig(buffer)
+    mpf.show()
     matplotlib.pyplot.close()
     print("Rendered chart @ ", datetime.now().isoformat(), ":\n    Plotted in ", start2 - start1,
           " ms\n    Rendered to png in ", round(time.time() * 1000) - start2, " ms", flush=True)
@@ -43,9 +47,9 @@ if __name__ == '__main__':
             'name': 'Bitcoin'
         },
         'candles': [
-            [1610000000000, 1, 3, 1, 2, 100],
-            [1610086400000, 2, 9, 2, 9, 500],
-            [1610172800000, 9, 9, 1, 1, 300],
-            [1610259200000, 1, 5, 1, 5, 200],
+            [1610000000000, '1', '3', '1', '2', '100'],
+            [1610086400000, '2', '9', '2', '9', '500'],
+            [1610172800000, '9', '9', '1', '1', '300'],
+            [1610259200000, '1', '5', '1', '5', '200'],
         ]
     }))

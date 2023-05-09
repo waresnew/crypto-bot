@@ -9,7 +9,7 @@ describe("Tests coin alerts", () => {
             user: "123",
             coin: 1,
             stat: "price",
-            threshold: 100,
+            threshold: "100",
             direction: ">",
             disabled: false
         };
@@ -18,7 +18,7 @@ describe("Tests coin alerts", () => {
             user: "123",
             coin: 1,
             stat: "24h%",
-            threshold: 100,
+            threshold: "100",
             direction: "<",
             disabled: false
         });
@@ -27,28 +27,28 @@ describe("Tests coin alerts", () => {
             .get("/api/v10/users/@me/channels")
             .reply(200, {id: "ok"});
         await Candles.insertOne({
-            base_volume: 0,
+            base_volume: "0",
             close_time: 0,
-            ignore: 0,
+            ignore: "0",
             open_time: 0,
-            quote_volume: 0,
-            taker_base_volume: 0,
-            taker_quote_volume: 0,
+            quote_volume: "0",
+            taker_base_volume: "0",
+            taker_quote_volume: "0",
             trades_count: 0,
             coin: 1,
-            open_price: 0,
-            close_price: 200,
-            high_price: 0,
-            low_price: 0
+            open_price: "0",
+            close_price: "200",
+            high_price: "0",
+            low_price: "0"
 
         });
         await LatestCoins.insertOne({
             coin: 1,
-            dayPriceChangePercent: 0,
-            weekHighPrice: 0,
-            weekLowPrice: 0,
-            weekPriceChangePercent: 0,
-            weekWeightedAvgPrice: 0
+            dayPriceChangePercent: "0",
+            weekHighPrice: "0",
+            weekLowPrice: "0",
+            weekPriceChangePercent: "0",
+            weekWeightedAvgPrice: "0"
         });
         nock("https://discord.com")
             .post("/api/v10/channels/ok/messages")

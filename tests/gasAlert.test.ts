@@ -8,17 +8,17 @@ describe("test gas alerts", () => {
             speed: "fast",
             user: "123",
             disabled: false,
-            threshold: 1
+            threshold: "1"
         })).toBe(false);
         expect(checkGasAlert({
             speed: "fast",
             user: "123",
             disabled: false,
-            threshold: 2
+            threshold: "2"
         })).toBe(true);
         expect(checkGasAlert({
             speed: "fast",
-            threshold: 3,
+            threshold: "3",
             user: "123",
             disabled: false
         })).toBe(true);

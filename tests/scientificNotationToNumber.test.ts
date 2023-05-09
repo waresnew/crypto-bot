@@ -1,4 +1,5 @@
 import {scientificNotationToNumber} from "../src/utils/utils";
+import BigNumber from "bignumber.js";
 
 describe("Test precision", () => {
     test("1", () => {
@@ -43,6 +44,9 @@ describe("Test precision", () => {
     });
     test("13", () => {
         expect(scientificNotationToNumber("1e-8")).toBe("0.00000001");
+    });
+    test("14", () => {
+        expect(new BigNumber("1,1").toNumber()).toBeNaN();
     });
 });
 

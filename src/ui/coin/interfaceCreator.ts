@@ -10,11 +10,11 @@ import {
 } from "discord-api-types/v10";
 import {CoinMetadata} from "../../structs/coinMetadata";
 import {Candles, LatestCoins} from "../../utils/database";
-import {scientificNotationToNumber} from "../../utils/utils";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import got from "got";
 import {FormDataEncoder} from "form-data-encoder";
 import {deepPatchCustomId, emojis} from "../../utils/discordUtils";
+import BigNumber from "bignumber.js";
 
 export async function makeEmbed(choice: CoinMetadata) {
     const embed = getEmbedTemplate();
@@ -26,21 +26,21 @@ export async function makeEmbed(choice: CoinMetadata) {
     };
     const coin = await LatestCoins.findOne({coin: choice.cmc_id});
     const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
-    embed.color = coin.weekPriceChangePercent < 0 ? 0xef5350 : 0x26a69a;
+    embed.color = new BigNumber(coin.weekPriceChangePercent).lt("0") ? 0xef5350 : 0x26a69a;
     embed.title = `${choice.name} (${choice.symbol}/USDT)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
         name: "Price",
-        value: `$${formatPrice(latestCandle.close_price)} ${coin.weekPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`
+        value: `$${formatPrice(new BigNumber(latestCandle.close_price))} ${new BigNumber(coin.weekPriceChangePercent).lt("0") ? emojis["bearish"] : emojis["bullish"]}`
     },
         {
             name: "24h High",
-            value: `$${formatPrice(coin.dayHighPrice)} ${emojis["bullish"]}`,
+            value: `$${formatPrice(new BigNumber(coin.dayHighPrice))} ${emojis["bullish"]}`,
             inline: true
         },
         {
             name: "24h Low",
-            value: `$${formatPrice(coin.dayLowPrice)} ${emojis["bearish"]}`,
+            value: `$${formatPrice(new BigNumber(coin.dayLowPrice))} ${emojis["bearish"]}`,
             inline: true
         },
         {
@@ -50,17 +50,17 @@ export async function makeEmbed(choice: CoinMetadata) {
         },
         {
             name: "1h Change",
-            value: `${Math.round(coin.hourPriceChangePercent * 100) / 100}% ${coin.hourPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
+            value: `${new BigNumber(coin.hourPriceChangePercent).toFormat(2)}% ${new BigNumber(coin.hourPriceChangePercent).lt("0") ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
             name: "24h Change",
-            value: `${Math.round(coin.dayPriceChangePercent * 100) / 100}% ${coin.dayPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
+            value: `${new BigNumber(coin.dayPriceChangePercent).toFormat(2)}% ${new BigNumber(coin.dayPriceChangePercent).lt("0") ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
             name: "7d Change",
-            value: `${Math.round(coin.weekPriceChangePercent * 100) / 100}% ${coin.weekPriceChangePercent < 0 ? emojis["bearish"] : emojis["bullish"]}`,
+            value: `${new BigNumber(coin.weekPriceChangePercent).toFormat(2)}% ${new BigNumber(coin.weekPriceChangePercent).lt("0") ? emojis["bearish"] : emojis["bullish"]}`,
             inline: true
         },
         {
@@ -86,8 +86,8 @@ export async function makeFormData(payload: APIInteractionResponseChannelMessage
     return new FormDataEncoder(form as any);
 }
 
-export function formatPrice(price: number) {
-    return price < 1 ? scientificNotationToNumber(Number(price).toPrecision(4)) : Math.round(price * 100) / 100;
+export function formatPrice(price: BigNumber) {
+    return price.lt("1") ? price.toPrecision(4).toString() : price.toFormat(2).replaceAll(new RegExp(",", "g"), "").toString();
 }
 
 export async function makeChart(coin: CoinMetadata) {

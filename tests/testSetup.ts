@@ -81,8 +81,8 @@ beforeAll(async () => {
     globalMocks.push(jest.spyOn(analytics, "page").mockReturnValue(undefined));
     globalMocks.push(jest.spyOn(analytics, "identify").mockReturnValue(undefined));
     expect(process.env["SEGMENT_KEY"]).toBeUndefined();
-    expect(globalThis.__MONGO_URI__).toMatch("127.0.0.1");
-    await openDb(globalThis.__MONGO_URI__, globalThis.__MONGO_DB_NAME__);
+    expect((globalThis as any).__MONGO_URI__).toMatch("127.0.0.1");
+    await openDb((globalThis as any).__MONGO_URI__, (globalThis as any).__MONGO_DB_NAME__);
 });
 
 afterAll(async () => {

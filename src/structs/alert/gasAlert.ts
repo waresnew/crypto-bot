@@ -4,7 +4,7 @@ export class GasAlert {
     //slow, normal, fast
     user: string;
     speed: string;
-    threshold: number;
+    threshold: string;
     disabled: boolean;
 
 }

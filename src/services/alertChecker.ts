@@ -57,7 +57,11 @@ export async function triggerAlerts() {
                 toDm.set(alert.user, []);
             }
             toDm.get(alert.user).push(formatAlert(alert));
-            await getAlertDb(alert).deleteOne(alert);
+            await getAlertDb(alert).updateOne(alert, {
+                $set: {
+                    disabled: true
+                }
+            });
         }
     }
     for (const user of toDm.keys()) {
@@ -68,7 +72,7 @@ export async function triggerAlerts() {
         notifs.forEach(line => {
             desc += "\n- " + line;
         });
-        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **deleted** and won't trigger again.\n\n**❤️ If Botchain has helped you, please upvote the bot with </vote:${commandIds.get("vote")}>.**\nHappy trading!`;
+        desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again. If you want to re-enable these alert(s), please do so with </myalerts:${commandIds.get("myalerts")}>.\n\n**❤️ If Botchain has helped you, please upvote the bot with </vote:${commandIds.get("vote")}>.**\nHappy trading!`;
         message.description = desc;
         analytics.track({
             userId: user,

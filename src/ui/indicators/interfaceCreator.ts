@@ -8,6 +8,7 @@ import {client, emojis} from "../../utils/discordUtils";
 import {formatPrice} from "../coin/interfaceCreator";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import {APIActionRowComponent, APIButtonComponent, ButtonStyle, ComponentType} from "discord-api-types/v10";
+import BigNumber from "bignumber.js";
 
 export async function makeEmbed(coin: CoinMetadata) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
@@ -28,7 +29,7 @@ export async function makeEmbed(coin: CoinMetadata) {
         if (isNaN(indicators[key])) {
             continue;
         }
-        indicators[key] = formatPrice(indicators[key]);
+        indicators[key] = formatPrice(new BigNumber(indicators[key]));
     }
     /*
     rsi >= 70 -> bullish, <=30 -> bearish
@@ -48,11 +49,11 @@ export async function makeEmbed(coin: CoinMetadata) {
         `RSI(14): ${indicators.rsi} - **${indicators.rsi <= 40 ? "Oversold " + emojis["bearish"] : indicators.rsi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 STOCH(9, 6, 6): ${indicators.stoch} - **${indicators.stoch <= 40 ? "Oversold " + emojis["bearish"] : indicators.stoch >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 STOCHRSI(14, 6, 6): ${indicators.stochrsi} - **${indicators.stochrsi <= 40 ? "Oversold " + emojis["bearish"] : indicators.stochrsi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-MACD(12, 26, 9): ${isNaN(indicators.macd.macd) ? "Not Enough Data" : formatPrice(indicators.macd.macd)} - **${indicators.macd.macdhist < 0 ? "Bearish " + emojis["bearish"] : indicators.macd.macdhist > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-ADX(14): ${isNaN(indicators.adx.adx) ? "Not Enough Data" : formatPrice(indicators.adx.adx)} - **${indicators.adx.adx <= 25 ? "Neutral" : indicators.adx.plus_di > indicators.adx.minus_di ? "Bullish " + emojis["bullish"] : indicators.adx.minus_di > indicators.adx.plus_di ? "Bearish " + emojis["bearish"] : "Neutral"}**
+MACD(12, 26, 9): ${isNaN(indicators.macd.macd) ? "Not Enough Data" : formatPrice(new BigNumber(indicators.macd.macd))} - **${indicators.macd.macdhist < 0 ? "Bearish " + emojis["bearish"] : indicators.macd.macdhist > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
+ADX(14): ${isNaN(indicators.adx.adx) ? "Not Enough Data" : formatPrice(new BigNumber(indicators.adx.adx))} - **${indicators.adx.adx <= 25 ? "Neutral" : indicators.adx.plus_di > indicators.adx.minus_di ? "Bullish " + emojis["bullish"] : indicators.adx.minus_di > indicators.adx.plus_di ? "Bearish " + emojis["bearish"] : "Neutral"}**
 Williams' %R(14): ${indicators.willr} - **${indicators.willr <= -60 ? "Oversold " + emojis["bearish"] : indicators.willr >= -40 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 CCI(14): ${indicators.cci} - **${indicators.cci <= -80 ? "Oversold " + emojis["bearish"] : indicators.cci >= 80 ? "Overbought " + emojis["bullish"] : "Neutral"}**
-ATR(14): ${isNaN(indicators.atr.atr) ? "Not Enough Data" : formatPrice(indicators.atr.atr)} - **${indicators.atr.atr > indicators.atr.atrma14 ? "High Volatility" : indicators.atr.atr > indicators.atr.atrma7 ? "Moderate Volatility" : indicators.atr.atr <= indicators.atr.atrma7 ? "Less Volatility" : "Neutral"}**
+ATR(14): ${isNaN(indicators.atr.atr) ? "Not Enough Data" : formatPrice(new BigNumber(indicators.atr.atr))} - **${indicators.atr.atr > indicators.atr.atrma14 ? "High Volatility" : indicators.atr.atr > indicators.atr.atrma7 ? "Moderate Volatility" : indicators.atr.atr <= indicators.atr.atrma7 ? "Less Volatility" : "Neutral"}**
 ULTOSC(7, 14, 28): ${indicators.ultosc} - **${indicators.ultosc <= 40 ? "Oversold " + emojis["bearish"] : indicators.ultosc >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 ROC(14): ${indicators.roc} - **${indicators.roc < 0 ? "Bearish " + emojis["bearish"] : indicators.roc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
 BOP: ${indicators.bop} - **${indicators.bop < 0 ? "Bearish " + emojis["bearish"] : indicators.bop > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**

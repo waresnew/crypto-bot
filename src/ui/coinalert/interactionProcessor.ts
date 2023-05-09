@@ -20,9 +20,10 @@ import {idToMeta} from "../../structs/coinMetadata";
 import {CoinAlert} from "../../structs/alert/coinAlert";
 import {CoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
-import {scientificNotationToNumber, validateWhen} from "../../utils/utils";
+import {validateWhen} from "../../utils/utils";
 import {validateAlert} from "../../utils/alertUtils";
 import {UserError} from "../../structs/userError";
+import BigNumber from "bignumber.js";
 
 export default class CoinAlertInteractionProcessor extends InteractionProcessor {
 
@@ -120,7 +121,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
-            message.description = `Great! You will be **DM'ed** when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${scientificNotationToNumber(when)}. If you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`;
+            message.description = `Great! You will be **DM'ed** when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${new BigNumber(when).toString()}. If you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`;
             await http.send({
                 type: InteractionResponseType.UpdateMessage,
                 data: {
@@ -162,7 +163,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             alert.user = interaction.user.id;
             alert.coin = coin.cmc_id;
             alert.stat = what;
-            alert.threshold = Number(when);
+            alert.threshold = when;
             alert.direction = direction;
             alert.disabled = false;
             const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
