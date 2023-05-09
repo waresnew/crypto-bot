@@ -10,6 +10,7 @@ import {APIInteraction} from "discord-api-types/v10";
 import {commandIds} from "./discordUtils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
+import {scientificNotationToNumber} from "./utils";
 
 type Alert = CoinAlert | GasAlert;
 
@@ -83,7 +84,7 @@ export async function checkCoinAlert(alert: CoinAlert) {
 //only to be used by expired coin handler
 export function formatCoinAlert(alert: CoinAlert, cryptoList = validCryptos) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + scientificNotationToNumber(alert.threshold.toString()) + (alert.stat.endsWith("%") ? "%" : "")}`;
 }
 
 export function checkGasAlert(alert: GasAlert) {
@@ -167,7 +168,7 @@ function makeCoinAlertSelectEntry(alert: CoinAlert) {
 
     return {
         label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
-        description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : ""),
+        description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + scientificNotationToNumber(alert.threshold.toString()) + (alert.stat.endsWith("%") ? "%" : ""),
         value: `coin_${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}`
     };
 }

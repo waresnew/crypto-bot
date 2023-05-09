@@ -53,6 +53,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                             custom_id: "gasalert_thresholdmodalvalue",
                             style: TextInputStyle.Short,
                             required: true,
+                            max_length: 18,
                             placeholder: "Enter a number"
                         }]
                     }]

@@ -3,8 +3,7 @@ import {
     APIApplicationCommandAutocompleteInteraction,
     ApplicationCommandOptionType,
     ApplicationCommandType,
-    InteractionResponseType,
-    MessageFlags
+    InteractionResponseType
 } from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
 import {
@@ -62,8 +61,7 @@ export default {
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {
                 embeds: [embed],
-                components: [makeButtons(choice)],
-                flags: MessageFlags.Ephemeral
+                components: [makeButtons(choice)]
             }
         });
     },

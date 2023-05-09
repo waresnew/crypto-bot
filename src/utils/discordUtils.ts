@@ -4,6 +4,7 @@ import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/
 import {Indexable} from "./utils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
+import {UserDatas} from "./database";
 
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
@@ -131,6 +132,11 @@ export function deepValidateCustomId(obj: any) {
         }
     }
     return true;
+}
+
+export async function userNotVotedRecently(id: string) {
+    const user = await UserDatas.findOne({user: id});
+    return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5);
 }
 
 export function validateRefresh(interaction: APIInteraction, latest: number, interval = 65) {

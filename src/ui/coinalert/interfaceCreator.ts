@@ -11,6 +11,7 @@ import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {CoinMetadata} from "../../structs/coinMetadata";
 import {commandIds} from "../../utils/discordUtils";
+import {scientificNotationToNumber} from "../../utils/utils";
 
 export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string) {
     const message = getEmbedTemplate();
@@ -54,7 +55,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
 export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${when}?`;
+    message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${scientificNotationToNumber(when)}?`;
     return {
         type: InteractionResponseType.UpdateMessage,
         flags: MessageFlags.Ephemeral,
@@ -76,7 +77,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     {
                         type: ComponentType.Button,
                         custom_id: `coinalert_directiongreater_${coin.cmc_id}_${what}_${when}`,
-                        label: `Greater than ${when}`,
+                        label: `Greater than ${scientificNotationToNumber(when)}`,
                         style: ButtonStyle.Success,
                         emoji: {
                             name: "📈",
@@ -86,7 +87,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     {
                         type: ComponentType.Button,
                         custom_id: `coinalert_directionless_${coin.cmc_id}_${what}_${when}`,
-                        label: `Less than ${when}`,
+                        label: `Less than ${scientificNotationToNumber(when)}`,
                         style: ButtonStyle.Danger,
                         emoji: {
                             name: "📉",

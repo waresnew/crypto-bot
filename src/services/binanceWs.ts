@@ -14,7 +14,6 @@ export function setRetry(value: boolean) {
 }
 
 export function initBinanceWs() {
-    // noinspection HttpUrlsUsage
     ws = new WebSocket(getBinanceWsUrl());
     ws.on("error", console.error);
     ws.on("ping", () => {
