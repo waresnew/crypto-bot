@@ -38,7 +38,7 @@ export function validateWhen(when: string) {
     if (isNaN(Number(when)) || isNaN(parseFloat(when))) {
         throw new UserError("Error: The specified threshold was not a number.");
     }
-    if (new BigNumber(when).abs().gt("1e16")) {
+    if (new BigNumber(when).abs().gt(1e16)) {
         throw new UserError("Error: The threshold you specified was too high. Please ensure it is between -1e16 and 1e16.");
     }
 }

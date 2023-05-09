@@ -26,7 +26,7 @@ export async function makeEmbed(choice: CoinMetadata) {
     };
     const coin = await LatestCoins.findOne({coin: choice.cmc_id});
     const latestCandle = await Candles.findOne({coin: choice.cmc_id}, {sort: {open_time: -1}});
-    embed.color = new BigNumber(coin.weekPriceChangePercent).lt("0") ? 0xef5350 : 0x26a69a;
+    embed.color = new BigNumber(coin.weekPriceChangePercent).lt(0) ? 0xef5350 : 0x26a69a;
     embed.title = `${choice.name} (${choice.symbol}/USDT)`;
     embed.url = `https://coinmarketcap.com/currencies/${choice.slug}`;
     embed.fields = [{
@@ -87,7 +87,7 @@ export async function makeFormData(payload: APIInteractionResponseChannelMessage
 }
 
 export function formatPrice(price: BigNumber) {
-    return price.lt("1") ? price.toPrecision(4).toString() : price.toFormat(2).replaceAll(new RegExp(",", "g"), "").toString();
+    return price.lt(1) ? price.toPrecision(4).toString() : price.toFormat(2).replaceAll(new RegExp(",", "g"), "").toString();
 }
 
 export async function makeChart(coin: CoinMetadata) {

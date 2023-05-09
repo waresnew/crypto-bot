@@ -91,7 +91,7 @@ export function checkGasAlert(alert: GasAlert) {
     if (alert.disabled) {
         return false;
     }
-    return gasPrices[alert.speed] <= alert.threshold;
+    return new BigNumber(gasPrices[alert.speed]).lte(new BigNumber(alert.threshold));
 }
 
 function formatGasAlert(alert: GasAlert) {
