@@ -6,13 +6,7 @@ import {UserError} from "../src/structs/userError";
 describe("test alert wizard", () => {
     it("validates threshold correctly", async () => {
         try {
-            validateWhen("1000000001");
-            fail();
-        } catch (e) {
-            expect((e as UserError).error).toMatch("Error: The threshold you specified was too high");
-        }
-        try {
-            validateWhen("-00000000000");
+            validateWhen("-000000000000000000000000000000000000000000000");
             fail();
         } catch (e) {
             expect((e as UserError).error).toMatch("The threshold you specified was too long");
@@ -24,7 +18,7 @@ describe("test alert wizard", () => {
             coin: 0,
             stat: "price",
             direction: ">",
-            threshold: 1,
+            threshold: "1",
             user: "123",
             disabled: false
         });
@@ -33,7 +27,7 @@ describe("test alert wizard", () => {
                 coin: 0,
                 stat: "price",
                 direction: ">",
-                threshold: 1,
+                threshold: "1",
                 user: "123",
                 disabled: false
             });
@@ -46,7 +40,7 @@ describe("test alert wizard", () => {
                 coin: i,
                 stat: "price",
                 direction: ">",
-                threshold: 1,
+                threshold: "1",
                 user: "123",
                 disabled: false
             });
@@ -56,7 +50,7 @@ describe("test alert wizard", () => {
                 coin: 25,
                 stat: "price",
                 direction: ">",
-                threshold: 1,
+                threshold: "1",
                 user: "123",
                 disabled: false
             });

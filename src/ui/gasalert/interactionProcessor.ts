@@ -53,6 +53,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                             custom_id: "gasalert_thresholdmodalvalue",
                             style: TextInputStyle.Short,
                             required: true,
+                            max_length: 18,
                             placeholder: "Enter a number"
                         }]
                     }]
@@ -63,7 +64,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             const tokens = interaction.data.custom_id.split("_");
             alert.user = interaction.user.id;
             alert.speed = tokens[2];
-            alert.threshold = Number(tokens[3]);
+            alert.threshold = tokens[3];
             alert.disabled = false;
             try {
                 await validateAlert(alert);

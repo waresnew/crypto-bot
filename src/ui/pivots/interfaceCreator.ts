@@ -16,6 +16,7 @@ import {
 import {analytics} from "../../utils/analytics";
 import {binanceLastUpdated} from "../../services/binanceRest";
 import {UserError} from "../../structs/userError";
+import BigNumber from "bignumber.js";
 
 export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
@@ -46,7 +47,7 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
             if (isNaN(pivots[key][key2])) {
                 continue;
             }
-            pivots[key][key2] = formatPrice(pivots[key][key2]);
+            pivots[key][key2] = formatPrice(new BigNumber(pivots[key][key2]));
         }
     }
     const methodOrder = ["Classic", "Fibonacci", "Camarilla", "Woodie", "DeMark"];
@@ -68,15 +69,16 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
         };
         let additional = "";
         for (const key of Object.keys(pivotPoints[pivot]).sort((a, b) => compareOrder.indexOf(a) - compareOrder.indexOf(b))) {
-            const val = parseFloat(pivotPoints[pivot][key]);
-            if (key.startsWith("S") && price < val) {
+            const val = new BigNumber(pivotPoints[pivot][key]);
+            const big = new BigNumber(price);
+            if (key.startsWith("S") && big.lt(val)) {
                 additional = `Price below **${key}** ${emojis["bearish"]}`;
                 break;
-            } else if (key.startsWith("R") && price > val) {
+            } else if (key.startsWith("R") && big.gt(val)) {
                 additional = `Price above **${key}** ${emojis["bullish"]}`;
                 break;
             } else if (key == "Pivot") {
-                additional = price > val ? `Price above **${key}** ${emojis["bullish"]}` : price < val ? `Price below **${key}** ${emojis["bearish"]}` : "";
+                additional = big.gt(val) ? `Price above **${key}** ${emojis["bullish"]}` : big.lt(val) ? `Price below **${key}** ${emojis["bearish"]}` : "";
                 break;
             }
         }
@@ -96,7 +98,7 @@ export async function makeEmbed(coin: CoinMetadata, interaction: APIInteraction)
     const embed = {
         ...getEmbedTemplate(),
         title: `Pivot Points for ${coin.symbol}/USDT`,
-        description: "Pivot points and support/resistance levels are key price levels used in technical analysis to identify potential price movements and levels of market volatility in the financial markets. These pivot points are calculated using daily prices. https://www.investopedia.com/terms/p/pivotpoint.asp\n\n**Current price**: $" + formatPrice(price),
+        description: "Pivot points and support/resistance levels are key price levels used in technical analysis to identify potential price movements and levels of market volatility in the financial markets. These pivot points are calculated using daily prices. https://www.investopedia.com/terms/p/pivotpoint.asp\n\n**Current price**: $" + formatPrice(new BigNumber(price)),
         footer: {
             text: "This is not financial advice.",
             icon_url: `https://cdn.discordapp.com/avatars/${client.id}/${client.avatar}.png`

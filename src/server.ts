@@ -24,7 +24,8 @@ import {
     commands,
     deepPatchCustomId,
     deepValidateCustomId,
-    interactionProcessors
+    interactionProcessors,
+    userNotVotedRecently
 } from "./utils/discordUtils";
 import got from "got";
 
@@ -87,8 +88,7 @@ server.route({
             const interaction = message as APIChatInputApplicationCommandInteraction;
             const cmd = commands.get(interaction.data.name);
             if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
-                const user = await UserDatas.findOne({user: message.user.id});
-                if (!user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5)) {
+                if (await userNotVotedRecently(message.user.id)) {
                     analytics.track({
                         userId: message.user.id,
                         event: "Ran votelocked command without voting"
@@ -100,6 +100,25 @@ server.route({
                         }
                     });
                     return;
+                }
+            }
+        }
+        if (message.type == InteractionType.MessageComponent) {
+            for (const cmd of commands.values()) {
+                if (cmd.voteRequired && message.data.custom_id.split("_")[1] == cmd.name && process.env["NODE_ENV"] == "production") {
+                    if (await userNotVotedRecently(message.user.id)) {
+                        analytics.track({
+                            userId: message.user.id,
+                            event: "Clicked votelocked component without voting"
+                        });
+                        await response.send({
+                            type: InteractionResponseType.ChannelMessageWithSource, data: {
+                                content: `You must vote for the bot on top.gg to do this. </vote:${commandIds.get("vote")}>`,
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                        return;
+                    }
                 }
             }
         }

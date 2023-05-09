@@ -11,12 +11,12 @@ describe("Checks if expired coins are handled properly", function () {
             user: "1234567890",
             coin: 1,
             stat: "price",
-            threshold: 50,
+            threshold: "50",
             direction: ">",
             disabled: false
         };
         await CoinAlerts.insertOne(alert);
-        expect((await CoinAlerts.findOne({user: "1234567890"})).threshold).toBe(50);
+        expect((await CoinAlerts.findOne({user: "1234567890"})).threshold).toBe("50");
         nock("https://discord.com")
             .get("/api/v10/users/@me/channels")
             .reply(200, {

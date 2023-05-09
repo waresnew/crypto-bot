@@ -10,6 +10,7 @@ import {APIInteraction} from "discord-api-types/v10";
 import {commandIds} from "./discordUtils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
+import BigNumber from "bignumber.js";
 
 type Alert = CoinAlert | GasAlert;
 
@@ -23,13 +24,13 @@ export function evalInequality(expr: string) {
     if (!match) {
         return false;
     }
-    const a = parseFloat(match[1]);
-    const b = parseFloat(match[3]);
+    const a = new BigNumber(match[1]);
+    const b = new BigNumber(match[3]);
     switch (match[2]) {
         case ">":
-            return a > b;
+            return a.gt(b);
         case "<":
-            return a < b;
+            return a.lt(b);
     }
     return false;
 }
@@ -63,7 +64,7 @@ export async function checkCoinAlert(alert: CoinAlert) {
     if (alert.disabled) {
         return false;
     }
-    let left = 0;
+    let left = "0";
     const candle = await getLatestCandle(alert.coin);
     const latest = await LatestCoins.findOne({coin: alert.coin});
     /* istanbul ignore next */
@@ -83,14 +84,14 @@ export async function checkCoinAlert(alert: CoinAlert) {
 //only to be used by expired coin handler
 export function formatCoinAlert(alert: CoinAlert, cryptoList = validCryptos) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + new BigNumber(alert.threshold).toString() + (alert.stat.endsWith("%") ? "%" : "")}`;
 }
 
 export function checkGasAlert(alert: GasAlert) {
     if (alert.disabled) {
         return false;
     }
-    return gasPrices[alert.speed] <= alert.threshold;
+    return new BigNumber(gasPrices[alert.speed]).lte(new BigNumber(alert.threshold));
 }
 
 function formatGasAlert(alert: GasAlert) {
@@ -102,7 +103,7 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
     const tokens = id.split("_").slice(1); //remove coin_ prefix
     alert.coin = Number(tokens[0]);
     alert.stat = tokens[1];
-    alert.threshold = Number(tokens[2]);
+    alert.threshold = tokens[2];
     alert.direction = tokens[3] as "<" | ">";
     alert.user = interaction.user.id;
     const old = await CoinAlerts.findOne({
@@ -124,7 +125,7 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction) {
     const alert = new GasAlert();
     const tokens = id.split("_").slice(1); //remove gas_ prefix
     alert.speed = tokens[0];
-    alert.threshold = Number(tokens[1]);
+    alert.threshold = tokens[1];
     alert.user = interaction.user.id;
     const old = await GasAlerts.findOne({
         speed: alert.speed,
@@ -146,7 +147,7 @@ function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
     alert.coin = nameToMeta(input[3]).cmc_id;
-    alert.threshold = Number(input[5].replace(new RegExp(/[$%]/), ""));
+    alert.threshold = input[5].replace(new RegExp(/[$%]/), "");
     alert.direction = input[4] == "less" ? "<" : ">";
     alert.disabled = input[1] == "❌";
     return alert;
@@ -157,7 +158,7 @@ function parsePrettyGasAlert(pretty: string, interaction: APIInteraction) {
     const alert = new GasAlert();
     alert.user = interaction.user.id;
     alert.speed = input[2];
-    alert.threshold = Number(input[3]);
+    alert.threshold = input[3];
     alert.disabled = input[1] == "❌";
     return alert;
 }
@@ -167,7 +168,7 @@ function makeCoinAlertSelectEntry(alert: CoinAlert) {
 
     return {
         label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
-        description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + alert.threshold + (alert.stat.endsWith("%") ? "%" : ""),
+        description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + new BigNumber(alert.threshold).toString() + (alert.stat.endsWith("%") ? "%" : ""),
         value: `coin_${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}`
     };
 }

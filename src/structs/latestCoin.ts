@@ -1,17 +1,17 @@
 export interface LatestCoin {
     //rest data
     coin: number;
-    weekPriceChangePercent: number;
-    weekWeightedAvgPrice: number;
-    weekHighPrice: number;
-    weekLowPrice: number;
+    weekPriceChangePercent: string;
+    weekWeightedAvgPrice: string;
+    weekHighPrice: string;
+    weekLowPrice: string;
     //websocket data (apparently binance only updates these if they changed so if they didn't change then assume %change is 0 etc)
-    dayPriceChangePercent?: number;
-    dayWeightedAvgPrice?: number;
-    dayHighPrice?: number;
-    dayLowPrice?: number;
-    hourPriceChangePercent?: number;
-    hourWeightedAvgPrice?: number;
-    hourHighPrice?: number;
-    hourLowPrice?: number;
+    dayPriceChangePercent?: string;
+    dayWeightedAvgPrice?: string;
+    dayHighPrice?: string;
+    dayLowPrice?: string;
+    hourPriceChangePercent?: string;
+    hourWeightedAvgPrice?: string;
+    hourHighPrice?: string;
+    hourLowPrice?: string;
 }

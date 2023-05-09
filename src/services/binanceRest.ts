@@ -150,17 +150,17 @@ export async function updateBinanceApi() {
                     const item = json[i];
                     const candle = {
                         coin: coin.cmc_id,
-                        open_time: item[0],
-                        open_price: parseFloat(item[1]),
-                        high_price: parseFloat(item[2]),
-                        low_price: parseFloat(item[3]),
-                        close_price: parseFloat(item[4]),
-                        base_volume: parseFloat(item[5]),
+                        open_time: parseFloat(item[0]),
+                        open_price: item[1],
+                        high_price: item[2],
+                        low_price: item[3],
+                        close_price: item[4],
+                        base_volume: item[5],
                         close_time: parseFloat(item[6]),
-                        quote_volume: parseFloat(item[7]),
-                        trades_count: item[8],
-                        taker_base_volume: parseFloat(item[9]),
-                        taker_quote_volume: parseFloat(item[10]),
+                        quote_volume: item[7],
+                        trades_count: parseFloat(item[8]),
+                        taker_base_volume: item[9],
+                        taker_quote_volume: item[10],
                         ignore: item[11]
                     };
                     toWrite.push({

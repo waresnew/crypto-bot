@@ -2,7 +2,7 @@ export class CoinAlert {
     user: string;
     coin: number;
     stat: string;
-    threshold: number;
+    threshold: string;
     direction: string;
     disabled: boolean;
 }
