@@ -4,6 +4,7 @@ import rawBody from "fastify-raw-body";
 import {
     APIApplicationCommandAutocompleteInteraction,
     APIInteraction,
+    APIInteractionResponse,
     APIMessageComponentInteraction,
     APIModalSubmitInteraction,
     ComponentType,
@@ -17,7 +18,7 @@ import {
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./utils/analytics";
 import Sentry from "@sentry/node";
-import {mongoClient, openDb, UserDatas} from "./utils/database";
+import {mongoClient, openDb, ServerSettings, UserDatas} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
 import {
     commandIds,
@@ -102,6 +103,24 @@ server.route({
                     return;
                 }
             }
+            if (cmd.guildOnly) {
+                if (interaction.guild_id === undefined) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Attempted to use server cmd in DMs",
+                        properties: {
+                            command: cmd.name
+                        }
+                    });
+                    await response.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: "This command can only be used in a server."
+                        }
+                    } as APIInteractionResponse);
+                }
+                return;
+            }
         }
         if (message.type == InteractionType.MessageComponent) {
             for (const cmd of commands.values()) {
@@ -166,6 +185,20 @@ server.route({
                     discriminator: message.user.discriminator
                 }
             });
+            if (!await UserDatas.findOne({user: message.user.id})) {
+                await UserDatas.insertOne({
+                    user: message.user.id,
+                    lastVoted: 0
+                });
+            }
+            if (message.guild_id) {
+                if (!await ServerSettings.findOne({guild: message.guild_id})) {
+                    await ServerSettings.insertOne({
+                        guild: message.guild_id,
+                        alertManagerRole: null
+                    });
+                }
+            }
         }
         if (message.type == InteractionType.Ping) {
             response.send({
@@ -199,6 +232,11 @@ server.route({
                 const processor = interactionProcessors.get(origin) as any;
                 if (processor) {
                     await processor.processStringSelect(interaction, response);
+                }
+            } else if (interaction.data.component_type == ComponentType.RoleSelect) {
+                const processor = interactionProcessors.get(origin) as any;
+                if (processor) {
+                    await processor.processRoleSelect(interaction, response);
                 }
             }
         } else if (message.type == InteractionType.ModalSubmit) {

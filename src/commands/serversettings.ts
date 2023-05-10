@@ -8,33 +8,17 @@ import {
     ApplicationCommandType,
     InteractionResponseType
 } from "discord-api-types/v10";
-import {analytics} from "../utils/analytics";
+import {availableSettings, renderSetting} from "../ui/serversettings/interfaceCreator";
 
 export default {
     name: "serversettings",
     type: ApplicationCommandType.ChatInput,
     description: "Adjust server-specific settings",
+    guildOnly: true,
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
-        if (interaction.guild_id === undefined) {
-            analytics.track({
-                userId: interaction.user.id,
-                event: "Attempted to use server cmd in DMs",
-                properties: {
-                    command: this.name
-                }
-            });
-            await http.send({
-                type: InteractionResponseType.ChannelMessageWithSource,
-                data: {
-                    content: "This command can only be used in a server."
-                }
-            } as APIInteractionResponse);
-        }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
-            data: {
-                content: "Need help? Join the official Botchain server here: https://discord.gg/mpyPadCG3q"
-            }
+            data: await renderSetting(interaction, availableSettings[0].dbKey)
         } as APIInteractionResponse);
     }
 } as APIApplicationCommand;

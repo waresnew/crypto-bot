@@ -1,10 +1,38 @@
-import {APIEmbed, APIInteraction} from "discord-api-types/v10";
+import {APIEmbed, APIInteraction, ComponentType} from "discord-api-types/v10";
 import {ServerSettings} from "../../utils/database";
+import {ServerSettingMetadata} from "../../structs/serverSetting";
 
-export async function makeEmbed(interaction: APIInteraction) {
+export const availableSettings: ServerSettingMetadata[] = [
+    {
+        name: "Alert Manager Role",
+        description: "Select a role that will be able to manage server-specific alerts.",
+        dbKey: "alertManagerRole",
+        type: "roleselect",
+        default: null
+    }
+];
+
+export async function renderSetting(interaction: APIInteraction, dbKey: string) {
     const settings = await ServerSettings.findOne({guild: interaction.guild_id});
-    return {
-        title: "Alert Manager",
-        description: `Select a role that will be able to manage server-specific alerts.\n\n**\`Current:\`** \`${settings.alertManagerRole ?? "None"}\``
-    } as APIEmbed;
+    const meta = availableSettings.find(s => s.dbKey === dbKey);
+    const cur = `\n\n**\`Current:\`** **${settings[meta.dbKey] == null ? "None" : meta.type == "roleselect" ? `<@&${settings[meta.dbKey]}>` : settings[meta.dbKey]}**`;
+    const embed: APIEmbed = {
+        title: meta.name,
+        description: meta.description + cur
+    };
+    if (meta.type === "roleselect") {
+        return {
+            embeds: [embed],
+            components: [{
+                type: ComponentType.ActionRow,
+                components: [{
+                    type: ComponentType.RoleSelect,
+                    custom_id: `serversettings_${meta.dbKey}`,
+                    placeholder: "Select a role"
+                }]
+            }]
+        };
+    } else {
+        throw new Error("Invalid setting type: " + meta.type);
+    }
 }
