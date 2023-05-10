@@ -37,12 +37,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             if (when.length > 1 && when[when.length - 1] == "%") {
                 when = when.substring(0, when.length - 1);
             }
-            if ((when.match(new RegExp(",", "g")) ?? []).length == 1) {
-                when = when.replace(",", ".");
-            }
-            if ((when.match(new RegExp(",", "g")) ?? []).length > 1) {
-                when = when.replaceAll(new RegExp(",", "g"), "");
-            }
+            when = when.replaceAll(new RegExp(",", "g"), "");
             try {
                 validateWhen(when);
             } catch (e) {
