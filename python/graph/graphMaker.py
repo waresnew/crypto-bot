@@ -32,7 +32,7 @@ def make_chart(data):
     axlist[0].spines.bottom.set_visible(False)
     axlist[2].spines.top.set_visible(False)
     start2 = round(time.time() * 1000)
-    mpf.show()
+    fig.savefig(buffer)
     matplotlib.pyplot.close()
     print("Rendered chart @ ", datetime.now().isoformat(), ":\n    Plotted in ", start2 - start1,
           " ms\n    Rendered to png in ", round(time.time() * 1000) - start2, " ms", flush=True)
