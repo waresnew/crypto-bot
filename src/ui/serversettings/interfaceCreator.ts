@@ -1,6 +1,7 @@
 import {APIEmbed, APIInteraction, ComponentType} from "discord-api-types/v10";
 import {ServerSettings} from "../../utils/database";
 import {ServerSettingMetadata} from "../../structs/serverSetting";
+import {getEmbedTemplate} from "../templates";
 
 export const availableSettings: ServerSettingMetadata[] = [
     {
@@ -17,6 +18,7 @@ export async function renderSetting(interaction: APIInteraction, dbKey: string) 
     const meta = availableSettings.find(s => s.dbKey === dbKey);
     const cur = `\n\n**\`Current:\`** **${settings[meta.dbKey] == null ? "None" : meta.type == "roleselect" ? `<@&${settings[meta.dbKey]}>` : settings[meta.dbKey]}**`;
     const embed: APIEmbed = {
+        ...getEmbedTemplate(),
         title: meta.name,
         description: meta.description + cur
     };
