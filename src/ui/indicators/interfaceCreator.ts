@@ -12,7 +12,7 @@ import BigNumber from "bignumber.js";
 
 export async function makeEmbed(coin: CoinMetadata) {
     const candles: Candle[] = await Candles.find({coin: coin.cmc_id}).sort({open_time: 1}).toArray();
-    const price = candles[candles.length - 1].close_price;
+    const price = new BigNumber(candles[candles.length - 1].close_price);
     const result = await got("http://127.0.0.1:3001/indicators", {
         method: "POST",
         body: JSON.stringify({
@@ -63,19 +63,19 @@ AROON(14): ${indicators.aroonosc} - **${indicators.aroonosc < 0 ? "Bearish " + e
     const bullishIndicatorCount = techIndicators.match(new RegExp(emojis["bullish"], "g"))?.length ?? 0;
     const bearishIndicatorCount = techIndicators.match(new RegExp(emojis["bearish"], "g"))?.length ?? 0;
     const movingAverages =
-        `SMA(5): ${indicators.sma5} - **${price < indicators.sma5 ? "Bearish " + emojis["bearish"] : price > indicators.sma5 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-SMA(10): ${indicators.sma10} - **${price < indicators.sma10 ? "Bearish " + emojis["bearish"] : price > indicators.sma10 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-SMA(20): ${indicators.sma20} - **${price < indicators.sma20 ? "Bearish " + emojis["bearish"] : price > indicators.sma20 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-SMA(50): ${indicators.sma50} - **${price < indicators.sma50 ? "Bearish " + emojis["bearish"] : price > indicators.sma50 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-SMA(100): ${indicators.sma100} - **${price < indicators.sma100 ? "Bearish " + emojis["bearish"] : price > indicators.sma100 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-SMA(200): ${indicators.sma200} - **${price < indicators.sma200 ? "Bearish " + emojis["bearish"] : price > indicators.sma200 ? "Bullish " + emojis["bullish"] : "Neutral"}**
+        `SMA(5): ${indicators.sma5} - **${price.lt(indicators.sma5) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma5) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+SMA(10): ${indicators.sma10} - **${price.lt(indicators.sma10) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma10) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+SMA(20): ${indicators.sma20} - **${price.lt(indicators.sma20) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma20) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+SMA(50): ${indicators.sma50} - **${price.lt(indicators.sma50) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma50) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+SMA(100): ${indicators.sma100} - **${price.lt(indicators.sma100) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma100) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+SMA(200): ${indicators.sma200} - **${price.lt(indicators.sma200) ? "Bearish " + emojis["bearish"] : price.gt(indicators.sma200) ? "Bullish " + emojis["bullish"] : "Neutral"}**
 
-EMA(5): ${indicators.ema5} - **${price < indicators.ema5 ? "Bearish " + emojis["bearish"] : price > indicators.ema5 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-EMA(10): ${indicators.ema10} - **${price < indicators.ema10 ? "Bearish " + emojis["bearish"] : price > indicators.ema10 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-EMA(20): ${indicators.ema20} - **${price < indicators.ema20 ? "Bearish " + emojis["bearish"] : price > indicators.ema20 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-EMA(50): ${indicators.ema50} - **${price < indicators.ema50 ? "Bearish " + emojis["bearish"] : price > indicators.ema50 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-EMA(100): ${indicators.ema100} - **${price < indicators.ema100 ? "Bearish " + emojis["bearish"] : price > indicators.ema100 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-EMA(200): ${indicators.ema200} - **${price < indicators.ema200 ? "Bearish " + emojis["bearish"] : price > indicators.ema200 ? "Bullish " + emojis["bullish"] : "Neutral"}**`;
+EMA(5): ${indicators.ema5} - **${price.lt(indicators.ema5) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema5) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+EMA(10): ${indicators.ema10} - **${price.lt(indicators.ema10) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema10) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+EMA(20): ${indicators.ema20} - **${price.lt(indicators.ema20) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema20) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+EMA(50): ${indicators.ema50} - **${price.lt(indicators.ema50) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema50) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+EMA(100): ${indicators.ema100} - **${price.lt(indicators.ema100) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema100) ? "Bullish " + emojis["bullish"] : "Neutral"}**
+EMA(200): ${indicators.ema200} - **${price.lt(indicators.ema200) ? "Bearish " + emojis["bearish"] : price.gt(indicators.ema200) ? "Bullish " + emojis["bullish"] : "Neutral"}**`;
     const bullishMovingAverageCount = movingAverages.match(new RegExp(emojis["bullish"], "g"))?.length ?? 0;
     const bearishMovingAverageCount = movingAverages.match(new RegExp(emojis["bearish"], "g"))?.length ?? 0;
 
