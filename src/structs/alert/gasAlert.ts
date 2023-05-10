@@ -6,5 +6,5 @@ export class GasAlert {
     speed: string;
     threshold: string;
     disabled: boolean;
-
+    guild: boolean;
 }

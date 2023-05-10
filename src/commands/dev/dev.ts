@@ -12,19 +12,23 @@ export default {
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const coinAlerts = await CoinAlerts.find({}).toArray();
         for (const alert of coinAlerts) {
-            await CoinAlerts.updateOne({_id: alert._id}, {
-                $set: {
-                    threshold: alert.threshold.toString()
-                }
-            });
+            if (alert.guild == undefined) {
+                await CoinAlerts.updateOne({_id: alert._id}, {
+                    $set: {
+                        guild: false
+                    }
+                });
+            }
         }
         const gasAlerts = await GasAlerts.find({}).toArray();
         for (const alert of gasAlerts) {
-            await GasAlerts.updateOne({_id: alert._id}, {
-                $set: {
-                    threshold: alert.threshold.toString()
-                }
-            });
+            if (alert.guild == undefined) {
+                await GasAlerts.updateOne({_id: alert._id}, {
+                    $set: {
+                        guild: false
+                    }
+                });
+            }
         }
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,

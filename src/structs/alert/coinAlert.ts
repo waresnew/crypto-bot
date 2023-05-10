@@ -5,4 +5,5 @@ export class CoinAlert {
     threshold: string;
     direction: string;
     disabled: boolean;
+    guild: boolean;
 }
