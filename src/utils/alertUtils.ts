@@ -13,6 +13,7 @@ import {UserError} from "../structs/userError";
 import BigNumber from "bignumber.js";
 
 type Alert = CoinAlert | GasAlert;
+export type AlertType = "guild" | "dm";
 
 /**
  * Evaluates an inequality expression safely
@@ -237,3 +238,4 @@ export async function checkAlert(alert: Alert) {
     }
     throw new Error("Invalid alert type");
 }
+

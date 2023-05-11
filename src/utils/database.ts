@@ -12,10 +12,11 @@ export let db: Db = null;
 export let mongoClient: MongoClient = null;
 export let Candles: Collection<Candle> = null;
 export let CoinAlerts: Collection<CoinAlert> = null;
-export let GasAlerts:Collection<GasAlert> = null;
+export let GasAlerts: Collection<GasAlert> = null;
 export let LatestCoins: Collection<LatestCoin> = null;
 export let UserDatas: Collection<UserData> = null;
 export let ServerSettings: Collection<ServerSetting> = null;
+
 export async function openDb(url: string, dbName: string) {
     mongoClient = await MongoClient.connect(url);
     console.log("Connected to MongoDB");
@@ -27,9 +28,12 @@ export async function openDb(url: string, dbName: string) {
     UserDatas = db.collection("userdatas");
     ServerSettings = db.collection("serversettings");
     await Candles.createIndex({coin: 1, open_time: -1}, {unique: true});
-    await CoinAlerts.createIndex({coin: 1, user: 1, stat: 1, threshold: 1, direction: 1, disabled: 1}, {unique: true});
+    await CoinAlerts.createIndex({coin: 1, user: 1, stat: 1, threshold: 1, direction: 1, disabled: 1});
+    await CoinAlerts.createIndex({coin: 1, guild: 1, stat: 1, threshold: 1, direction: 1, disabled: 1});
+
     await LatestCoins.createIndex({coin: 1}, {unique: true});
-    await GasAlerts.createIndex({user: 1, speed: 1, threshold: 1}, {unique: true});
+    await GasAlerts.createIndex({user: 1, speed: 1, threshold: 1});
+    await GasAlerts.createIndex({guild: 1, speed: 1, threshold: 1});
     await UserDatas.createIndex({user: 1}, {unique: true});
     await ServerSettings.createIndex({guild: 1}, {unique: true});
 }

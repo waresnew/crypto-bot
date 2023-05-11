@@ -2,9 +2,9 @@
 //eth only
 export class GasAlert {
     //slow, normal, fast
-    user: string;
+    user?: string;
     speed: string;
     threshold: string;
     disabled: boolean;
-    guild: boolean;
+    guild?: string;
 }

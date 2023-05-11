@@ -63,7 +63,10 @@ export const customIdVersions = {
     indicators_refresh: "0.0.1",
     patterns_refresh: "0.0.1",
     pivots_refresh: "0.0.1",
-    serversettings_alertManagerRole: "0.0.1"
+    serversettings_alertManagerRole: "0.0.1",
+    coinalert_guild: "0.0.1",
+    coinalert_dm: "0.0.1",
+    coinalert_statundo: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {

@@ -15,18 +15,20 @@ import {FastifyReply} from "fastify";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {analytics} from "../../utils/analytics";
-import {makeDirectionPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
+import {makeDirectionPrompt, makeGuildDmPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
 import {idToMeta} from "../../structs/coinMetadata";
 import {CoinAlert} from "../../structs/alert/coinAlert";
 import {CoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {validateWhen} from "../../utils/utils";
-import {validateAlert} from "../../utils/alertUtils";
+import {AlertType, validateAlert} from "../../utils/alertUtils";
 import {UserError} from "../../structs/userError";
 import BigNumber from "bignumber.js";
 
 export default class CoinAlertInteractionProcessor extends InteractionProcessor {
-
+//todo branching the group alerts from dm alerts shouldn't be that hard
+// and i can proabbly abstract the beginning alert flow (group/dm, which channel)
+// by making a function with "coinalert" or "gasalert" arg and prefix my customids with that
     /* istanbul ignore next */
     static override async processModal(interaction: APIModalSubmitInteraction, http: FastifyReply): Promise<void> {
         if (interaction.data.custom_id.startsWith("coinalert_thresholdmodal")) {
@@ -62,8 +64,9 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                 }
             }
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const what = interaction.data.custom_id.split("_")[3];
-            await http.send(makeDirectionPrompt(interaction, coin, what, when));
+            const what = interaction.data.custom_id.split("_")[4];
+            const type = interaction.data.custom_id.split("_")[3] as AlertType;
+            await http.send(makeDirectionPrompt(interaction, coin, type, what, when));
         }
     }
 
@@ -73,29 +76,36 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             const split = interaction.data.custom_id.split("_");
             if (split[1] == "valueundo") {
                 const coin = idToMeta(Number(split[2]));
-                const res = makeStatPrompt(interaction, coin);
+                const type = split[3] as AlertType;
+                const res = makeStatPrompt(interaction, coin, type);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             } else if (split[1] == "directionundo") {
                 const coin = idToMeta(Number(split[2]));
-                const what = split[3];
-                await http.send(makeThresholdPrompt(interaction, coin, what));
+                const type = split[3] as AlertType;
+                const what = split[4];
+                await http.send(makeThresholdPrompt(interaction, coin, type, what));
             } else if (split[1] == "confirmundo") {
                 const coin = idToMeta(Number(split[2]));
-                const what = split[3];
-                const when = split[4];
-                await http.send(makeDirectionPrompt(interaction, coin, what, when));
+                const type = split[3] as AlertType;
+                const what = split[4];
+                const when = split[5];
+                await http.send(makeDirectionPrompt(interaction, coin, type, what, when));
+            } else if (split[1] == "statundo") {
+                const coin = idToMeta(Number(split[2]));
+                await http.send(makeGuildDmPrompt(interaction, coin));
             }
             return;
         }
         if (interaction.data.custom_id.startsWith("coinalert_value")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const what = interaction.data.custom_id.split("_")[3];
+            const type = interaction.data.custom_id.split("_")[3];
+            const what = interaction.data.custom_id.split("_")[4];
             await http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${coin.symbol}`,
-                    custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${what}`,
+                    custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${type}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
@@ -112,7 +122,8 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             } as APIModalInteractionResponse);
         } else if (interaction.data.custom_id.startsWith("coinalert_direction")) {
             const direction = interaction.data.custom_id.startsWith("coinalert_directiongreater") ? ">" : "<";
-            const what = interaction.data.custom_id.split("_")[3], when = interaction.data.custom_id.split("_")[4];
+            const type = interaction.data.custom_id.split("_")[3] as AlertType;
+            const what = interaction.data.custom_id.split("_")[4], when = interaction.data.custom_id.split("_")[5];
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
@@ -133,11 +144,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                                 },
                                 style: ButtonStyle.Primary,
                                 label: "Go back",
-                                custom_id: `coinalert_confirmundo_${coin.cmc_id}_${what}_${when}`
+                                custom_id: `coinalert_confirmundo_${coin.cmc_id}_${type}_${what}_${when}`
                             },
                             {
                                 type: ComponentType.Button,
-                                custom_id: `coinalert_confirm_${coin.cmc_id}_${what}_${when}_${direction}`,
+                                custom_id: `coinalert_confirm_${coin.cmc_id}_${type}_${what}_${when}_${direction}`,
                                 label: "Confirm",
                                 style: ButtonStyle.Success,
                                 emoji: {
@@ -151,15 +162,17 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             });
         } else if (interaction.data.custom_id.startsWith("coinalert_confirm")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const what = interaction.data.custom_id.split("_")[3];
-            const when = interaction.data.custom_id.split("_")[4];
-            const direction = interaction.data.custom_id.split("_")[5];
+            const type = interaction.data.custom_id.split("_")[3] as AlertType;
+            const what = interaction.data.custom_id.split("_")[4];
+            const when = interaction.data.custom_id.split("_")[5];
+            const direction = interaction.data.custom_id.split("_")[6];
             const alert = new CoinAlert();
-            alert.user = interaction.user.id;
+            alert.user = type == "dm" ? interaction.user.id : null;
             alert.coin = coin.cmc_id;
             alert.stat = what;
             alert.threshold = when;
             alert.direction = direction;
+            alert.guild = type == "guild" ? interaction.guild_id : null;
             alert.disabled = false;
             const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
             try {
@@ -184,7 +197,8 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                     coin: alert.coin,
                     stat: alert.stat,
                     threshold: alert.threshold,
-                    direction: alert.direction
+                    direction: alert.direction,
+                    type: type
                 }
             });
             await CoinAlerts.insertOne(alert);
@@ -196,6 +210,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                     components: []
                 }
             });
+        } else if (interaction.data.custom_id.startsWith("coinalert_guild") || interaction.data.custom_id.startsWith("coinalert_dm")) {
+            const type = interaction.data.custom_id.startsWith("coinalert_guild") ? "guild" : "dm";
+            const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
+            const response = makeStatPrompt(interaction, coin, type);
+            await http.send(response);
         }
     }
 
@@ -204,8 +223,9 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
 
         if (interaction.data.custom_id.startsWith("coinalert_stat")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
+            const type = interaction.data.custom_id.split("_")[3] as AlertType;
             const what = interaction.data.values[0];
-            const response = makeThresholdPrompt(interaction, coin, what);
+            const response = makeThresholdPrompt(interaction, coin, type, what);
             await http.send(response);
         }
     }
