@@ -1,8 +1,10 @@
 /* istanbul ignore file */
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {
+    APIMessageChannelSelectInteractionData,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
+    APIMessageRoleSelectInteractionData,
     APIModalInteractionResponse,
     APIModalSubmitInteraction,
     ButtonStyle,
@@ -15,15 +17,23 @@ import {FastifyReply} from "fastify";
 import {getEmbedTemplate} from "../templates";
 import CryptoStat from "../../structs/cryptoStat";
 import {analytics} from "../../utils/analytics";
-import {makeDirectionPrompt, makeGuildDmPrompt, makeStatPrompt, makeThresholdPrompt} from "./interfaceCreator";
+import {
+    makeChannelPrompt,
+    makeDirectionPrompt,
+    makeGuildDmPrompt,
+    makeRolePingPrompt,
+    makeStatPrompt,
+    makeThresholdPrompt
+} from "./interfaceCreator";
 import {idToMeta} from "../../structs/coinMetadata";
-import {CoinAlert} from "../../structs/alert/coinAlert";
-import {CoinAlerts} from "../../utils/database";
+import {DmCoinAlerts, GuildCoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {validateWhen} from "../../utils/utils";
 import {AlertType, validateAlert} from "../../utils/alertUtils";
 import {UserError} from "../../structs/userError";
 import BigNumber from "bignumber.js";
+import {GuildCoinAlert} from "../../structs/alert/guildCoinAlert";
+import {DmCoinAlert} from "../../structs/alert/dmCoinAlert";
 
 export default class CoinAlertInteractionProcessor extends InteractionProcessor {
 //todo branching the group alerts from dm alerts shouldn't be that hard
@@ -64,9 +74,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                 }
             }
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const what = interaction.data.custom_id.split("_")[4];
+            const what = interaction.data.custom_id.split("_")[6];
+            const channel = interaction.data.custom_id.split("_")[4];
+            const role = interaction.data.custom_id.split("_")[5];
             const type = interaction.data.custom_id.split("_")[3] as AlertType;
-            await http.send(makeDirectionPrompt(interaction, coin, type, what, when));
+            await http.send(makeDirectionPrompt(interaction, coin, type, channel, role, what, when));
         }
     }
 
@@ -77,35 +89,61 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             if (split[1] == "valueundo") {
                 const coin = idToMeta(Number(split[2]));
                 const type = split[3] as AlertType;
-                const res = makeStatPrompt(interaction, coin, type);
-                res.type = InteractionResponseType.UpdateMessage;
+                const channel = split[4];
+                const role = split[5];
+                const res = makeStatPrompt(interaction, coin, type, channel, role);
                 await http.send(res);
             } else if (split[1] == "directionundo") {
                 const coin = idToMeta(Number(split[2]));
                 const type = split[3] as AlertType;
-                const what = split[4];
-                await http.send(makeThresholdPrompt(interaction, coin, type, what));
+                const channel = split[4];
+                const role = split[5];
+                const what = split[6];
+                await http.send(makeThresholdPrompt(interaction, coin, type, channel, role, what));
             } else if (split[1] == "confirmundo") {
                 const coin = idToMeta(Number(split[2]));
                 const type = split[3] as AlertType;
-                const what = split[4];
-                const when = split[5];
-                await http.send(makeDirectionPrompt(interaction, coin, type, what, when));
+                const channel = split[4];
+                const role = split[5];
+                const what = split[6];
+                const when = split[7];
+                await http.send(makeDirectionPrompt(interaction, coin, type, channel, role, what, when));
             } else if (split[1] == "statundo") {
                 const coin = idToMeta(Number(split[2]));
-                await http.send(makeGuildDmPrompt(interaction, coin));
+                const type = split[3] as AlertType;
+                const channel = split[4];
+                let res;
+                if (type == "guild") {
+                    res = makeRolePingPrompt(interaction, coin, channel);
+                } else {
+                    res = makeGuildDmPrompt(interaction, coin);
+                }
+                res.type = InteractionResponseType.UpdateMessage;
+                await http.send(res);
+            } else if (split[1] == "channelundo") {
+                const coin = idToMeta(Number(split[2]));
+                const res = makeGuildDmPrompt(interaction, coin);
+                res.type = InteractionResponseType.UpdateMessage;
+                await http.send(res);
+            } else if (split[1] == "roleundo") {
+                const coin = idToMeta(Number(split[2]));
+                const res = makeChannelPrompt(interaction, coin);
+                res.type = InteractionResponseType.UpdateMessage;
+                await http.send(res);
             }
             return;
         }
         if (interaction.data.custom_id.startsWith("coinalert_value")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const type = interaction.data.custom_id.split("_")[3];
-            const what = interaction.data.custom_id.split("_")[4];
+            const channel = interaction.data.custom_id.split("_")[4];
+            const role = interaction.data.custom_id.split("_")[5];
+            const what = interaction.data.custom_id.split("_")[6];
             await http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${coin.symbol}`,
-                    custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${type}_${what}`,
+                    custom_id: `coinalert_thresholdmodal_${coin.cmc_id}_${type}_${channel}_${role}_${what}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
@@ -121,9 +159,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                 }
             } as APIModalInteractionResponse);
         } else if (interaction.data.custom_id.startsWith("coinalert_direction")) {
-            const direction = interaction.data.custom_id.startsWith("coinalert_directiongreater") ? ">" : "<";
+            const direction = interaction.data.custom_id.startsWith("coinalert_greater") ? ">" : "<";
             const type = interaction.data.custom_id.split("_")[3] as AlertType;
-            const what = interaction.data.custom_id.split("_")[4], when = interaction.data.custom_id.split("_")[5];
+            const what = interaction.data.custom_id.split("_")[6], when = interaction.data.custom_id.split("_")[7];
+            const channel = interaction.data.custom_id.split("_")[4];
+            const role = interaction.data.custom_id.split("_")[5];
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
@@ -144,11 +184,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                                 },
                                 style: ButtonStyle.Primary,
                                 label: "Go back",
-                                custom_id: `coinalert_confirmundo_${coin.cmc_id}_${type}_${what}_${when}`
+                                custom_id: `coinalert_confirmundo_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}`
                             },
                             {
                                 type: ComponentType.Button,
-                                custom_id: `coinalert_confirm_${coin.cmc_id}_${type}_${what}_${when}_${direction}`,
+                                custom_id: `coinalert_confirm_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}_${direction}`,
                                 label: "Confirm",
                                 style: ButtonStyle.Success,
                                 emoji: {
@@ -163,16 +203,24 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
         } else if (interaction.data.custom_id.startsWith("coinalert_confirm")) {
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
             const type = interaction.data.custom_id.split("_")[3] as AlertType;
-            const what = interaction.data.custom_id.split("_")[4];
-            const when = interaction.data.custom_id.split("_")[5];
-            const direction = interaction.data.custom_id.split("_")[6];
-            const alert = new CoinAlert();
-            alert.user = type == "dm" ? interaction.user.id : null;
+            const channel = interaction.data.custom_id.split("_")[4];
+            const role = interaction.data.custom_id.split("_")[5];
+            const what = interaction.data.custom_id.split("_")[6];
+            const when = interaction.data.custom_id.split("_")[7];
+            const direction = interaction.data.custom_id.split("_")[8];
+            const alert = type == "guild" ? new GuildCoinAlert() : new DmCoinAlert();
+            if (!(alert instanceof GuildCoinAlert)) {
+                alert.user = interaction.user.id;
+            }
             alert.coin = coin.cmc_id;
             alert.stat = what;
             alert.threshold = when;
             alert.direction = direction;
-            alert.guild = type == "guild" ? interaction.guild_id : null;
+            if (!(alert instanceof DmCoinAlert)) {
+                alert.guild = interaction.guild_id;
+                alert.channel = channel;
+                alert.roleIdPing = role;
+            }
             alert.disabled = false;
             const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
             try {
@@ -201,7 +249,11 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                     type: type
                 }
             });
-            await CoinAlerts.insertOne(alert);
+            if (type == "guild") {
+                await GuildCoinAlerts.insertOne(alert as GuildCoinAlert);
+            } else {
+                await DmCoinAlerts.insertOne(alert as DmCoinAlert);
+            }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}. Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers.`,
@@ -213,20 +265,49 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
         } else if (interaction.data.custom_id.startsWith("coinalert_guild") || interaction.data.custom_id.startsWith("coinalert_dm")) {
             const type = interaction.data.custom_id.startsWith("coinalert_guild") ? "guild" : "dm";
             const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const response = makeStatPrompt(interaction, coin, type);
+            let response;
+            if (type == "guild") {
+                response = makeChannelPrompt(interaction, coin);
+            } else {
+                response = makeStatPrompt(interaction, coin, type, null, null);
+            }
             await http.send(response);
+        } else if (interaction.data.custom_id.startsWith("coinalert_roleskip")) {
+            const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
+            const channel = interaction.data.custom_id.split("_")[3];
+            await http.send(makeStatPrompt(interaction, coin, "guild", channel, null));
         }
     }
 
     /* istanbul ignore next */
-    static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-
-        if (interaction.data.custom_id.startsWith("coinalert_stat")) {
-            const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
-            const type = interaction.data.custom_id.split("_")[3] as AlertType;
-            const what = interaction.data.values[0];
-            const response = makeThresholdPrompt(interaction, coin, type, what);
-            await http.send(response);
+    static override async processSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
+        const split = interaction.data.custom_id.split("_");
+        if (interaction.data.component_type == ComponentType.StringSelect) {
+            if (interaction.data.custom_id.startsWith("coinalert_stat")) {
+                const coin = idToMeta(Number(split[2]));
+                const type = split[3] as AlertType;
+                const what = interaction.data.values[0];
+                const channel = split[4];
+                const role = split[5];
+                const response = makeThresholdPrompt(interaction, coin, type, channel, role, what);
+                await http.send(response);
+            }
+        } else if (interaction.data.component_type == ComponentType.ChannelSelect) {
+            if (interaction.data.custom_id.startsWith("coinalert_channel")) {
+                const data = interaction.data as APIMessageChannelSelectInteractionData;
+                const channel = data.resolved.channels[Object.keys(data.resolved.channels)[0]].id;
+                const coin = idToMeta(Number(split[2]));
+                await http.send(makeRolePingPrompt(interaction, coin, channel));
+            }
+        } else if (interaction.data.component_type == ComponentType.RoleSelect) {
+            if (interaction.data.custom_id.startsWith("coinalert_role")) {
+                const data = interaction.data as APIMessageRoleSelectInteractionData;
+                const role = data.resolved.roles[Object.keys(data.resolved.roles)[0]].id;
+                const coin = idToMeta(Number(split[2]));
+                const channel = split[3];
+                await http.send(makeStatPrompt(interaction, coin, "guild", channel, role));
+            }
         }
+
     }
 }

@@ -10,13 +10,13 @@ import {
 } from "discord-api-types/v10";
 import {APIStringSelectComponent} from "discord-api-types/payloads/v10/channel";
 import {CoinAlert} from "../../structs/alert/coinAlert";
-import {CoinAlerts, GasAlerts} from "../../utils/database";
+import {DmCoinAlerts, DmGasAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {formatAlert, getAlertDb, makeAlertSelectEntry} from "../../utils/alertUtils";
 import {GasAlert} from "../../structs/alert/gasAlert";
 
 export async function makeAlertsMenu(interaction: APIInteraction) {
-    const alerts = [...await CoinAlerts.find({user: interaction.user.id}).toArray(), ...await GasAlerts.find({user: interaction.user.id}).toArray()];
+    const alerts = [...await DmCoinAlerts.find({user: interaction.user.id}).toArray(), ...await DmGasAlerts.find({user: interaction.user.id}).toArray()];
     const alertMenuOptions: APISelectMenuOption[] = alerts.map(alert => makeAlertSelectEntry(alert));
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
     return {

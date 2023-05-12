@@ -4,6 +4,7 @@ import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
+    ComponentType,
     InteractionResponseType,
     MessageFlags
 } from "discord-api-types/v10";
@@ -14,27 +15,29 @@ import {getAlertDb, parseAlertId, parsePrettyAlert} from "../../utils/alertUtils
 
 export default class AlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
-    static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-        if (interaction.data.custom_id.startsWith("myalerts_menu")) {
-            if (interaction.data.values[0] == "default") {
-                const coinLink = `</coin:${commandIds.get("coin")}>`;
+    static override async processSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
+        if (interaction.data.component_type == ComponentType.StringSelect) {
+            if (interaction.data.custom_id.startsWith("myalerts_menu")) {
+                if (interaction.data.values[0] == "default") {
+                    const coinLink = `</coin:${commandIds.get("coin")}>`;
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
+                const converted = await Promise.all(interaction.data.values.map(async value => await parseAlertId(value, interaction)));
+                const instructions = await makeEmbed(converted, interaction);
                 await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
+                    type: InteractionResponseType.UpdateMessage, data: {
+                        embeds: [instructions],
+                        components: [await makeAlertsMenu(interaction), await makeButtons()],
                         flags: MessageFlags.Ephemeral
                     }
                 });
-                return;
             }
-            const converted = await Promise.all(interaction.data.values.map(async value => await parseAlertId(value, interaction)));
-            const instructions = await makeEmbed(converted, interaction);
-            await http.send({
-                type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons()],
-                    flags: MessageFlags.Ephemeral
-                }
-            });
         }
     }
 

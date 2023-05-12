@@ -17,11 +17,7 @@ export default abstract class InteractionProcessor {
         return undefined;
     }
 
-    static processStringSelect(_interaction: APIMessageComponentSelectMenuInteraction, _http: FastifyReply): Promise<void> {
-        return undefined;
-    }
-
-    static processRoleSelect(_interaction: APIMessageComponentSelectMenuInteraction, _http: FastifyReply): Promise<void> {
+    static processSelect(_interaction: APIMessageComponentSelectMenuInteraction, _http: FastifyReply): Promise<void> {
         return undefined;
     }
 }

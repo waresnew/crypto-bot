@@ -1,16 +1,16 @@
 import {getEmbedTemplate} from "../ui/templates";
 import {analytics} from "../utils/analytics";
 import {APIChannel} from "discord-api-types/v10";
-import {CoinAlerts, GasAlerts} from "../utils/database";
+import {DmCoinAlerts, DmGasAlerts} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {commandIds, discordGot} from "../utils/discordUtils";
 import {validCryptos} from "../utils/coinUtils";
 import {checkAlert, formatAlert, formatCoinAlert, getAlertDb} from "../utils/alertUtils";
 
 export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
-    const expired = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
-    const found = await CoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
-    await CoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
+    const expired = await DmCoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
+    const found = await DmCoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
+    await DmCoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
     const removedCoins = expired.map(alert => alert.coin);
     if (removedCoins.length > 0) {
         console.log(`Removed ${found.length} expired alerts for ${removedCoins.join(", ")}`);
@@ -50,7 +50,7 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
 }
 export async function triggerAlerts() {
     const toDm = new Map<string, string[]>();
-    const alerts = [...await CoinAlerts.find({}).toArray(), ...await GasAlerts.find({}).toArray()];
+    const alerts = [...await DmCoinAlerts.find({}).toArray(), ...await DmGasAlerts.find({}).toArray()];
     for (const alert of alerts) {
         if (await checkAlert(alert)) {
             if (!toDm.has(alert.user)) {

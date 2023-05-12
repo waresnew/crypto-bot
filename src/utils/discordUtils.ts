@@ -38,8 +38,8 @@ export const customIdVersions = {
     coinalert_value: "0.0.1",
     coinalert_thresholdmodal: "0.0.1",
     coinalert_thresholdmodalvalue: "0.0.1",
-    coinalert_directiongreater: "0.0.1",
-    coinalert_directionless: "0.0.1",
+    coinalert_greater: "0.0.1",
+    coinalert_less: "0.0.1",
     coinalert_confirm: "0.0.1",
     coinalert_confirmundo: "0.0.1",
     coinalert_valueundo: "0.0.1",
@@ -66,7 +66,12 @@ export const customIdVersions = {
     serversettings_alertManagerRole: "0.0.1",
     coinalert_guild: "0.0.1",
     coinalert_dm: "0.0.1",
-    coinalert_statundo: "0.0.1"
+    coinalert_statundo: "0.0.1",
+    coinalert_channel: "0.0.1",
+    coinalert_channelundo: "0.0.1",
+    coinalert_role: "0.0.1",
+    coinalert_roleundo: "0.0.1",
+    coinalert_roleskip: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {
@@ -98,7 +103,7 @@ function patchCustomId(id: string) {
     const key = id.split("_")[0] + "_" + id.split("_")[1];
     const latest = customIdVersions[key];
     if (!latest) {
-        return undefined;
+        throw new Error("customid version not found: " + key);
     }
     return latest + "_" + id;
 }

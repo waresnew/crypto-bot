@@ -228,15 +228,10 @@ server.route({
                     await processor.processButton(interaction, response);
                 }
 
-            } else if (interaction.data.component_type == ComponentType.StringSelect) {
+            } else if (interaction.data.component_type == ComponentType.StringSelect || interaction.data.component_type == ComponentType.RoleSelect || interaction.data.component_type == ComponentType.ChannelSelect) {
                 const processor = interactionProcessors.get(origin) as any;
                 if (processor) {
-                    await processor.processStringSelect(interaction, response);
-                }
-            } else if (interaction.data.component_type == ComponentType.RoleSelect) {
-                const processor = interactionProcessors.get(origin) as any;
-                if (processor) {
-                    await processor.processRoleSelect(interaction, response);
+                    await processor.processSelect(interaction, response);
                 }
             }
         } else if (message.type == InteractionType.ModalSubmit) {

@@ -17,7 +17,7 @@ import {analytics} from "../../utils/analytics";
 import {getEmbedTemplate} from "../templates";
 import {GasAlert} from "../../structs/alert/gasAlert";
 import {validateAlert} from "../../utils/alertUtils";
-import {GasAlerts} from "../../utils/database";
+import {DmGasAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {UserError} from "../../structs/userError";
 
@@ -90,7 +90,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 }
             });
             const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
-            await GasAlerts.insertOne(alert);
+            await DmGasAlerts.insertOne(alert);
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
                     content: `Done! Added and enabled alert. Manage your alerts with ${manageAlertLink}. Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers.`,

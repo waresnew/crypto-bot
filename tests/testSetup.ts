@@ -7,7 +7,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {jest} from "@jest/globals";
-import {Candles, CoinAlerts, LatestCoins, mongoClient, openDb} from "../src/utils/database";
+import {Candles, DmCoinAlerts, LatestCoins, mongoClient, openDb} from "../src/utils/database";
 import {CoinMetadata} from "../src/structs/coinMetadata";
 import {initClient} from "../src/utils/discordUtils";
 import {validCryptos} from "../src/utils/coinUtils";
@@ -53,7 +53,7 @@ export const mockCommandInteraction: APIChatInputApplicationCommandInteraction =
 export const mockReply = {send: jest.fn().mockImplementation(() => Promise.resolve())} as unknown as FastifyReply;
 const globalMocks: any[] = [];
 beforeEach(async () => {
-    await CoinAlerts.deleteMany({});
+    await DmCoinAlerts.deleteMany({});
     await LatestCoins.deleteMany({});
     await Candles.deleteMany({});
     const btc = new CoinMetadata(), eth = new CoinMetadata();

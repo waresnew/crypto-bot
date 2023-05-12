@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import {CoinAlert} from "../structs/alert/coinAlert";
 import {getLatestCandle, validCryptos} from "./coinUtils";
-import {CoinAlerts, GasAlerts, LatestCoins} from "./database";
+import {DmCoinAlerts, DmGasAlerts, LatestCoins} from "./database";
 import CryptoStat from "../structs/cryptoStat";
 import {idToMeta, nameToMeta} from "../structs/coinMetadata";
 import {GasAlert} from "../structs/alert/gasAlert";
@@ -38,7 +38,7 @@ export function evalInequality(expr: string) {
 
 export async function validateAlert(alert: Alert) {
     const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
-    const alerts = [...await CoinAlerts.find({user: alert.user}).toArray(), ...await GasAlerts.find({user: alert.user}).toArray()];
+    const alerts = [...await DmCoinAlerts.find({user: alert.user}).toArray(), ...await DmGasAlerts.find({user: alert.user}).toArray()];
     if (alerts.length >= 25) {
         analytics.track({
             userId: alert.user,
@@ -107,7 +107,7 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
     alert.threshold = tokens[2];
     alert.direction = tokens[3] as "<" | ">";
     alert.user = interaction.user.id;
-    const old = await CoinAlerts.findOne({
+    const old = await DmCoinAlerts.findOne({
         coin: alert.coin,
         stat: alert.stat,
         threshold: alert.threshold,
@@ -128,7 +128,7 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction) {
     alert.speed = tokens[0];
     alert.threshold = tokens[1];
     alert.user = interaction.user.id;
-    const old = await GasAlerts.findOne({
+    const old = await DmGasAlerts.findOne({
         speed: alert.speed,
         threshold: alert.threshold,
         user: alert.user
@@ -184,9 +184,9 @@ function makeGasAlertSelectEntry(alert: GasAlert) {
 
 export function getAlertDb(alert: Alert) {
     if ("coin" in alert) {
-        return CoinAlerts;
+        return DmCoinAlerts;
     } else if ("speed" in alert) {
-        return GasAlerts;
+        return DmGasAlerts;
     }
     throw new Error("Invalid alert type");
 }

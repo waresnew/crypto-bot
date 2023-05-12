@@ -9,7 +9,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
-import {makeStatPrompt} from "../ui/coinalert/interfaceCreator";
+import {makeGuildDmPrompt, makeStatPrompt} from "../ui/coinalert/interfaceCreator";
 import {autocompleteCoins, parseCoinCommandArg} from "../utils/coinUtils";
 import {UserError} from "../structs/userError";
 
@@ -41,7 +41,11 @@ export default {
                 throw e;
             }
         }
-        await http.send(makeStatPrompt(interaction, coin));
+        if (interaction.guild_id) {
+            await http.send(await makeGuildDmPrompt(interaction, coin));
+        } else {
+            await http.send(makeStatPrompt(interaction, coin, "dm", null, null));
+        }
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
         await http.send(autocompleteCoins(interaction));

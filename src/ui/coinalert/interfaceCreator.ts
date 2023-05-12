@@ -14,7 +14,7 @@ import {commandIds} from "../../utils/discordUtils";
 import BigNumber from "bignumber.js";
 import {AlertType} from "../../utils/alertUtils";
 
-export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, what: string) {
+export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. What value should the ${CryptoStat.shortToLong(what)} rise/fall to before alerting you?
@@ -35,7 +35,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${type}`
+                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${type}_${channel}_${role}`
                     },
                     {
                         type: ComponentType.Button,
@@ -45,7 +45,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `coinalert_value_${coin.cmc_id}_${type}_${what}`
+                        custom_id: `coinalert_value_${coin.cmc_id}_${type}_${channel}_${role}_${what}`
                     }
                 ]
             }]
@@ -53,7 +53,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
     } as APIInteractionResponse;
 }
 
-export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, what: string, when: string) {
+export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${new BigNumber(when).toString()}?`;
@@ -73,11 +73,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Primary,
                         label: "Go back",
-                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${type}_${what}`
+                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${type}_${channel}_${role}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_directiongreater_${coin.cmc_id}_${type}_${what}_${when}`,
+                        custom_id: `coinalert_greater_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}`,
                         label: `Greater than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -87,7 +87,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_directionless_${coin.cmc_id}_${type}_${what}_${when}`,
+                        custom_id: `coinalert_less_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}`,
                         label: `Less than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -101,7 +101,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
     } as APIInteractionResponse;
 }
 
-export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType) {
+export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string) {
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
@@ -109,7 +109,7 @@ export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, 
 
 eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1h%")}\` to track the 1 hour percentage change of the price.`;
     return {
-        type: InteractionResponseType.ChannelMessageWithSource, data: {
+        type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],
             flags: MessageFlags.Ephemeral,
             components: [
@@ -118,7 +118,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                     components: [{
                         type: ComponentType.StringSelect,
                         placeholder: "Select a stat...",
-                        custom_id: `coinalert_stat_${coin.cmc_id}_${type}`,
+                        custom_id: `coinalert_stat_${coin.cmc_id}_${type}_${channel}_${role}`,
                         options: sortedOptions.map(entry => {
                             return {
                                 label: entry[0].toUpperCase() + entry.substring(1),
@@ -138,7 +138,93 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                             },
                             style: ButtonStyle.Primary,
                             label: "Go back",
-                            custom_id: `coinalert_statundo_${coin.cmc_id}_${type}`
+                            custom_id: `coinalert_statundo_${coin.cmc_id}_${type}_${channel}`
+                        }
+                    ]
+                }
+            ]
+        }
+    } as APIInteractionResponse;
+}
+
+//guild only
+export function makeChannelPrompt(interaction: APIInteraction, coin: CoinMetadata) {
+    const message = getEmbedTemplate();
+    message.title = `Adding alert for ${coin.name}`;
+    message.description = "Please select a channel to send this alert to.\n\n**Note: Please ensure that Botchain has permissions to send messages in the channel you select, or else the alert might silently fail to trigger.**";
+    return {
+        type: InteractionResponseType.UpdateMessage, data: {
+            embeds: [message],
+            flags: MessageFlags.Ephemeral,
+            components: [
+                {
+                    type: ComponentType.ActionRow,
+                    components: [{
+                        type: ComponentType.ChannelSelect,
+                        placeholder: "Select a channel...",
+                        custom_id: `coinalert_channel_${coin.cmc_id}`
+                    }]
+                },
+                {
+                    type: ComponentType.ActionRow,
+                    components: [{
+                        type: ComponentType.Button,
+                        emoji: {
+                            name: "⬅️",
+                            id: null
+                        },
+                        style: ButtonStyle.Primary,
+                        label: "Go back",
+                        custom_id: `coinalert_channelundo_${coin.cmc_id}`
+                    }]
+                }
+            ]
+        }
+    } as APIInteractionResponse;
+}
+
+//guild only
+export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetadata, channel: string) {
+    const message = getEmbedTemplate();
+    message.title = `Adding alert for ${coin.name}`;
+    message.description = "Please select a role to ping when the alert is triggered.\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
+    return {
+        type: InteractionResponseType.UpdateMessage, data: {
+            embeds: [message],
+            flags: MessageFlags.Ephemeral,
+            components: [
+                {
+                    type: ComponentType.ActionRow,
+                    components: [
+                        {
+                            type: ComponentType.RoleSelect,
+                            placeholder: "Select a role...",
+                            custom_id: `coinalert_role_${coin.cmc_id}_${channel}`
+                        }
+                    ]
+                },
+                {
+                    type: ComponentType.ActionRow,
+                    components: [
+                        {
+                            type: ComponentType.Button,
+                            emoji: {
+                                name: "⬅️",
+                                id: null
+                            },
+                            style: ButtonStyle.Primary,
+                            label: "Go back",
+                            custom_id: `coinalert_roleundo_${coin.cmc_id}`
+                        },
+                        {
+                            type: ComponentType.Button,
+                            emoji: {
+                                name: "⏭️",
+                                id: null
+                            },
+                            style: ButtonStyle.Success,
+                            label: "Skip",
+                            custom_id: `coinalert_roleskip_${coin.cmc_id}_${channel}`
                         }
                     ]
                 }

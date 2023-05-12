@@ -1,6 +1,6 @@
 import nock from "nock";
 import {triggerAlerts} from "../src/services/alertChecker";
-import {Candles, CoinAlerts, LatestCoins} from "../src/utils/database";
+import {Candles, DmCoinAlerts, LatestCoins} from "../src/utils/database";
 import {checkCoinAlert} from "../src/utils/alertUtils";
 
 describe("Tests coin alerts", () => {
@@ -13,8 +13,8 @@ describe("Tests coin alerts", () => {
             direction: ">",
             disabled: false
         };
-        await CoinAlerts.insertOne(firstAlert);
-        await CoinAlerts.insertOne({
+        await DmCoinAlerts.insertOne(firstAlert);
+        await DmCoinAlerts.insertOne({
             user: "123",
             coin: 1,
             stat: "24h%",
@@ -22,7 +22,7 @@ describe("Tests coin alerts", () => {
             direction: "<",
             disabled: false
         });
-        expect((await CoinAlerts.findOne({coin: 1})).user).toBe("123");
+        expect((await DmCoinAlerts.findOne({coin: 1})).user).toBe("123");
         nock("https://discord.com")
             .get("/api/v10/users/@me/channels")
             .reply(200, {id: "ok"});
@@ -59,7 +59,7 @@ describe("Tests coin alerts", () => {
         expect(await checkCoinAlert(firstAlert)).toBe(true);
 
         await triggerAlerts();
-        expect((await CoinAlerts.findOne({coin: 1})).disabled).toBe(true);
+        expect((await DmCoinAlerts.findOne({coin: 1})).disabled).toBe(true);
 
     });
 });

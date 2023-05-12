@@ -1,4 +1,4 @@
-import {CoinAlerts} from "../src/utils/database";
+import {DmCoinAlerts} from "../src/utils/database";
 import {validateWhen} from "../src/utils/utils";
 import {validateAlert} from "../src/utils/alertUtils";
 import {UserError} from "../src/structs/userError";
@@ -14,7 +14,7 @@ describe("test alert wizard", () => {
     });
 
     it("rejects duplicate/>25 alerts", async () => {
-        await CoinAlerts.insertOne({
+        await DmCoinAlerts.insertOne({
             coin: 0,
             stat: "price",
             direction: ">",
@@ -36,7 +36,7 @@ describe("test alert wizard", () => {
             expect((e as UserError).error).toMatch("Error: You already have an alert exactly like the one you are trying to add");
         }
         for (let i = 1; i < 25; i++) {
-            await CoinAlerts.insertOne({
+            await DmCoinAlerts.insertOne({
                 coin: i,
                 stat: "price",
                 direction: ">",
