@@ -71,7 +71,10 @@ export const customIdVersions = {
     coinalert_channelundo: "0.0.1",
     coinalert_role: "0.0.1",
     coinalert_roleundo: "0.0.1",
-    coinalert_roleskip: "0.0.1"
+    coinalert_roleskip: "0.0.1",
+    coinalert_msg: "0.0.1",
+    coinalert_msgmodalvalue: "0.0.1",
+    coinalert_msgmodal: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {

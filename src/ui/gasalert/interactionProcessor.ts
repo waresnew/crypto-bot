@@ -154,7 +154,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                                         name: "⬅️",
                                         id: null
                                     },
-                                    style: ButtonStyle.Primary,
+                                    style: ButtonStyle.Secondary,
                                     custom_id: `gasalert_confirmundo_${speed}`
                                 },
                                 {

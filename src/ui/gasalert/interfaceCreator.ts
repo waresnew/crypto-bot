@@ -84,7 +84,7 @@ export function makeThresholdPrompt(speed: string) {
                                 name: "⬅️",
                                 id: null
                             },
-                            style: ButtonStyle.Primary,
+                            style: ButtonStyle.Secondary,
                             custom_id: "gasalert_thresholdundo"
                         },
                         {

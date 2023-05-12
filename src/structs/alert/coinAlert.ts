@@ -4,4 +4,6 @@ export abstract class CoinAlert {
     threshold: string;
     direction: string;
     disabled: boolean;
+    message: string;
+
 }

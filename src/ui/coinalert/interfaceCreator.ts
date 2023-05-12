@@ -33,7 +33,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                             name: "⬅️",
                             id: null
                         },
-                        style: ButtonStyle.Primary,
+                        style: ButtonStyle.Secondary,
                         label: "Go back",
                         custom_id: `coinalert_valueundo_${coin.cmc_id}_${type}_${channel}_${role}`
                     },
@@ -71,7 +71,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                             name: "⬅️",
                             id: null
                         },
-                        style: ButtonStyle.Primary,
+                        style: ButtonStyle.Secondary,
                         label: "Go back",
                         custom_id: `coinalert_directionundo_${coin.cmc_id}_${type}_${channel}_${role}_${what}`
                     },
@@ -136,7 +136,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                                 name: "⬅️",
                                 id: null
                             },
-                            style: ButtonStyle.Primary,
+                            style: ButtonStyle.Secondary,
                             label: "Go back",
                             custom_id: `coinalert_statundo_${coin.cmc_id}_${type}_${channel}`
                         }
@@ -173,7 +173,7 @@ export function makeChannelPrompt(interaction: APIInteraction, coin: CoinMetadat
                             name: "⬅️",
                             id: null
                         },
-                        style: ButtonStyle.Primary,
+                        style: ButtonStyle.Secondary,
                         label: "Go back",
                         custom_id: `coinalert_channelundo_${coin.cmc_id}`
                     }]
@@ -212,7 +212,7 @@ export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetada
                                 name: "⬅️",
                                 id: null
                             },
-                            style: ButtonStyle.Primary,
+                            style: ButtonStyle.Secondary,
                             label: "Go back",
                             custom_id: `coinalert_roleundo_${coin.cmc_id}`
                         },
