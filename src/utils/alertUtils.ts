@@ -123,33 +123,35 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction, guild: 
     alert.stat = tokens[1];
     alert.threshold = tokens[2];
     alert.direction = tokens[3] as "<" | ">";
-    let old;
-    if (alert instanceof GuildCoinAlert) {
-        alert.guild = interaction.guild_id;
-        old = await GuildCoinAlerts.findOne({
+    const old = alert instanceof GuildCoinAlert ?
+        await GuildCoinAlerts.findOne({
             coin: alert.coin,
             stat: alert.stat,
             threshold: alert.threshold,
             direction: alert.direction,
-            guild: alert.guild
-        });
-        alert.channel = old.channel;
-        alert.roleIdPing = old.roleIdPing;
-    } else {
-        alert.user = interaction.user.id;
-        old = await DmCoinAlerts.findOne({
+            guild: interaction.guild_id
+        })
+        : await DmCoinAlerts.findOne({
             coin: alert.coin,
             stat: alert.stat,
             threshold: alert.threshold,
             direction: alert.direction,
-            user: alert.user
+            user: interaction.user.id
         });
+    if (old) {
+        if (alert instanceof GuildCoinAlert) {
+            alert.guild = interaction.guild_id;
+            alert.channel = (old as GuildCoinAlert).channel;
+            alert.roleIdPing = (old as GuildCoinAlert).roleIdPing;
+        } else {
+            (alert as DmCoinAlert).user = interaction.user.id;
+        }
     }
-    alert.message = old.message;
     if (!old) {
         alert.disabled = false;
     } else {
         alert.disabled = old["disabled"];
+        alert.message = old.message;
     }
     return alert;
 }
@@ -159,30 +161,31 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: b
     const tokens = id.split("_").slice(1); //remove gas_ prefix
     alert.speed = tokens[0];
     alert.threshold = tokens[1];
-    let old;
-    if (alert instanceof GuildGasAlert) {
-        alert.guild = interaction.guild_id;
-        old = await GuildGasAlerts.findOne({
+    const old = alert instanceof GuildGasAlert ?
+        await GuildGasAlerts.findOne({
             speed: alert.speed,
             threshold: alert.threshold,
-            guild: alert.guild
-        });
-        alert.channel = old.channel;
-        alert.roleIdPing = old.roleIdPing;
-    } else {
-        alert.user = interaction.user.id;
-        old = await DmGasAlerts.findOne({
+            guild: interaction.guild_id
+        }) : await DmGasAlerts.findOne({
             speed: alert.speed,
             threshold: alert.threshold,
-            user: alert.user
+            user: interaction.user.id
         });
+    if (old) {
+        if (alert instanceof GuildGasAlert) {
+            alert.guild = interaction.guild_id;
+            alert.channel = (old as GuildGasAlert).channel;
+            alert.roleIdPing = (old as GuildGasAlert).roleIdPing;
+        } else {
+            alert.user = interaction.user.id;
+        }
     }
-    alert.message = old.message;
-
     if (!old) {
         alert.disabled = false;
     } else {
         alert.disabled = old["disabled"];
+        alert.message = old.message;
+
     }
     return alert;
 }
@@ -201,11 +204,25 @@ async function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction,
     alert.threshold = input[5].replace(new RegExp(/[$%]/), "");
     alert.direction = input[4] == "less" ? "<" : ">";
     alert.disabled = input[1] == "❌";
-    const old = alert instanceof GuildCoinAlert ? await GuildCoinAlerts.findOne(deleteUndefinedProps(alert)) : await DmCoinAlerts.findOne(deleteUndefinedProps(alert));
-    alert.message = old.message;
-    if (alert instanceof GuildCoinAlert) {
-        alert.channel = (old as GuildCoinAlert).channel;
-        alert.roleIdPing = (old as GuildCoinAlert).roleIdPing;
+    const old = alert instanceof GuildCoinAlert ? await GuildCoinAlerts.findOne({
+        coin: alert.coin,
+        guild: alert.guild,
+        stat: alert.stat,
+        threshold: alert.threshold,
+        direction: alert.direction
+    }) : await DmCoinAlerts.findOne({
+        coin: alert.coin,
+        user: alert.user,
+        stat: alert.stat,
+        threshold: alert.threshold,
+        direction: alert.direction
+    });
+    if (old) {
+        alert.message = old.message;
+        if (alert instanceof GuildCoinAlert) {
+            alert.channel = (old as GuildCoinAlert).channel;
+            alert.roleIdPing = (old as GuildCoinAlert).roleIdPing;
+        }
     }
     return alert;
 }
@@ -221,11 +238,21 @@ async function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, 
     alert.speed = input[2];
     alert.threshold = input[3];
     alert.disabled = input[1] == "❌";
-    const old = alert instanceof GuildGasAlert ? await GuildGasAlerts.findOne(deleteUndefinedProps(alert)) : await DmGasAlerts.findOne(deleteUndefinedProps(alert));
-    alert.message = old.message;
-    if (alert instanceof GuildGasAlert) {
-        alert.channel = (old as GuildGasAlert).channel;
-        alert.roleIdPing = (old as GuildGasAlert).roleIdPing;
+    const old = alert instanceof GuildGasAlert ? await GuildGasAlerts.findOne({
+        speed: alert.speed,
+        threshold: alert.threshold,
+        guild: alert.guild
+    }) : await DmGasAlerts.findOne({
+        speed: alert.speed,
+        threshold: alert.threshold,
+        user: alert.user
+    });
+    if (old) {
+        alert.message = old.message;
+        if (alert instanceof GuildGasAlert) {
+            alert.channel = (old as GuildGasAlert).channel;
+            alert.roleIdPing = (old as GuildGasAlert).roleIdPing;
+        }
     }
     return alert;
 }
@@ -250,15 +277,15 @@ function makeGasAlertSelectEntry(alert: GasAlert) {
 
 export function getAlertDb(alert: Alert) {
     if ("coin" in alert) {
-        if ("user" in alert) {
+        if (alert instanceof DmCoinAlert || "user" in alert) {
             return DmCoinAlerts;
-        } else if ("guild" in alert) {
+        } else if (alert instanceof GuildCoinAlert || "guild" in alert) {
             return GuildCoinAlerts;
         }
     } else if ("speed" in alert) {
-        if ("user" in alert) {
+        if (alert instanceof DmGasAlert || "user" in alert) {
             return DmGasAlerts;
-        } else if ("guild" in alert) {
+        } else if (alert instanceof GuildGasAlert || "guild" in alert) {
             return GuildGasAlerts;
         }
     }
