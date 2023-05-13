@@ -117,7 +117,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             alert.speed = speed;
             alert.threshold = threshold;
             alert.disabled = false;
-            alert.message = interaction.message.embeds[0].fields ?? [].lengtah > 0 ? interaction.message.embeds[0].fields[0].value : null;
+            alert.message = interaction.message.embeds[0].fields ?? [].length > 0 ? interaction.message.embeds[0].fields[0].value : null;
             try {
                 await validateAlert(alert);
             } catch (e) {
