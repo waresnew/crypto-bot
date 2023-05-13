@@ -137,8 +137,9 @@ export async function updateBinanceApi() {
             };
         }));
     }
-    console.log(`Weight used: ${weightUsed}/1200, Max limit: ${maxLimit}`);
     const responses = await Promise.all(binancePromises);
+    console.log(`Weight used: ${weightUsed}/1200, Max limit: ${maxLimit}`);
+
     const start2 = Date.now();
     const session = mongoClient.startSession();
     await session.withTransaction(async () => {

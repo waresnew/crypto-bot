@@ -79,7 +79,18 @@ export const customIdVersions = {
     coinalert_roleskip: "0.0.1",
     coinalert_msg: "0.0.1",
     coinalert_msgmodalvalue: "0.0.1",
-    coinalert_msgmodal: "0.0.1"
+    coinalert_msgmodal: "0.0.1",
+    gasalert_channel: "0.0.1",
+    gasalert_channelundo: "0.0.1",
+    gasalert_role: "0.0.1",
+    gasalert_roleundo: "0.0.1",
+    gasalert_roleskip: "0.0.1",
+    gasalert_msg: "0.0.1",
+    gasalert_msgmodalvalue: "0.0.1",
+    gasalert_msgmodal: "0.0.1",
+    gasalert_guild: "0.0.1",
+    gasalert_dm: "0.0.1",
+    gasalert_speedundo: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {

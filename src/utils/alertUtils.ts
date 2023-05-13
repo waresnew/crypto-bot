@@ -18,7 +18,9 @@ import {GuildGasAlert} from "../structs/alert/guildGasAlert";
 import {deleteUndefinedProps} from "./utils";
 
 type Alert = CoinAlert | GasAlert;
-export type AlertType = "guild" | "dm";
+export type AlertMethod = "guild" | "dm";
+export type GuildAlert = GuildCoinAlert | GuildGasAlert;
+export type DmAlert = DmCoinAlert | DmGasAlert;
 
 /**
  * Evaluates an inequality expression safely
@@ -51,7 +53,7 @@ export async function validateAlert(alert: Alert) {
     }
     const isDm = alert instanceof DmCoinAlert || alert instanceof DmGasAlert;
     const isGuild = alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert;
-    if (isDm && alerts.length >= 25 || isGuild && alerts.length >= 10) {
+    if (alerts.length >= 10) {
         analytics.track({
             userId: isDm ? alert.user : isGuild ? alert.guild : null,
             event: "Alert Creation Failed",
@@ -60,7 +62,7 @@ export async function validateAlert(alert: Alert) {
             }
         });
 
-        throw new UserError(`Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
+        throw new UserError(`Error: You can not have more than 10 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
     }
     if (await getAlertDb(alert).findOne(alert)) {
         if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
@@ -131,6 +133,8 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction, guild: 
             direction: alert.direction,
             guild: alert.guild
         });
+        alert.channel = old.channel;
+        alert.roleIdPing = old.roleIdPing;
     } else {
         alert.user = interaction.user.id;
         old = await DmCoinAlerts.findOne({
@@ -141,6 +145,7 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction, guild: 
             user: alert.user
         });
     }
+    alert.message = old.message;
     if (!old) {
         alert.disabled = false;
     } else {
@@ -162,6 +167,8 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: b
             threshold: alert.threshold,
             guild: alert.guild
         });
+        alert.channel = old.channel;
+        alert.roleIdPing = old.roleIdPing;
     } else {
         alert.user = interaction.user.id;
         old = await DmGasAlerts.findOne({
@@ -170,6 +177,8 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: b
             user: alert.user
         });
     }
+    alert.message = old.message;
+
     if (!old) {
         alert.disabled = false;
     } else {
@@ -178,7 +187,7 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: b
     return alert;
 }
 
-function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
+async function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     const input = pretty.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));
     const alert = guild ? new GuildCoinAlert() : new DmCoinAlert();
     if (alert instanceof GuildCoinAlert) {
@@ -192,10 +201,16 @@ function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction, guild
     alert.threshold = input[5].replace(new RegExp(/[$%]/), "");
     alert.direction = input[4] == "less" ? "<" : ">";
     alert.disabled = input[1] == "❌";
+    const old = alert instanceof GuildCoinAlert ? await GuildCoinAlerts.findOne(deleteUndefinedProps(alert)) : await DmCoinAlerts.findOne(deleteUndefinedProps(alert));
+    alert.message = old.message;
+    if (alert instanceof GuildCoinAlert) {
+        alert.channel = (old as GuildCoinAlert).channel;
+        alert.roleIdPing = (old as GuildCoinAlert).roleIdPing;
+    }
     return alert;
 }
 
-function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
+async function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/));
     const alert = guild ? new GuildGasAlert() : new DmGasAlert();
     if (alert instanceof GuildGasAlert) {
@@ -206,6 +221,12 @@ function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, guild:
     alert.speed = input[2];
     alert.threshold = input[3];
     alert.disabled = input[1] == "❌";
+    const old = alert instanceof GuildGasAlert ? await GuildGasAlerts.findOne(deleteUndefinedProps(alert)) : await DmGasAlerts.findOne(deleteUndefinedProps(alert));
+    alert.message = old.message;
+    if (alert instanceof GuildGasAlert) {
+        alert.channel = (old as GuildGasAlert).channel;
+        alert.roleIdPing = (old as GuildGasAlert).roleIdPing;
+    }
     return alert;
 }
 
@@ -253,11 +274,11 @@ export function makeAlertSelectEntry(alert: Alert) {
     throw new Error("Invalid alert type");
 }
 
-export function parsePrettyAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
+export async function parsePrettyAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     if (new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/).test(pretty)) {
-        return deleteUndefinedProps(parsePrettyCoinAlert(pretty, interaction, guild));
+        return deleteUndefinedProps(await parsePrettyCoinAlert(pretty, interaction, guild));
     } else if (new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/).test(pretty)) {
-        return deleteUndefinedProps(parsePrettyGasAlert(pretty, interaction, guild));
+        return deleteUndefinedProps(await parsePrettyGasAlert(pretty, interaction, guild));
     } else {
         return null;
     }
@@ -282,8 +303,14 @@ export function formatAlert(alert: Alert) {
     } else {
         throw new Error("Invalid alert type");
     }
+    if ("guild" in alert) {
+        result += `\n⤷ Channel: <#${(alert as GuildAlert).channel}>`;
+        if ((alert as GuildAlert).roleIdPing != "null") {
+            result += `\n⤷ Role Ping: <@&${(alert as GuildAlert).roleIdPing}>`;
+        }
+    }
     if (alert.message) {
-        result += ` (${alert.message})`;
+        result += `\n⤷ Message: ${alert.message}`;
     }
     return result + "\n";
 }

@@ -151,7 +151,7 @@ export default class MyAlertsInteractionProcessor extends InteractionProcessor {
     static async parseSelected(interaction: APIInteraction, guild: boolean) {
         const selected = [];
         for (const line of interaction.message.embeds[0].description.split("\n")) {
-            const result = parsePrettyAlert(line, interaction, guild);
+            const result = await parsePrettyAlert(line, interaction, guild);
             if (result != null) {
                 selected.push(result);
             }

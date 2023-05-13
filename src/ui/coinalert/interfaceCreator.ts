@@ -12,9 +12,9 @@ import CryptoStat from "../../structs/cryptoStat";
 import {CoinMetadata} from "../../structs/coinMetadata";
 import {commandIds} from "../../utils/discordUtils";
 import BigNumber from "bignumber.js";
-import {AlertType} from "../../utils/alertUtils";
+import {AlertMethod} from "../../utils/alertUtils";
 
-export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string, what: string) {
+export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. What value should the ${CryptoStat.shortToLong(what)} rise/fall to before alerting you?
@@ -35,7 +35,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Secondary,
                         label: "Go back",
-                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${type}_${channel}_${role}`
+                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${alertMethod}_${channel}_${role}`
                     },
                     {
                         type: ComponentType.Button,
@@ -45,7 +45,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `coinalert_value_${coin.cmc_id}_${type}_${channel}_${role}_${what}`
+                        custom_id: `coinalert_value_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}`
                     }
                 ]
             }]
@@ -53,7 +53,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
     } as APIInteractionResponse;
 }
 
-export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string, what: string, when: string) {
+export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${new BigNumber(when).toString()}?`;
@@ -73,11 +73,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Secondary,
                         label: "Go back",
-                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${type}_${channel}_${role}_${what}`
+                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_greater_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}`,
+                        custom_id: `coinalert_greater_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}_${when}`,
                         label: `Greater than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -87,7 +87,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_less_${coin.cmc_id}_${type}_${channel}_${role}_${what}_${when}`,
+                        custom_id: `coinalert_less_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}_${when}`,
                         label: `Less than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -101,7 +101,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
     } as APIInteractionResponse;
 }
 
-export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, type: AlertType, channel: string, role: string) {
+export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string) {
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
@@ -118,7 +118,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                     components: [{
                         type: ComponentType.StringSelect,
                         placeholder: "Select a stat...",
-                        custom_id: `coinalert_stat_${coin.cmc_id}_${type}_${channel}_${role}`,
+                        custom_id: `coinalert_stat_${coin.cmc_id}_${alertMethod}_${channel}_${role}`,
                         options: sortedOptions.map(entry => {
                             return {
                                 label: entry[0].toUpperCase() + entry.substring(1),
@@ -138,7 +138,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                             },
                             style: ButtonStyle.Secondary,
                             label: "Go back",
-                            custom_id: `coinalert_statundo_${coin.cmc_id}_${type}_${channel}`
+                            custom_id: `coinalert_statundo_${coin.cmc_id}_${alertMethod}_${channel}`
                         }
                     ]
                 }

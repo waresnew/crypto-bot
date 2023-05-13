@@ -13,7 +13,7 @@ describe("test alert wizard", () => {
         }
     });
 
-    it("rejects duplicate/>25 alerts", async () => {
+    it("rejects duplicate/>10 alerts", async () => {
         await DmCoinAlerts.insertOne({
             coin: 0,
             stat: "price",
@@ -35,7 +35,7 @@ describe("test alert wizard", () => {
         } catch (e) {
             expect((e as UserError).error).toMatch("Error: You already have an alert exactly like the one you are trying to add");
         }
-        for (let i = 1; i < 25; i++) {
+        for (let i = 1; i < 10; i++) {
             await DmCoinAlerts.insertOne({
                 coin: i,
                 stat: "price",
@@ -47,7 +47,7 @@ describe("test alert wizard", () => {
         }
         try {
             await validateAlert({
-                coin: 25,
+                coin: 10,
                 stat: "price",
                 direction: ">",
                 threshold: "1",

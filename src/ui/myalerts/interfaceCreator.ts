@@ -47,7 +47,7 @@ export async function makeAlertsMenu(interaction: APIInteraction, guild = false)
 export async function makeEmbed(values: (CoinAlert | GasAlert)[], interaction: APIInteraction, guild = false) {
     const instructions = getEmbedTemplate();
     instructions.title = guild ? "This server's alerts" : "Your alerts";
-    let desc = guild ? `**You are currently managing this server's alerts. If you wish to manage your personal alerts, please run </myalerts:${commandIds.get("myalerts")}> instead.**\n\n` : "" + "Looking to add an alert? Run </coinalert:" + commandIds.get("coinalert") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅.";
+    let desc = (guild ? `**You are currently managing this server's alerts. If you wish to manage your personal alerts, please run </myalerts:${commandIds.get("myalerts")}> instead.**\n\n` : "") + "Looking to add an alert? Run </coinalert:" + commandIds.get("coinalert") + ">!\nToggle/delete your crypto notifications here. Disabled notifications will not be triggered and are marked with an ❌. Enabled notifications are marked with a ✅. Select an alert to view more information about it (eg. custom message, channel, role ping).";
     const choices: string[] = [];
     let removed = "\n\nThe following alerts no longer exist. They will not be processed.\n";
     for (const alert of values) {

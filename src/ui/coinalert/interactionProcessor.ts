@@ -29,7 +29,7 @@ import {idToMeta} from "../../structs/coinMetadata";
 import {DmCoinAlerts, GuildCoinAlerts} from "../../utils/database";
 import {commandIds} from "../../utils/discordUtils";
 import {validateWhen} from "../../utils/utils";
-import {AlertType, validateAlert} from "../../utils/alertUtils";
+import {AlertMethod, validateAlert} from "../../utils/alertUtils";
 import {UserError} from "../../structs/userError";
 import BigNumber from "bignumber.js";
 import {GuildCoinAlert} from "../../structs/alert/guildCoinAlert";
@@ -75,43 +75,10 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             const what = split[6];
             const channel = split[4];
             const role = split[5];
-            const type = split[3] as AlertType;
+            const type = split[3] as AlertMethod;
             await http.send(makeDirectionPrompt(interaction, coin, type, channel, role, what, when));
         } else if (interaction.data.custom_id.startsWith("coinalert_msgmodal")) {
-            const msg = interaction.data.components[0].components[0].value;
-            if (msg.length > 250) {
-                analytics.track({
-                    userId: interaction.user.id,
-                    event: "Invalid alert message input",
-                    properties: {
-                        input: msg
-                    }
-                });
-                await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: "Error: Message is too long (max 250 characters)",
-                        flags: MessageFlags.Ephemeral
-                    }
-                });
-                return;
-            }
-            const cur = interaction.message;
-            if (msg) {
-                cur.embeds[0].fields = [{
-                    name: "Current message",
-                    value: msg
-                }];
-            } else {
-                cur.embeds[0].fields.length = 0;
-            }
-            await http.send({
-                type: InteractionResponseType.UpdateMessage,
-                data: {
-                    embeds: cur.embeds,
-                    components: cur.components,
-                    flags: MessageFlags.Ephemeral
-                }
-            });
+            await sendMsgModalReply(interaction, http);
         }
     }
 
@@ -121,21 +88,21 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
         if (split[1].endsWith("undo")) {
             if (split[1] == "valueundo") {
                 const coin = idToMeta(Number(split[2]));
-                const type = split[3] as AlertType;
+                const type = split[3] as AlertMethod;
                 const channel = split[4];
                 const role = split[5];
                 const res = makeStatPrompt(interaction, coin, type, channel, role);
                 await http.send(res);
             } else if (split[1] == "directionundo") {
                 const coin = idToMeta(Number(split[2]));
-                const type = split[3] as AlertType;
+                const type = split[3] as AlertMethod;
                 const channel = split[4];
                 const role = split[5];
                 const what = split[6];
                 await http.send(makeThresholdPrompt(interaction, coin, type, channel, role, what));
             } else if (split[1] == "confirmundo") {
                 const coin = idToMeta(Number(split[2]));
-                const type = split[3] as AlertType;
+                const type = split[3] as AlertMethod;
                 const channel = split[4];
                 const role = split[5];
                 const what = split[6];
@@ -143,7 +110,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                 await http.send(makeDirectionPrompt(interaction, coin, type, channel, role, what, when));
             } else if (split[1] == "statundo") {
                 const coin = idToMeta(Number(split[2]));
-                const type = split[3] as AlertType;
+                const type = split[3] as AlertMethod;
                 const channel = split[4];
                 let res;
                 if (type == "guild") {
@@ -193,7 +160,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             } as APIModalInteractionResponse);
         } else if (interaction.data.custom_id.startsWith("coinalert_greater") || interaction.data.custom_id.startsWith("coinalert_less")) {
             const direction = interaction.data.custom_id.startsWith("coinalert_greater") ? ">" : "<";
-            const type = split[3] as AlertType;
+            const type = split[3] as AlertMethod;
             const what = split[6], when = split[7];
             const channel = split[4];
             const role = split[5];
@@ -202,7 +169,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             message.title = `Adding alert for ${coin.name}`;
             message.description = `Great! You will be **DM'ed** when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${new BigNumber(when).toString()}.
 
-If you want to add a custom message that will be attached with the alert when it triggers, you may click \`Add message\` to do so. If you wish to remove the message you have set, simply click \`Add message\` and submit an empty text box.
+If you want to add a custom message that will be attached with the alert when it triggers, you may click \`Edit message\` to do so. If you wish to remove the message you have set, simply click \`Edit message\` and submit an empty text box.
 
 Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`;
             await http.send({
@@ -230,7 +197,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                                     id: null
                                 },
                                 style: ButtonStyle.Primary,
-                                label: "Add message",
+                                label: "Edit message",
                                 custom_id: "coinalert_msg"
                             },
                             {
@@ -249,7 +216,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
             });
         } else if (interaction.data.custom_id.startsWith("coinalert_confirm")) {
             const coin = idToMeta(Number(split[2]));
-            const type = split[3] as AlertType;
+            const type = split[3] as AlertMethod;
             const channel = split[4];
             const role = split[5];
             const what = split[6];
@@ -268,7 +235,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                 alert.channel = channel;
                 alert.roleIdPing = role;
             }
-            alert.message = interaction.message.embeds[0].fields.length > 0 ? interaction.message.embeds[0].fields[0].value : null;
+            alert.message = interaction.message.embeds[0].fields ?? [].length > 0 ? interaction.message.embeds[0].fields[0].value : null;
             alert.disabled = false;
             const manageAlertLink = type == "dm" ? `</myalerts:${commandIds.get("myalerts")}>` : `</serveralerts:${commandIds.get("serveralerts")}>`;
             try {
@@ -312,6 +279,22 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
             });
         } else if (interaction.data.custom_id.startsWith("coinalert_guild") || interaction.data.custom_id.startsWith("coinalert_dm")) {
             const type = interaction.data.custom_id.startsWith("coinalert_guild") ? "guild" : "dm";
+            if (type == "guild" && !interaction.guild_id) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Tried to create guild alert in DMs",
+                    properties: {
+                        type: "coin"
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: You must be in a server to set up a guild alert.",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             const coin = idToMeta(Number(split[2]));
             let response;
             if (type == "guild") {
@@ -338,8 +321,8 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                             custom_id: "coinalert_msgmodalvalue",
                             style: TextInputStyle.Paragraph,
                             max_length: 250,
-                            required: true,
-                            placeholder: "Enter a message"
+                            required: false,
+                            placeholder: "Leave this blank to remove the message"
                         }]
                     }]
                 }
@@ -353,7 +336,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
         if (interaction.data.component_type == ComponentType.StringSelect) {
             if (interaction.data.custom_id.startsWith("coinalert_stat")) {
                 const coin = idToMeta(Number(split[2]));
-                const type = split[3] as AlertType;
+                const type = split[3] as AlertMethod;
                 const what = interaction.data.values[0];
                 const channel = split[4];
                 const role = split[5];
@@ -378,4 +361,41 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
         }
 
     }
+}
+
+export async function sendMsgModalReply(interaction: APIModalSubmitInteraction, http: FastifyReply) {
+    const msg = interaction.data.components[0].components[0].value;
+    if (msg.length > 250) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Invalid alert message input",
+            properties: {
+                input: msg
+            }
+        });
+        await http.send({
+            type: InteractionResponseType.ChannelMessageWithSource, data: {
+                content: "Error: Message is too long (max 250 characters)",
+                flags: MessageFlags.Ephemeral
+            }
+        });
+        return;
+    }
+    const cur = interaction.message;
+    if (msg) {
+        cur.embeds[0].fields = [{
+            name: "Current message",
+            value: msg
+        }];
+    } else if (cur.embeds[0].fields) {
+        cur.embeds[0].fields.length = 0;
+    }
+    await http.send({
+        type: InteractionResponseType.UpdateMessage,
+        data: {
+            embeds: cur.embeds,
+            components: cur.components,
+            flags: MessageFlags.Ephemeral
+        }
+    });
 }
