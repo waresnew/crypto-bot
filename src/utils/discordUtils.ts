@@ -181,8 +181,8 @@ export function validateRefresh(interaction: APIInteraction, latest: number, int
 
 export async function checkAlertCreatePerm(interaction: APIInteraction) {
     const role = await ServerSettings.findOne({guild: interaction.guild_id});
-    if (!role || !role.alertManagerRole === null || role && role.alertManagerRole) {
-        if (!role || !role.alertManagerRole === null || !interaction.member.roles.includes(role.alertManagerRole)) {
+    if (!role || role.alertManagerRole === null || role && role.alertManagerRole) {
+        if (!role || role.alertManagerRole === null || !interaction.member.roles.includes(role.alertManagerRole)) {
             analytics.track({
                 userId: interaction.user.id,
                 event: role ? "Attempted to use role locked cmd without role" : "Attempted to use role locked cmd without setting role"
