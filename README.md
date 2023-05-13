@@ -27,9 +27,12 @@ information.
 
 ### Price Alerts `/coinalert`
 
-Set up price alerts for your favourite coins.
+Set up price alerts for your favourite coins. These can either be sent to your DMs, or to a channel in the server. You
+can also specify a custom message to remind you (or your fellow members) why you set that alert.
 
 ![image3](https://i.imgur.com/O2GiBZJ.gif)
+
+![image4](https://i.imgur.com/N9JxSpg.png)
 
 ### Technical Analysis `/indicators`, `/patterns`, `/pivots`
 
