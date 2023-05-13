@@ -4,7 +4,7 @@ import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/
 import {Indexable} from "./utils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
-import {UserDatas} from "./database";
+import {ServerSettings, UserDatas} from "./database";
 
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
@@ -34,35 +34,63 @@ export const discordGot = got.extend({
 });
 //only two tokens allowed
 export const customIdVersions = {
-    coinalert_stat: "0.0.1",
-    coinalert_value: "0.0.1",
-    coinalert_thresholdmodal: "0.0.1",
-    coinalert_thresholdmodalvalue: "0.0.1",
-    coinalert_directiongreater: "0.0.1",
-    coinalert_directionless: "0.0.1",
-    coinalert_confirm: "0.0.1",
-    coinalert_confirmundo: "0.0.1",
-    coinalert_valueundo: "0.0.1",
-    coinalert_directionundo: "0.0.1",
+    coinalert_stat: "0.0.2",
+    coinalert_value: "0.0.2",
+    coinalert_thresholdmodal: "0.0.2",
+    coinalert_thresholdmodalvalue: "0.0.2",
+    coinalert_greater: "0.0.1",
+    coinalert_less: "0.0.1",
+    coinalert_confirm: "0.0.2",
+    coinalert_confirmundo: "0.0.2",
+    coinalert_valueundo: "0.0.2",
+    coinalert_directionundo: "0.0.2",
     coin_refresh: "0.0.1",
     myalerts_menu: "0.0.2",
     myalerts_enable: "0.0.2",
     myalerts_disable: "0.0.2",
     myalerts_delete: "0.0.2",
     myalerts_refresh: "0.0.2",
+    serveralerts_menu: "0.0.1",
+    serveralerts_enable: "0.0.1",
+    serveralerts_disable: "0.0.1",
+    serveralerts_delete: "0.0.1",
+    serveralerts_refresh: "0.0.1",
     gas_refresh: "0.0.1",
-    gasalert_speedslow: "0.0.1",
-    gasalert_speednormal: "0.0.1",
-    gasalert_speedfast: "0.0.1",
-    gasalert_thresholdundo: "0.0.1",
-    gasalert_confirmundo: "0.0.1",
-    gasalert_threshold: "0.0.1",
-    gasalert_thresholdmodal: "0.0.1",
-    gasalert_thresholdmodalvalue: "0.0.1",
-    gasalert_confirm: "0.0.1",
+    gasalert_speedslow: "0.0.2",
+    gasalert_speednormal: "0.0.2",
+    gasalert_speedfast: "0.0.2",
+    gasalert_thresholdundo: "0.0.2",
+    gasalert_confirmundo: "0.0.2",
+    gasalert_threshold: "0.0.2",
+    gasalert_thresholdmodal: "0.0.2",
+    gasalert_thresholdmodalvalue: "0.0.2",
+    gasalert_confirm: "0.0.2",
     indicators_refresh: "0.0.1",
     patterns_refresh: "0.0.1",
-    pivots_refresh: "0.0.1"
+    pivots_refresh: "0.0.1",
+    serversettings_alertManagerRole: "0.0.1",
+    coinalert_guild: "0.0.1",
+    coinalert_dm: "0.0.1",
+    coinalert_statundo: "0.0.1",
+    coinalert_channel: "0.0.1",
+    coinalert_channelundo: "0.0.1",
+    coinalert_role: "0.0.1",
+    coinalert_roleundo: "0.0.1",
+    coinalert_roleskip: "0.0.1",
+    coinalert_msg: "0.0.1",
+    coinalert_msgmodalvalue: "0.0.1",
+    coinalert_msgmodal: "0.0.1",
+    gasalert_channel: "0.0.1",
+    gasalert_channelundo: "0.0.1",
+    gasalert_role: "0.0.1",
+    gasalert_roleundo: "0.0.1",
+    gasalert_roleskip: "0.0.1",
+    gasalert_msg: "0.0.1",
+    gasalert_msgmodalvalue: "0.0.1",
+    gasalert_msgmodal: "0.0.1",
+    gasalert_guild: "0.0.1",
+    gasalert_dm: "0.0.1",
+    gasalert_speedundo: "0.0.1"
 } as Indexable;
 
 export function initClient(input: APIUser) {
@@ -94,7 +122,7 @@ function patchCustomId(id: string) {
     const key = id.split("_")[0] + "_" + id.split("_")[1];
     const latest = customIdVersions[key];
     if (!latest) {
-        return undefined;
+        throw new Error("customid version not found: " + key);
     }
     return latest + "_" + id;
 }
@@ -148,5 +176,18 @@ export function validateRefresh(interaction: APIInteraction, latest: number, int
             event: "Tried to refresh something that was already up to date"
         });
         throw new UserError("This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (curTime + interval) + ":R>.");
+    }
+}
+
+export async function checkAlertCreatePerm(interaction: APIInteraction) {
+    const role = await ServerSettings.findOne({guild: interaction.guild_id});
+    if (!role || role && role.alertManagerRole) {
+        if (!role || !interaction.member.roles.includes(role.alertManagerRole)) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: role ? "Attempted to use role locked cmd without role" : "Attempted to use role locked cmd without setting role"
+            });
+            throw new UserError(`You must have the required role to do this. Set one up with </serversettings:${commandIds.get("serversettings")}>`);
+        }
     }
 }

@@ -4,12 +4,14 @@ import rawBody from "fastify-raw-body";
 import {
     APIApplicationCommandAutocompleteInteraction,
     APIInteraction,
+    APIInteractionResponse,
     APIMessageComponentInteraction,
     APIModalSubmitInteraction,
     ComponentType,
     InteractionResponseType,
     InteractionType,
-    MessageFlags
+    MessageFlags,
+    PermissionFlagsBits
 } from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
@@ -17,9 +19,10 @@ import {
 import nacl from "tweetnacl";
 import {analytics, initAnalytics} from "./utils/analytics";
 import Sentry from "@sentry/node";
-import {mongoClient, openDb, UserDatas} from "./utils/database";
+import {mongoClient, openDb, ServerSettings, UserDatas} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
 import {
+    checkAlertCreatePerm,
     commandIds,
     commands,
     deepPatchCustomId,
@@ -28,6 +31,7 @@ import {
     userNotVotedRecently
 } from "./utils/discordUtils";
 import got from "got";
+import {UserError} from "./structs/userError";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();
@@ -102,10 +106,68 @@ server.route({
                     return;
                 }
             }
+            if (cmd.guildOnly) {
+                if (interaction.guild_id === undefined) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Attempted to use server cmd in DMs",
+                        properties: {
+                            command: cmd.name
+                        }
+                    });
+                    await response.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: "This command can only be used in a server."
+                        }
+                    } as APIInteractionResponse);
+                    return;
+
+                }
+            }
+            if (interaction.member && cmd.manageServerRequired) {
+                if (!(BigInt(interaction.member.permissions) & PermissionFlagsBits.ManageGuild)) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Attempted to use manage server cmd without perms",
+                        properties: {
+                            command: cmd.name
+                        }
+                    });
+                    await response.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: "You must have the Manage Server permission to use this command.",
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                }
+            }
+            if (interaction.member && cmd.name == "serveralerts") {
+                try {
+                    await checkAlertCreatePerm(interaction);
+                } catch (e) {
+                    if (e instanceof UserError) {
+                        await response.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: e.error,
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                        return;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
         }
         if (message.type == InteractionType.MessageComponent) {
             for (const cmd of commands.values()) {
-                if (cmd.voteRequired && message.data.custom_id.split("_")[1] == cmd.name && process.env["NODE_ENV"] == "production") {
+                if (message.data.custom_id.split("_")[1] != cmd.name) {
+                    continue;
+                }
+                if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
                     if (await userNotVotedRecently(message.user.id)) {
                         analytics.track({
                             userId: message.user.id,
@@ -119,6 +181,43 @@ server.route({
                         });
                         return;
                     }
+                }
+                if (message.member && cmd.manageServerRequired) {
+                    if (!(BigInt(message.member.permissions) & PermissionFlagsBits.ManageGuild)) {
+                        analytics.track({
+                            userId: message.user.id,
+                            event: "Attempted to use manage server cmd without perms",
+                            properties: {
+                                command: cmd.name
+                            }
+                        });
+                        await response.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: "You must have the Manage Server permission to use this command.",
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                    }
+                }
+                if (message.member && cmd.name == "serveralerts") {
+                    try {
+                        await checkAlertCreatePerm(message);
+                    } catch (e) {
+                        if (e instanceof UserError) {
+                            await response.send({
+                                type: InteractionResponseType.ChannelMessageWithSource,
+                                data: {
+                                    content: e.error,
+                                    flags: MessageFlags.Ephemeral
+                                }
+                            });
+                            return;
+                        } else {
+                            throw e;
+                        }
+                    }
+
                 }
             }
         }
@@ -166,6 +265,20 @@ server.route({
                     discriminator: message.user.discriminator
                 }
             });
+            if (!await UserDatas.findOne({user: message.user.id})) {
+                await UserDatas.insertOne({
+                    user: message.user.id,
+                    lastVoted: 0
+                });
+            }
+            if (message.guild_id) {
+                if (!await ServerSettings.findOne({guild: message.guild_id})) {
+                    await ServerSettings.insertOne({
+                        guild: message.guild_id,
+                        alertManagerRole: null
+                    });
+                }
+            }
         }
         if (message.type == InteractionType.Ping) {
             response.send({
@@ -195,10 +308,10 @@ server.route({
                     await processor.processButton(interaction, response);
                 }
 
-            } else if (interaction.data.component_type == ComponentType.StringSelect) {
+            } else if (interaction.data.component_type == ComponentType.StringSelect || interaction.data.component_type == ComponentType.RoleSelect || interaction.data.component_type == ComponentType.ChannelSelect) {
                 const processor = interactionProcessors.get(origin) as any;
                 if (processor) {
-                    await processor.processStringSelect(interaction, response);
+                    await processor.processSelect(interaction, response);
                 }
             }
         } else if (message.type == InteractionType.ModalSubmit) {

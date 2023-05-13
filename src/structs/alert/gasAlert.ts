@@ -1,10 +1,9 @@
 
 //eth only
-export class GasAlert {
+export abstract class GasAlert {
     //slow, normal, fast
-    user: string;
     speed: string;
     threshold: string;
     disabled: boolean;
-
+    message: string;
 }

@@ -1,6 +1,6 @@
 import {APIChannel} from "discord-api-types/v10";
 import nock from "nock";
-import {CoinAlerts} from "../src/utils/database";
+import {DmCoinAlerts} from "../src/utils/database";
 import {notifyExpiredCoins} from "../src/services/alertChecker";
 import {validCryptos} from "../src/utils/coinUtils";
 
@@ -15,8 +15,8 @@ describe("Checks if expired coins are handled properly", function () {
             direction: ">",
             disabled: false
         };
-        await CoinAlerts.insertOne(alert);
-        expect((await CoinAlerts.findOne({user: "1234567890"})).threshold).toBe("50");
+        await DmCoinAlerts.insertOne(alert);
+        expect((await DmCoinAlerts.findOne({user: "1234567890"})).threshold).toBe("50");
         nock("https://discord.com")
             .get("/api/v10/users/@me/channels")
             .reply(200, {
@@ -36,6 +36,6 @@ describe("Checks if expired coins are handled properly", function () {
         const oldCryptos = validCryptos.slice();
         validCryptos.length = 0;
         await notifyExpiredCoins(oldCryptos);
-        expect((await CoinAlerts.find({}).toArray()).length).toBe(0);
+        expect((await DmCoinAlerts.find({}).toArray()).length).toBe(0);
     });
 });

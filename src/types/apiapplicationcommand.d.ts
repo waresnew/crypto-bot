@@ -8,5 +8,8 @@ declare module "discord-api-types/v10" {
         autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply);
 
         voteRequired: boolean;
+
+        guildOnly: boolean;
+        manageServerRequired: boolean;
     }
 }

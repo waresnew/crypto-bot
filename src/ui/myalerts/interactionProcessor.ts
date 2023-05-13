@@ -4,6 +4,7 @@ import {
     APIInteraction,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
+    ComponentType,
     InteractionResponseType,
     MessageFlags
 } from "discord-api-types/v10";
@@ -12,36 +13,40 @@ import {analytics} from "../../utils/analytics";
 import {commandIds} from "../../utils/discordUtils";
 import {getAlertDb, parseAlertId, parsePrettyAlert} from "../../utils/alertUtils";
 
-export default class AlertsInteractionProcessor extends InteractionProcessor {
+export default class MyAlertsInteractionProcessor extends InteractionProcessor {
     /* istanbul ignore next */
-    static override async processStringSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-        if (interaction.data.custom_id.startsWith("myalerts_menu")) {
-            if (interaction.data.values[0] == "default") {
-                const coinLink = `</coin:${commandIds.get("coin")}>`;
+    static override async processSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply, guild = false) {
+        const prefix = guild ? "serveralerts" : "myalerts";
+        if (interaction.data.component_type == ComponentType.StringSelect) {
+            if (interaction.data.custom_id.startsWith(`${prefix}_menu`)) {
+                if (interaction.data.values[0] == "default") {
+                    const coinLink = `</coin:${commandIds.get("coin")}>`;
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource, data: {
+                            content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
+                const converted = await Promise.all(interaction.data.values.map(async value => await parseAlertId(value, interaction, guild)));
+                const instructions = await makeEmbed(converted, interaction, guild);
                 await http.send({
-                    type: InteractionResponseType.ChannelMessageWithSource, data: {
-                        content: `Error: You have not added any alerts. Please use ${coinLink} on a coin and then click "Add alert" before proceeding.`,
+                    type: InteractionResponseType.UpdateMessage, data: {
+                        embeds: [instructions],
+                        components: [await makeAlertsMenu(interaction, guild), await makeButtons(guild)],
                         flags: MessageFlags.Ephemeral
                     }
                 });
-                return;
             }
-            const converted = await Promise.all(interaction.data.values.map(async value => await parseAlertId(value, interaction)));
-            const instructions = await makeEmbed(converted, interaction);
-            await http.send({
-                type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [instructions],
-                    components: [await makeAlertsMenu(interaction), await makeButtons()],
-                    flags: MessageFlags.Ephemeral
-                }
-            });
         }
     }
 
     /* istanbul ignore next */
-    static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply) {
-        const selected = await AlertsInteractionProcessor.parseSelected(interaction);
-        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp("myalerts_refresh"))) {
+    static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply, guild = false) {
+        const selected = await MyAlertsInteractionProcessor.parseSelected(interaction, guild);
+        const prefix = guild ? "serveralerts" : "myalerts";
+        if (selected.length == 0 && !interaction.data.custom_id.match(new RegExp(`${prefix}_refresh`))) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Performed batch operation with 0 selected",
@@ -57,7 +62,7 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             });
             return;
         }
-        if (interaction.data.custom_id.startsWith("myalerts_enable")) {
+        if (interaction.data.custom_id.startsWith(`${prefix}_enable`)) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Enabled selected alerts",
@@ -79,11 +84,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons()]
+                    embeds: [await makeEmbed(selected, interaction, guild)],
+                    components: [await makeAlertsMenu(interaction, guild), await makeButtons(guild)]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("myalerts_disable")) {
+        } else if (interaction.data.custom_id.startsWith(`${prefix}_disable`)) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Disabled selected alerts",
@@ -104,11 +109,11 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons()]
+                    embeds: [await makeEmbed(selected, interaction, guild)],
+                    components: [await makeAlertsMenu(interaction, guild), await makeButtons(guild)]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("myalerts_delete")) {
+        } else if (interaction.data.custom_id.startsWith(`${prefix}_delete`)) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Deleted selected alerts",
@@ -122,19 +127,19 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
             selected.length = 0;
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    embeds: [await makeEmbed(selected, interaction)],
-                    components: [await makeAlertsMenu(interaction), await makeButtons()]
+                    embeds: [await makeEmbed(selected, interaction, guild)],
+                    components: [await makeAlertsMenu(interaction, guild), await makeButtons(guild)]
                 }
             });
-        } else if (interaction.data.custom_id.startsWith("myalerts_refresh")) {
+        } else if (interaction.data.custom_id.startsWith(`${prefix}_refresh`)) {
             analytics.track({
                 userId: interaction.user.id,
                 event: "Refreshed /myalerts page"
             });
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    components: [await makeAlertsMenu(interaction), makeButtons()],
-                    embeds: [await makeEmbed(selected, interaction)],
+                    components: [await makeAlertsMenu(interaction, guild), makeButtons(guild)],
+                    embeds: [await makeEmbed(selected, interaction, guild)],
                     flags: MessageFlags.Ephemeral
                 }
             });
@@ -143,10 +148,10 @@ export default class AlertsInteractionProcessor extends InteractionProcessor {
     }
 
     /* istanbul ignore next */
-    static async parseSelected(interaction: APIInteraction) {
+    static async parseSelected(interaction: APIInteraction, guild: boolean) {
         const selected = [];
         for (const line of interaction.message.embeds[0].description.split("\n")) {
-            const result = parsePrettyAlert(line, interaction);
+            const result = await parsePrettyAlert(line, interaction, guild);
             if (result != null) {
                 selected.push(result);
             }

@@ -1,33 +1,6 @@
 import {UserError} from "../structs/userError";
 import BigNumber from "bignumber.js";
 
-export function scientificNotationToNumber(input: string): string {
-    const tokens = input.split("e");
-    if (tokens.length == 1) {
-        return input;
-    }
-    if (Number(input) < 1) {
-        const left = Math.max(1, tokens[0].indexOf("."));
-        let ans = "0.";
-        for (let i = 0; i < Math.abs(Number(tokens[1])) - left; i++) {
-            ans += "0";
-        }
-        ans += tokens[0].replace(".", "");
-        return ans;
-    } else if (Number(input) >= 1) {
-        const point = Math.max(1, tokens[0].indexOf("."));
-        const newPoint = point + Number(tokens[1]);
-        let ans = tokens[0].replace(".", "");
-        if (newPoint <= ans.length) {
-            ans = ans.substring(0, newPoint) + (newPoint == ans.length ? "" : "." + ans.substring(newPoint));
-        } else {
-            ans += "0".repeat(newPoint - (ans.length - point) - 1);
-        }
-        return ans;
-    }
-    return input;
-}
-
 export function validateWhen(when: string) {
     if (!when) {
         throw new UserError("Error: You did not specify a threshold. Please try again.");
@@ -45,4 +18,13 @@ export function validateWhen(when: string) {
 
 export interface Indexable {
     [index: string]: any;
+}
+
+export function deleteUndefinedProps(obj: any) {
+    for (const key of Object.keys(obj)) {
+        if (obj[key] === undefined) {
+            delete obj[key];
+        }
+    }
+    return obj;
 }
