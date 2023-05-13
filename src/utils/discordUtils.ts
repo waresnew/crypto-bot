@@ -4,7 +4,7 @@ import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/
 import {Indexable} from "./utils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
-import {UserDatas} from "./database";
+import {ServerSettings, UserDatas} from "./database";
 
 /**key=command name */
 export const interactionProcessors = new Map<string, InteractionProcessor>();
@@ -176,5 +176,18 @@ export function validateRefresh(interaction: APIInteraction, latest: number, int
             event: "Tried to refresh something that was already up to date"
         });
         throw new UserError("This panel has not been updated since the last time you refreshed it.\nPlease try again <t:" + (curTime + interval) + ":R>.");
+    }
+}
+
+export async function checkAlertCreatePerm(interaction: APIInteraction) {
+    const role = await ServerSettings.findOne({guild: interaction.guild_id});
+    if (!role || role && role.alertManagerRole) {
+        if (!role || !interaction.member.roles.includes(role.alertManagerRole)) {
+            analytics.track({
+                userId: interaction.user.id,
+                event: role ? "Attempted to use role locked cmd without role" : "Attempted to use role locked cmd without setting role"
+            });
+            throw new UserError(`You must have the required role to do this. Set one up with </serversettings:${commandIds.get("serversettings")}>`);
+        }
     }
 }

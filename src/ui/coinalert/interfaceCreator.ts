@@ -3,6 +3,7 @@ import {
     APIInteraction,
     APIInteractionResponse,
     ButtonStyle,
+    ChannelType,
     ComponentType,
     InteractionResponseType,
     MessageFlags
@@ -162,7 +163,8 @@ export function makeChannelPrompt(interaction: APIInteraction, coin: CoinMetadat
                     components: [{
                         type: ComponentType.ChannelSelect,
                         placeholder: "Select a channel...",
-                        custom_id: `coinalert_channel_${coin.cmc_id}`
+                        custom_id: `coinalert_channel_${coin.cmc_id}`,
+                        channel_types: [ChannelType.GuildText]
                     }]
                 },
                 {

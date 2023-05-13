@@ -10,5 +10,6 @@ declare module "discord-api-types/v10" {
         voteRequired: boolean;
 
         guildOnly: boolean;
+        manageServerRequired: boolean;
     }
 }

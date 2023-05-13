@@ -10,7 +10,8 @@ import {
     ComponentType,
     InteractionResponseType,
     InteractionType,
-    MessageFlags
+    MessageFlags,
+    PermissionFlagsBits
 } from "discord-api-types/v10";
 import {
     APIChatInputApplicationCommandInteraction
@@ -21,6 +22,7 @@ import Sentry from "@sentry/node";
 import {mongoClient, openDb, ServerSettings, UserDatas} from "./utils/database";
 import {setRetry, ws} from "./services/binanceWs";
 import {
+    checkAlertCreatePerm,
     commandIds,
     commands,
     deepPatchCustomId,
@@ -29,6 +31,7 @@ import {
     userNotVotedRecently
 } from "./utils/discordUtils";
 import got from "got";
+import {UserError} from "./structs/userError";
 
 await openDb(process.env["MONGO_URL"], `crypto-bot-${process.env["NODE_ENV"]}`);
 initAnalytics();
@@ -121,10 +124,49 @@ server.route({
                 }
                 return;
             }
+            if (interaction.member && cmd.manageServerRequired) {
+                if (!(BigInt(interaction.member.permissions) & PermissionFlagsBits.ManageGuild)) {
+                    analytics.track({
+                        userId: interaction.user.id,
+                        event: "Attempted to use manage server cmd without perms",
+                        properties: {
+                            command: cmd.name
+                        }
+                    });
+                    await response.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: "You must have the Manage Server permission to use this command.",
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                }
+            }
+            if (interaction.member && cmd.name == "serveralerts") {
+                try {
+                    await checkAlertCreatePerm(interaction);
+                } catch (e) {
+                    if (e instanceof UserError) {
+                        await response.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: e.error,
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                        return;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
         }
         if (message.type == InteractionType.MessageComponent) {
             for (const cmd of commands.values()) {
-                if (cmd.voteRequired && message.data.custom_id.split("_")[1] == cmd.name && process.env["NODE_ENV"] == "production") {
+                if (message.data.custom_id.split("_")[1] != cmd.name) {
+                    continue;
+                }
+                if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
                     if (await userNotVotedRecently(message.user.id)) {
                         analytics.track({
                             userId: message.user.id,
@@ -138,6 +180,43 @@ server.route({
                         });
                         return;
                     }
+                }
+                if (message.member && cmd.manageServerRequired) {
+                    if (!(BigInt(message.member.permissions) & PermissionFlagsBits.ManageGuild)) {
+                        analytics.track({
+                            userId: message.user.id,
+                            event: "Attempted to use manage server cmd without perms",
+                            properties: {
+                                command: cmd.name
+                            }
+                        });
+                        await response.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: "You must have the Manage Server permission to use this command.",
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                    }
+                }
+                if (message.member && cmd.name == "serveralerts") {
+                    try {
+                        await checkAlertCreatePerm(message);
+                    } catch (e) {
+                        if (e instanceof UserError) {
+                            await response.send({
+                                type: InteractionResponseType.ChannelMessageWithSource,
+                                data: {
+                                    content: e.error,
+                                    flags: MessageFlags.Ephemeral
+                                }
+                            });
+                            return;
+                        } else {
+                            throw e;
+                        }
+                    }
+
                 }
             }
         }

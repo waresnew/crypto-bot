@@ -26,7 +26,7 @@ import {analytics} from "../../utils/analytics";
 import {getEmbedTemplate} from "../templates";
 import {AlertMethod, validateAlert} from "../../utils/alertUtils";
 import {DmGasAlerts, GuildGasAlerts} from "../../utils/database";
-import {commandIds} from "../../utils/discordUtils";
+import {checkAlertCreatePerm, commandIds} from "../../utils/discordUtils";
 import {UserError} from "../../structs/userError";
 import {GuildGasAlert} from "../../structs/alert/guildGasAlert";
 import {DmGasAlert} from "../../structs/alert/dmGasAlert";
@@ -174,6 +174,23 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                     }
                 });
                 return;
+            }
+            if (type == "guild") {
+                try {
+                    await checkAlertCreatePerm(interaction);
+                } catch (e) {
+                    if (e instanceof UserError) {
+                        await http.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: e.error,
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
             }
             let response;
             if (type == "guild") {

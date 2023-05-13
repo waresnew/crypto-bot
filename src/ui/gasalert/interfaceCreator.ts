@@ -2,6 +2,7 @@
 import {
     APIInteractionResponse,
     ButtonStyle,
+    ChannelType,
     ComponentType,
     InteractionResponseType,
     MessageFlags
@@ -167,7 +168,8 @@ export function makeChannelPrompt() {
                     components: [{
                         type: ComponentType.ChannelSelect,
                         placeholder: "Select a channel...",
-                        custom_id: "gasalert_channel"
+                        custom_id: "gasalert_channel",
+                        channel_types: [ChannelType.GuildText]
                     }]
                 },
                 {

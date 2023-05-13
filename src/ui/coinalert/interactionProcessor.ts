@@ -27,7 +27,7 @@ import {
 } from "./interfaceCreator";
 import {idToMeta} from "../../structs/coinMetadata";
 import {DmCoinAlerts, GuildCoinAlerts} from "../../utils/database";
-import {commandIds} from "../../utils/discordUtils";
+import {checkAlertCreatePerm, commandIds} from "../../utils/discordUtils";
 import {validateWhen} from "../../utils/utils";
 import {AlertMethod, validateAlert} from "../../utils/alertUtils";
 import {UserError} from "../../structs/userError";
@@ -294,6 +294,23 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                     }
                 });
                 return;
+            }
+            if (type == "guild") {
+                try {
+                    await checkAlertCreatePerm(interaction);
+                } catch (e) {
+                    if (e instanceof UserError) {
+                        await http.send({
+                            type: InteractionResponseType.ChannelMessageWithSource,
+                            data: {
+                                content: e.error,
+                                flags: MessageFlags.Ephemeral
+                            }
+                        });
+                    } else {
+                        throw e;
+                    }
+                }
             }
             const coin = idToMeta(Number(split[2]));
             let response;

@@ -15,6 +15,7 @@ export default {
     type: ApplicationCommandType.ChatInput,
     description: "Adjust server-specific settings",
     guildOnly: true,
+    manageServerRequired: true,
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource,
