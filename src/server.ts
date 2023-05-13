@@ -121,8 +121,9 @@ server.route({
                             content: "This command can only be used in a server."
                         }
                     } as APIInteractionResponse);
+                    return;
+
                 }
-                return;
             }
             if (interaction.member && cmd.manageServerRequired) {
                 if (!(BigInt(interaction.member.permissions) & PermissionFlagsBits.ManageGuild)) {
