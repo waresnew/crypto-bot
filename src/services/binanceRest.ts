@@ -105,9 +105,12 @@ export async function updateBinanceApi() {
     }
     const binancePromises = [];
     let weightUsed = 0;
+    let maxLimit = 0;
     binancePromises.push(...symbols.map(async symbol => {
         weightUsed++;
-        return got(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id)}`, {
+        const limit = await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id);
+        maxLimit = Math.max(maxLimit, limit);
+        return got(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${limit}`, {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
@@ -134,7 +137,7 @@ export async function updateBinanceApi() {
             };
         }));
     }
-    console.log(`Weight used: ${weightUsed}/1200`);
+    console.log(`Weight used: ${weightUsed}/1200, Max limit: ${maxLimit}`);
     const responses = await Promise.all(binancePromises);
     const start2 = Date.now();
     const session = mongoClient.startSession();

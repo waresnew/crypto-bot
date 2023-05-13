@@ -5,4 +5,5 @@ export abstract class GasAlert {
     speed: string;
     threshold: string;
     disabled: boolean;
+    message: string;
 }

@@ -49,16 +49,17 @@ export async function validateAlert(alert: Alert) {
     } else if (alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert) {
         alerts = [...await GuildCoinAlerts.find({guild: alert.guild}).toArray(), ...await GuildCoinAlerts.find({guild: alert.guild}).toArray()];
     }
-    if (alerts.length >= 25) {
-        if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
-            analytics.track({
-                userId: alert.user,
-                event: "Alert Creation Failed",
-                properties: {
-                    reason: "Too many alerts"
-                }
-            });
-        }
+    const isDm = alert instanceof DmCoinAlert || alert instanceof DmGasAlert;
+    const isGuild = alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert;
+    if (isDm && alerts.length >= 25 || isGuild && alerts.length >= 10) {
+        analytics.track({
+            userId: isDm ? alert.user : isGuild ? alert.guild : null,
+            event: "Alert Creation Failed",
+            properties: {
+                reason: "Too many alerts"
+            }
+        });
+
         throw new UserError(`Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
     }
     if (await getAlertDb(alert).findOne(alert)) {
@@ -273,12 +274,18 @@ export async function parseAlertId(id: string, interaction: APIInteraction, guil
 
 //duck typing :vomit:
 export function formatAlert(alert: Alert) {
+    let result;
     if ("coin" in alert) {
-        return formatCoinAlert(alert);
+        result = formatCoinAlert(alert);
     } else if ("speed" in alert) {
-        return formatGasAlert(alert);
+        result = formatGasAlert(alert);
+    } else {
+        throw new Error("Invalid alert type");
     }
-    throw new Error("Invalid alert type");
+    if (alert.message) {
+        result += ` (${alert.message})`;
+    }
+    return result + "\n";
 }
 
 export async function checkAlert(alert: Alert) {

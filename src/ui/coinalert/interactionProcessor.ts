@@ -79,6 +79,22 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             await http.send(makeDirectionPrompt(interaction, coin, type, channel, role, what, when));
         } else if (interaction.data.custom_id.startsWith("coinalert_msgmodal")) {
             const msg = interaction.data.components[0].components[0].value;
+            if (msg.length > 250) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Invalid alert message input",
+                    properties: {
+                        input: msg
+                    }
+                });
+                await http.send({
+                    type: InteractionResponseType.ChannelMessageWithSource, data: {
+                        content: "Error: Message is too long (max 250 characters)",
+                        flags: MessageFlags.Ephemeral
+                    }
+                });
+                return;
+            }
             const cur = interaction.message;
             if (msg) {
                 cur.embeds[0].fields = [{
@@ -288,7 +304,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}. Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers.`,
+                    content: `Done! Added and enabled alert for ${coin.name}. Manage your alerts with ${manageAlertLink}. ` + (type == "guild" ? "Please ensure Botchain has permissions to send messages in the channel you specified." : "Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers."),
                     flags: MessageFlags.Ephemeral,
                     embeds: [],
                     components: []
@@ -321,7 +337,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                             label: "What message should be attached?",
                             custom_id: "coinalert_msgmodalvalue",
                             style: TextInputStyle.Paragraph,
-                            max_length: 1000,
+                            max_length: 250,
                             required: true,
                             placeholder: "Enter a message"
                         }]
