@@ -19,3 +19,12 @@ export function validateWhen(when: string) {
 export interface Indexable {
     [index: string]: any;
 }
+
+export function deleteUndefinedProps(obj: any) {
+    for (const key of Object.keys(obj)) {
+        if (obj[key] === undefined) {
+            delete obj[key];
+        }
+    }
+    return obj;
+}

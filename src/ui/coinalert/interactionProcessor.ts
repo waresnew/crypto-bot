@@ -254,7 +254,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
             }
             alert.message = interaction.message.embeds[0].fields.length > 0 ? interaction.message.embeds[0].fields[0].value : null;
             alert.disabled = false;
-            const manageAlertLink = type == "dm" ? `</myalerts:${commandIds.get("myalerts")}>` : "**server alert placeholder**"; //todo
+            const manageAlertLink = type == "dm" ? `</myalerts:${commandIds.get("myalerts")}>` : `</serveralerts:${commandIds.get("serveralerts")}>`;
             try {
                 await validateAlert(alert);
             } catch (e) {

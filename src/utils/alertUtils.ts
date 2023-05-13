@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import {CoinAlert} from "../structs/alert/coinAlert";
 import {getLatestCandle, validCryptos} from "./coinUtils";
-import {DmCoinAlerts, DmGasAlerts, LatestCoins} from "./database";
+import {DmCoinAlerts, DmGasAlerts, GuildCoinAlerts, GuildGasAlerts, LatestCoins} from "./database";
 import CryptoStat from "../structs/cryptoStat";
 import {idToMeta, nameToMeta} from "../structs/coinMetadata";
 import {GasAlert} from "../structs/alert/gasAlert";
@@ -11,6 +11,11 @@ import {commandIds} from "./discordUtils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
 import BigNumber from "bignumber.js";
+import {DmCoinAlert} from "../structs/alert/dmCoinAlert";
+import {GuildCoinAlert} from "../structs/alert/guildCoinAlert";
+import {DmGasAlert} from "../structs/alert/dmGasAlert";
+import {GuildGasAlert} from "../structs/alert/guildGasAlert";
+import {deleteUndefinedProps} from "./utils";
 
 type Alert = CoinAlert | GasAlert;
 export type AlertType = "guild" | "dm";
@@ -37,26 +42,35 @@ export function evalInequality(expr: string) {
 }
 
 export async function validateAlert(alert: Alert) {
-    const manageAlertLink = `</myalerts:${commandIds.get("myalerts")}>`;
-    const alerts = [...await DmCoinAlerts.find({user: alert.user}).toArray(), ...await DmGasAlerts.find({user: alert.user}).toArray()];
+    const manageAlertLink = alert instanceof DmCoinAlert || alert instanceof DmGasAlert ? `</myalerts:${commandIds.get("myalerts")}>` : `</serveralerts:${commandIds.get("serveralerts")}>`;
+    let alerts;
+    if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
+        alerts = [...await DmCoinAlerts.find({user: alert.user}).toArray(), ...await DmGasAlerts.find({user: alert.user}).toArray()];
+    } else if (alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert) {
+        alerts = [...await GuildCoinAlerts.find({guild: alert.guild}).toArray(), ...await GuildCoinAlerts.find({guild: alert.guild}).toArray()];
+    }
     if (alerts.length >= 25) {
-        analytics.track({
-            userId: alert.user,
-            event: "Alert Creation Failed",
-            properties: {
-                reason: "Too many alerts"
-            }
-        });
+        if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
+            analytics.track({
+                userId: alert.user,
+                event: "Alert Creation Failed",
+                properties: {
+                    reason: "Too many alerts"
+                }
+            });
+        }
         throw new UserError(`Error: You can not have more than 25 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
     }
     if (await getAlertDb(alert).findOne(alert)) {
-        analytics.track({
-            userId: alert.user,
-            event: "Alert Creation Failed",
-            properties: {
-                reason: "Duplicate alert"
-            }
-        });
+        if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
+            analytics.track({
+                userId: alert.user,
+                event: "Alert Creation Failed",
+                properties: {
+                    reason: "Duplicate alert"
+                }
+            });
+        }
         throw new UserError(`Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`);
     }
 }
@@ -99,21 +113,33 @@ function formatGasAlert(alert: GasAlert) {
     return `When gas for a ${alert.speed} transaction is less than ${alert.threshold} gwei`;
 }
 
-async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
-    const alert = new CoinAlert();
+async function parseIdCoinAlert(id: string, interaction: APIInteraction, guild: boolean) {
+    const alert = guild ? new GuildCoinAlert() : new DmCoinAlert();
     const tokens = id.split("_").slice(1); //remove coin_ prefix
     alert.coin = Number(tokens[0]);
     alert.stat = tokens[1];
     alert.threshold = tokens[2];
     alert.direction = tokens[3] as "<" | ">";
-    alert.user = interaction.user.id;
-    const old = await DmCoinAlerts.findOne({
-        coin: alert.coin,
-        stat: alert.stat,
-        threshold: alert.threshold,
-        direction: alert.direction,
-        user: alert.user
-    });
+    let old;
+    if (alert instanceof GuildCoinAlert) {
+        alert.guild = interaction.guild_id;
+        old = await GuildCoinAlerts.findOne({
+            coin: alert.coin,
+            stat: alert.stat,
+            threshold: alert.threshold,
+            direction: alert.direction,
+            guild: alert.guild
+        });
+    } else {
+        alert.user = interaction.user.id;
+        old = await DmCoinAlerts.findOne({
+            coin: alert.coin,
+            stat: alert.stat,
+            threshold: alert.threshold,
+            direction: alert.direction,
+            user: alert.user
+        });
+    }
     if (!old) {
         alert.disabled = false;
     } else {
@@ -122,17 +148,27 @@ async function parseIdCoinAlert(id: string, interaction: APIInteraction) {
     return alert;
 }
 
-async function parseIdGasAlert(id: string, interaction: APIInteraction) {
-    const alert = new GasAlert();
+async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: boolean) {
+    const alert = guild ? new GuildGasAlert() : new DmGasAlert();
     const tokens = id.split("_").slice(1); //remove gas_ prefix
     alert.speed = tokens[0];
     alert.threshold = tokens[1];
-    alert.user = interaction.user.id;
-    const old = await DmGasAlerts.findOne({
-        speed: alert.speed,
-        threshold: alert.threshold,
-        user: alert.user
-    });
+    let old;
+    if (alert instanceof GuildGasAlert) {
+        alert.guild = interaction.guild_id;
+        old = await GuildGasAlerts.findOne({
+            speed: alert.speed,
+            threshold: alert.threshold,
+            guild: alert.guild
+        });
+    } else {
+        alert.user = interaction.user.id;
+        old = await DmGasAlerts.findOne({
+            speed: alert.speed,
+            threshold: alert.threshold,
+            user: alert.user
+        });
+    }
     if (!old) {
         alert.disabled = false;
     } else {
@@ -141,10 +177,14 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction) {
     return alert;
 }
 
-function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction) {
+function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     const input = pretty.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));
-    const alert = new CoinAlert();
-    alert.user = interaction.user.id;
+    const alert = guild ? new GuildCoinAlert() : new DmCoinAlert();
+    if (alert instanceof GuildCoinAlert) {
+        alert.guild = interaction.guild_id;
+    } else {
+        alert.user = interaction.user.id;
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
     alert.coin = nameToMeta(input[3]).cmc_id;
@@ -154,10 +194,14 @@ function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction) {
     return alert;
 }
 
-function parsePrettyGasAlert(pretty: string, interaction: APIInteraction) {
+function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/));
-    const alert = new GasAlert();
-    alert.user = interaction.user.id;
+    const alert = guild ? new GuildGasAlert() : new DmGasAlert();
+    if (alert instanceof GuildGasAlert) {
+        alert.guild = interaction.guild_id;
+    } else {
+        alert.user = interaction.user.id;
+    }
     alert.speed = input[2];
     alert.threshold = input[3];
     alert.disabled = input[1] == "❌";
@@ -184,9 +228,17 @@ function makeGasAlertSelectEntry(alert: GasAlert) {
 
 export function getAlertDb(alert: Alert) {
     if ("coin" in alert) {
-        return DmCoinAlerts;
+        if ("user" in alert) {
+            return DmCoinAlerts;
+        } else if ("guild" in alert) {
+            return GuildCoinAlerts;
+        }
     } else if ("speed" in alert) {
-        return DmGasAlerts;
+        if ("user" in alert) {
+            return DmGasAlerts;
+        } else if ("guild" in alert) {
+            return GuildGasAlerts;
+        }
     }
     throw new Error("Invalid alert type");
 }
@@ -200,22 +252,21 @@ export function makeAlertSelectEntry(alert: Alert) {
     throw new Error("Invalid alert type");
 }
 
-export function parsePrettyAlert(pretty: string, interaction: APIInteraction) {
-    const stats = CryptoStat.listLongs().join("|");
+export function parsePrettyAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
     if (new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/).test(pretty)) {
-        return parsePrettyCoinAlert(pretty, interaction);
+        return deleteUndefinedProps(parsePrettyCoinAlert(pretty, interaction, guild));
     } else if (new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/).test(pretty)) {
-        return parsePrettyGasAlert(pretty, interaction);
+        return deleteUndefinedProps(parsePrettyGasAlert(pretty, interaction, guild));
     } else {
         return null;
     }
 }
 
-export async function parseAlertId(id: string, interaction: APIInteraction) {
+export async function parseAlertId(id: string, interaction: APIInteraction, guild: boolean) {
     if (id.startsWith("gas")) {
-        return parseIdGasAlert(id, interaction);
+        return deleteUndefinedProps(await parseIdGasAlert(id, interaction, guild));
     } else if (id.startsWith("coin")) {
-        return parseIdCoinAlert(id, interaction);
+        return deleteUndefinedProps(await parseIdCoinAlert(id, interaction, guild));
     }
     throw new Error("Invalid alert type");
 }

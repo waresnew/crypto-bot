@@ -187,7 +187,7 @@ export function makeChannelPrompt(interaction: APIInteraction, coin: CoinMetadat
 export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetadata, channel: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = "Please select a role to ping when the alert is triggered.\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
+    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anynone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
     return {
         type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],

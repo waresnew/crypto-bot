@@ -3,22 +3,23 @@
 import {Collection, Db, MongoClient} from "mongodb";
 import {Candle} from "../structs/candle";
 import {LatestCoin} from "../structs/latestCoin";
-import {GasAlert} from "../structs/alert/gasAlert";
 import {UserData} from "../structs/userdata";
 import {ServerSetting} from "../structs/serverSetting";
 import {DmCoinAlert} from "../structs/alert/dmCoinAlert";
 import {GuildCoinAlert} from "../structs/alert/guildCoinAlert";
+import {DmGasAlert} from "../structs/alert/dmGasAlert";
+import {GuildGasAlert} from "../structs/alert/guildGasAlert";
 
 export let db: Db = null;
 export let mongoClient: MongoClient = null;
 export let Candles: Collection<Candle> = null;
 export let DmCoinAlerts: Collection<DmCoinAlert> = null;
 export let GuildCoinAlerts: Collection<GuildCoinAlert> = null;
-export let DmGasAlerts: Collection<GasAlert> = null;
+export let DmGasAlerts: Collection<DmGasAlert> = null;
 export let LatestCoins: Collection<LatestCoin> = null;
 export let UserDatas: Collection<UserData> = null;
 export let ServerSettings: Collection<ServerSetting> = null;
-
+export let GuildGasAlerts: Collection<GuildGasAlert> = null;
 export async function openDb(url: string, dbName: string) {
     mongoClient = await MongoClient.connect(url);
     console.log("Connected to MongoDB");
@@ -30,6 +31,7 @@ export async function openDb(url: string, dbName: string) {
     UserDatas = db.collection("userdatas");
     ServerSettings = db.collection("serversettings");
     GuildCoinAlerts = db.collection("guildcoinalerts");
+    GuildGasAlerts = db.collection("guildgasalerts");
     await Candles.createIndex({coin: 1, open_time: -1}, {unique: true});
     await DmCoinAlerts.createIndex({
         coin: 1,
@@ -47,7 +49,9 @@ export async function openDb(url: string, dbName: string) {
         direction: 1,
         disabled: 1
     }, {unique: true});
-
+    await GuildGasAlerts.createIndex({
+        guild: 1, speed: 1, threshold: 1
+    }, {unique: true});
     await LatestCoins.createIndex({coin: 1}, {unique: true});
     await DmGasAlerts.createIndex({user: 1, speed: 1, threshold: 1}, {unique: true});
     await UserDatas.createIndex({user: 1}, {unique: true});
