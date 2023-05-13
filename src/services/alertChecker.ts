@@ -143,7 +143,7 @@ export async function triggerAlerts() {
             }
             toMsgChannel.get(alert.channel).push({
                 msg: formatAlert(alert),
-                role: !alert.roleIdPing ? null : `<@&${alert.roleIdPing}>`
+                role: alert.roleIdPing == "null" ? null : `<@&${alert.roleIdPing}>`
             });
             await getAlertDb(alert).updateOne(alert, {
                 $set: {
