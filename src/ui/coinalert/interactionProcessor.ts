@@ -167,7 +167,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             const coin = idToMeta(Number(split[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
-            message.description = `Great! You will be **DM'ed** when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${new BigNumber(when).toString()}.
+            message.description = `Great! A message will be sent to ${type == "dm" ? "your **DMs**" : `<#${channel}>`} when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${new BigNumber(when).toString()}.
 
 If you want to add a custom message that will be attached with the alert when it triggers, you may click \`Edit message\` to do so. If you wish to remove the message you have set, simply click \`Edit message\` and submit an empty text box.
 

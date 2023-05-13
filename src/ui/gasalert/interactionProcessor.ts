@@ -267,7 +267,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                         {
                             ...getEmbedTemplate(),
                             title: "Adding alert for Ethereum Gas Prices",
-                            description: `Great! You will be **DM'ed** when the gas fee for a ${speed} transaction is less than ${when}.
+                            description: `Great! A message will be sent to ${alertMethod == "dm" ? "your **DMs**" : `<#${channel}>`} when the gas fee for a ${speed} transaction is less than ${when}.
 If you want to add a custom message that will be attached with the alert when it triggers, you may click \`Edit message\` to do so. If you wish to remove the message you have set, simply click \`Edit message\` and submit an empty text box.
 
 Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`

@@ -191,7 +191,7 @@ async function parseIdGasAlert(id: string, interaction: APIInteraction, guild: b
 }
 
 async function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
-    const input = pretty.match(new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/));
+    const input = pretty.match(new RegExp(/^- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)$/));
     const alert = guild ? new GuildCoinAlert() : new DmCoinAlert();
     if (alert instanceof GuildCoinAlert) {
         alert.guild = interaction.guild_id;
@@ -228,7 +228,7 @@ async function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction,
 }
 
 async function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
-    const input = pretty.match(new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/));
+    const input = pretty.match(new RegExp(/^- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei$/));
     const alert = guild ? new GuildGasAlert() : new DmGasAlert();
     if (alert instanceof GuildGasAlert) {
         alert.guild = interaction.guild_id;
@@ -302,9 +302,9 @@ export function makeAlertSelectEntry(alert: Alert) {
 }
 
 export async function parsePrettyAlert(pretty: string, interaction: APIInteraction, guild: boolean) {
-    if (new RegExp(/- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)/).test(pretty)) {
+    if (new RegExp(/^- ([❌✅]) When (.+) of (.+) is (less|greater) than (.+)$/).test(pretty)) {
         return deleteUndefinedProps(await parsePrettyCoinAlert(pretty, interaction, guild));
-    } else if (new RegExp(/- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei/).test(pretty)) {
+    } else if (new RegExp(/^- ([❌✅]) When gas for a (.+) transaction is less than (.+) gwei$/).test(pretty)) {
         return deleteUndefinedProps(await parsePrettyGasAlert(pretty, interaction, guild));
     } else {
         return null;
