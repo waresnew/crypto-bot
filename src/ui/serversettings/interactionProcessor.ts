@@ -8,6 +8,7 @@ import {
 } from "discord-api-types/v10";
 import {ServerSettings} from "../../utils/database";
 import {availableSettings, renderSetting} from "./interfaceCreator";
+import {analytics} from "../../utils/analytics";
 
 export default class ServerSettingsInteractionProcessor extends InteractionProcessor {
     static override async processSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
@@ -19,6 +20,13 @@ export default class ServerSettingsInteractionProcessor extends InteractionProce
                 throw new Error("Invalid setting type: " + meta.type);
             }
             settings[meta.dbKey] = data.resolved.roles[Object.keys(data.resolved.roles)[0]].id;
+            analytics.track({
+                userId: interaction.user.id,
+                event: "Updated server setting",
+                properties: {
+                    setting: meta.dbKey
+                }
+            });
             await ServerSettings.updateOne({
                 guild: interaction.guild_id
             }, {
