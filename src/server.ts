@@ -278,6 +278,10 @@ server.route({
                         alertManagerRole: null
                     });
                 }
+                analytics.group({
+                    userId: message.user.id,
+                    groupId: message.guild_id
+                });
             }
         }
         if (message.type == InteractionType.Ping) {
