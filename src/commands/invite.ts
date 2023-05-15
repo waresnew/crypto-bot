@@ -21,7 +21,7 @@ export default {
                 embeds: [{
                     ...getEmbedTemplate(),
                     title: "Invite Botchain",
-                    description: "[Click to add me to your server!](https://discord.com/api/oauth2/authorize?client_id=1058388231273590885&permissions=133120&scope=bot%20applications.commands)",
+                    description: "[Click to add me to your server!](https://discord.com/api/oauth2/authorize?client_id=1058388231273590885&permissions=134144&scope=bot%20applications.commands)",
                     thumbnail: {
                         url: "https://i.imgur.com/w33cucZ.png"
                     }
