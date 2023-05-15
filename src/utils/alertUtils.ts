@@ -49,7 +49,7 @@ export async function validateAlert(alert: Alert) {
     if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
         alerts = [...await DmCoinAlerts.find({user: alert.user}).toArray(), ...await DmGasAlerts.find({user: alert.user}).toArray()];
     } else if (alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert) {
-        alerts = [...await GuildCoinAlerts.find({guild: alert.guild}).toArray(), ...await GuildCoinAlerts.find({guild: alert.guild}).toArray()];
+        alerts = [...await GuildCoinAlerts.find({guild: alert.guild}).toArray(), ...await GuildGasAlerts.find({guild: alert.guild}).toArray()];
     }
     const isDm = alert instanceof DmCoinAlert || alert instanceof DmGasAlert;
     const isGuild = alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert;

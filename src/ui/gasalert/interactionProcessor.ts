@@ -36,6 +36,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
         if (interaction.data.custom_id.split("_")[1].endsWith("undo")) {
             const split = interaction.data.custom_id.split("_");
+            //not returning = side effects like alrets with null properties
             if (split[1] == "thresholdundo") {
                 const alertMethod = split[2] as AlertMethod;
                 const channel = split[3];
@@ -43,6 +44,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 const res = makeSpeedPrompt(alertMethod, channel, role);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
+                return;
             } else if (split[1] == "confirmundo") {
                 const alertMethod = split[2] as AlertMethod;
                 const channel = split[3];
@@ -67,6 +69,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             }
+            return;
         }
         if (interaction.data.custom_id.startsWith("gasalert_speed")) {
             const speed = interaction.data.custom_id.split("_")[1].substring("speed".length);
