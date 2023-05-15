@@ -44,7 +44,6 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 const res = makeSpeedPrompt(alertMethod, channel, role);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
-                return;
             } else if (split[1] == "confirmundo") {
                 const alertMethod = split[2] as AlertMethod;
                 const channel = split[3];
