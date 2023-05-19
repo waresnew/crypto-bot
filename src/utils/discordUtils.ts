@@ -1,6 +1,6 @@
 import got from "got";
 import InteractionProcessor from "../ui/abstractInteractionProcessor";
-import {APIApplicationCommand, APIInteraction, APIUser} from "discord-api-types/v10";
+import {APIApplicationCommand, APIInteraction, APIUser, PermissionFlagsBits} from "discord-api-types/v10";
 import {Indexable} from "./utils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
@@ -183,9 +183,16 @@ export async function checkAlertCreatePerm(interaction: APIInteraction) {
     const role = await ServerSettings.findOne({guild: interaction.guild_id});
     if (!role || role.alertManagerRole === null || role && role.alertManagerRole) {
         if (!role || role.alertManagerRole === null || !interaction.member.roles.includes(role.alertManagerRole)) {
+            if (BigInt(interaction.member.permissions) & PermissionFlagsBits.ManageGuild) {
+                analytics.track({
+                    userId: interaction.user.id,
+                    event: "Attempted to use role locked cmd without role but has manage server perms"
+                });
+                return;
+            }
             analytics.track({
                 userId: interaction.user.id,
-                event: role ? "Attempted to use role locked cmd without role" : "Attempted to use role locked cmd without setting role"
+                event: "Attempted to use role locked cmd without role"
             });
             throw new UserError(`You must have the required role to do this. Set one up with </serversettings:${commandIds.get("serversettings")}>`);
         }

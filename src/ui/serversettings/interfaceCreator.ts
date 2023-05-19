@@ -6,7 +6,7 @@ import {getEmbedTemplate} from "../templates";
 export const availableSettings: ServerSettingMetadata[] = [
     {
         name: "Alert Manager Role",
-        description: "Select a role that will be able to manage server-specific alerts. **Only users with this role will be able to edit/create alerts for this server.**",
+        description: "Use the dropdown menu below to select a role that will be able to manage server-specific alerts. People with the `Manage Server` permission will be able to manage alerts regardless of this setting.",
         dbKey: "alertManagerRole",
         type: "roleselect",
         default: null
