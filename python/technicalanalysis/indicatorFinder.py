@@ -1,6 +1,6 @@
 import numpy
 import numpy as np
-from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA, BOP, MFI, AROONOSC, MINUS_DI, \
+from talib import ROC, ULTOSC, ATR, CCI, WILLR, ADX, MACD, STOCHRSI, STOCH, RSI, SMA, EMA, MFI, AROONOSC, MINUS_DI, \
     PLUS_DI
 
 
@@ -38,7 +38,6 @@ def find_indicators(ohlcv):
     indicators['atr']['atrma7'] = SMA(atr, timeperiod=7)[-1] if len(atr) > 14 else numpy.nan
     indicators['ultosc'] = ULTOSC(ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # ULTOSC(7, 14, 28)
     indicators['roc'] = ROC(ohlcv['close'], timeperiod=14)[-1]  # ROC(14)
-    indicators['bop'] = BOP(ohlcv['open'], ohlcv['high'], ohlcv['low'], ohlcv['close'])[-1]  # BOP
     indicators['mfi'] = MFI(ohlcv['high'], ohlcv['low'], ohlcv['close'], ohlcv['volume'])[-1]  # MFI(14)
     indicators['aroonosc'] = AROONOSC(ohlcv['high'], ohlcv['low'], timeperiod=14)[-1]  # AROON(14)
     return indicators

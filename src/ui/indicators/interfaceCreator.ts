@@ -41,7 +41,6 @@ export async function makeEmbed(coin: CoinMetadata) {
     cci >= 100 -> overbought, <= -100 -> oversold
     ultosc >= 70 -> overbought, <= 30 -> oversold
     roc >= 10 -> bullish, <= -10 -> bearish
-    bop > 0 -> bullish, < 0 -> bearish
     mfi >= 80 -> overbought, <= 20 -> oversold
     aroonosc > 0 bullish, < 0 bearish
      */
@@ -56,7 +55,6 @@ CCI(14): ${indicators.cci} - **${indicators.cci <= -80 ? "Oversold " + emojis["b
 ATR(14): ${isNaN(indicators.atr.atr) ? "Not Enough Data" : formatPrice(new BigNumber(indicators.atr.atr))} - **${indicators.atr.atr > indicators.atr.atrma14 ? "High Volatility" : indicators.atr.atr > indicators.atr.atrma7 ? "Moderate Volatility" : indicators.atr.atr <= indicators.atr.atrma7 ? "Less Volatility" : "Neutral"}**
 ULTOSC(7, 14, 28): ${indicators.ultosc} - **${indicators.ultosc <= 40 ? "Oversold " + emojis["bearish"] : indicators.ultosc >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 ROC(14): ${indicators.roc} - **${indicators.roc < 0 ? "Bearish " + emojis["bearish"] : indicators.roc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
-BOP: ${indicators.bop} - **${indicators.bop < 0 ? "Bearish " + emojis["bearish"] : indicators.bop > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**
 MFI(14): ${indicators.mfi} - **${indicators.mfi <= 40 ? "Oversold " + emojis["bearish"] : indicators.mfi >= 60 ? "Overbought " + emojis["bullish"] : "Neutral"}**
 AROON(14): ${indicators.aroonosc} - **${indicators.aroonosc < 0 ? "Bearish " + emojis["bearish"] : indicators.aroonosc > 0 ? "Bullish " + emojis["bullish"] : "Neutral"}**`;
 
@@ -93,7 +91,7 @@ EMA(200): ${indicators.ema200} - **${price.lt(indicators.ema200) ? "Bearish " + 
                 value:
                     `${techIndicators}
                 
-Verdict: **${bullishIndicatorCount > bearishIndicatorCount ? "Bullish " + emojis["bullish"] : bearishIndicatorCount > bullishIndicatorCount ? "Bearish " + emojis["bearish"] : "Neutral"}** (Bullish: ${bullishIndicatorCount}, Bearish: ${bearishIndicatorCount}, Neutral: ${12 - bullishIndicatorCount - bearishIndicatorCount})`
+Verdict: **${bullishIndicatorCount > bearishIndicatorCount ? "Bullish " + emojis["bullish"] : bearishIndicatorCount > bullishIndicatorCount ? "Bearish " + emojis["bearish"] : "Neutral"}** (Bullish: ${bullishIndicatorCount}, Bearish: ${bearishIndicatorCount}, Neutral: ${11 - bullishIndicatorCount - bearishIndicatorCount})`
             },
             {
                 name: "Moving Averages",
