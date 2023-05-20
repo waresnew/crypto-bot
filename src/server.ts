@@ -261,8 +261,7 @@ server.route({
             analytics.identify({
                 userId: message.user.id,
                 traits: {
-                    username: message.user.username,
-                    discriminator: message.user.discriminator
+                    username: message.user.username
                 }
             });
             if (!await UserDatas.findOne({user: message.user.id})) {
