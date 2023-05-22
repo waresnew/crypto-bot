@@ -36,7 +36,7 @@
   "devDependencies": {
     "@shelf/jest-mongodb": "^4.1.7",
     "@swc/cli": "^0.1.62",
-    "@swc/core": "^1.3.46",
+    "@swc/core": "^1.3.59",
     "@swc/jest": "^0.2.24",
     "@types/analytics-node": "^3.1.10",
     "@types/cron": "^2.0.0",
