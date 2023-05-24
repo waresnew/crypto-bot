@@ -2,7 +2,6 @@
 import InteractionProcessor from "../abstractInteractionProcessor";
 import {FastifyReply} from "fastify";
 import {
-    APIMessageChannelSelectInteractionData,
     APIMessageComponentButtonInteraction,
     APIMessageComponentSelectMenuInteraction,
     APIMessageRoleSelectInteractionData,
@@ -14,19 +13,13 @@ import {
     MessageFlags,
     TextInputStyle
 } from "discord-api-types/v10";
-import {
-    makeChannelPrompt,
-    makeGuildDmPrompt,
-    makeRolePingPrompt,
-    makeSpeedPrompt,
-    makeThresholdPrompt
-} from "./interfaceCreator";
+import {makeGuildDmPrompt, makeRolePingPrompt, makeSpeedPrompt, makeThresholdPrompt} from "./interfaceCreator";
 import {validateWhen} from "../../utils/utils";
 import {analytics} from "../../utils/analytics";
 import {getEmbedTemplate} from "../templates";
 import {AlertMethod, validateAlert} from "../../utils/alertUtils";
 import {DmGasAlerts, GuildGasAlerts} from "../../utils/database";
-import {checkAlertCreatePerm, commandIds} from "../../utils/discordUtils";
+import {checkAlertCreatePerm, checkCanPingRole, checkChannelSendMsgPerms, commandIds} from "../../utils/discordUtils";
 import {UserError} from "../../structs/userError";
 import {GuildGasAlert} from "../../structs/alert/guildGasAlert";
 import {DmGasAlert} from "../../structs/alert/dmGasAlert";
@@ -39,32 +32,27 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             //not returning = side effects like alrets with null properties
             if (split[1] == "thresholdundo") {
                 const alertMethod = split[2] as AlertMethod;
-                const channel = split[3];
-                const role = split[4];
-                const res = makeSpeedPrompt(alertMethod, channel, role);
+                const role = split[3];
+                const res = makeSpeedPrompt(alertMethod, role);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             } else if (split[1] == "confirmundo") {
                 const alertMethod = split[2] as AlertMethod;
-                const channel = split[3];
-                const role = split[4];
-                const speed = split[5];
-                await http.send(makeThresholdPrompt(alertMethod, channel, role, speed));
-            } else if (split[1] == "channelundo") {
-                await http.send(makeGuildDmPrompt());
+                const role = split[3];
+                const speed = split[4];
+                await http.send(makeThresholdPrompt(alertMethod, role, speed));
             } else if (split[1] == "speedundo") {
                 const type = split[2] as AlertMethod;
-                const channel = split[3];
                 let res;
                 if (type == "guild") {
-                    res = makeRolePingPrompt(channel);
+                    res = makeRolePingPrompt();
                 } else {
                     res = makeGuildDmPrompt();
                 }
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             } else if (split[1] == "roleundo") {
-                const res = makeChannelPrompt();
+                const res = makeGuildDmPrompt();
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             }
@@ -73,20 +61,18 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
         if (interaction.data.custom_id.startsWith("gasalert_speed")) {
             const speed = interaction.data.custom_id.split("_")[1].substring("speed".length);
             const alertMethod = interaction.data.custom_id.split("_")[2] as AlertMethod;
-            const channel = interaction.data.custom_id.split("_")[3];
-            const role = interaction.data.custom_id.split("_")[4];
-            await http.send(makeThresholdPrompt(alertMethod, channel, role, speed));
+            const role = interaction.data.custom_id.split("_")[3];
+            await http.send(makeThresholdPrompt(alertMethod, role, speed));
         } else if (interaction.data.custom_id.startsWith("gasalert_threshold")) {
             const split = interaction.data.custom_id.split("_");
             const alertMethod = split[2];
-            const channel = split[3];
-            const role = split[4];
-            const speed = split[5];
+            const role = split[3];
+            const speed = split[4];
             await http.send({
                 type: InteractionResponseType.Modal,
                 data: {
                     title: `Setting threshold for ${speed} gas price`,
-                    custom_id: `gasalert_thresholdmodal_${alertMethod}_${channel}_${role}_${speed}`,
+                    custom_id: `gasalert_thresholdmodal_${alertMethod}_${role}_${speed}`,
                     components: [{
                         type: ComponentType.ActionRow,
                         components: [{
@@ -104,13 +90,12 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
         } else if (interaction.data.custom_id.startsWith("gasalert_confirm")) {
             const split = interaction.data.custom_id.split("_");
             const alertMethod = split[2] as AlertMethod;
-            const channel = split[3];
-            const role = split[4];
-            const speed = split[5];
-            const threshold = split[6];
+            const role = split[3];
+            const speed = split[4];
+            const threshold = split[5];
             const alert = alertMethod == "guild" ? new GuildGasAlert() : new DmGasAlert();
             if (alert instanceof GuildGasAlert) {
-                alert.channel = channel;
+                alert.channel = interaction.channel_id;
                 alert.roleIdPing = role;
                 alert.guild = interaction.guild_id;
             } else {
@@ -153,7 +138,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             }
             await http.send({
                 type: InteractionResponseType.UpdateMessage, data: {
-                    content: `Done! Added and enabled alert. Manage your alerts with ${manageAlertLink}. ` + (alertMethod == "guild" ? "Please ensure Botchain has permissions to send messages in the channel you specified." : "Please make sure you stay in a server with Botchain in it, so it can DM you when your alert triggers."),
+                    content: `Done! Added and enabled alert. Manage your alerts with ${manageAlertLink}.`,
                     flags: MessageFlags.Ephemeral,
                     embeds: [],
                     components: []
@@ -196,9 +181,24 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
             }
             let response;
             if (type == "guild") {
-                response = makeChannelPrompt();
+                try {
+                    checkChannelSendMsgPerms(interaction);
+                } catch (e) {
+                    if (!(e instanceof UserError)) {
+                        throw e;
+                    }
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
+                response = makeRolePingPrompt();
             } else {
-                response = makeSpeedPrompt(type, null, null);
+                response = makeSpeedPrompt(type, null);
             }
             await http.send(response);
         } else if (interaction.data.custom_id.startsWith("gasalert_msg")) {
@@ -222,8 +222,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 }
             } as APIModalInteractionResponse);
         } else if (interaction.data.custom_id.startsWith("gasalert_roleskip")) {
-            const channel = interaction.data.custom_id.split("_")[2];
-            await http.send(makeSpeedPrompt("guild", channel, null));
+            await http.send(makeSpeedPrompt("guild", null));
         }
     }
 
@@ -258,9 +257,8 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                 }
             }
             const alertMethod = split[2] as AlertMethod;
-            const channel = split[3];
-            const role = split[4];
-            const speed = split[5];
+            const role = split[3];
+            const speed = split[4];
             await http.send({
                 type: InteractionResponseType.UpdateMessage,
                 data: {
@@ -269,7 +267,7 @@ export default class GasAlertInteractionProcessor extends InteractionProcessor {
                         {
                             ...getEmbedTemplate(),
                             title: "Adding alert for Ethereum Gas Prices",
-                            description: `Great! A message will be sent to ${alertMethod == "dm" ? "your **DMs**" : `<#${channel}>`} when the gas fee for a ${speed} transaction is less than ${when}.
+                            description: `Great! A message will be sent to ${alertMethod == "dm" ? "your **DMs**" : `**this channel** (<#${interaction.channel_id}>)`} when the gas fee for a ${speed} transaction is less than ${when}.
 If you want to add a custom message that will be attached with the alert when it triggers, you may click \`Edit message\` to do so. If you wish to remove the message you have set, simply click \`Edit message\` and submit an empty text box.
 
 Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert. Otherwise, click \`Go back\` to go back and make changes.`
@@ -287,7 +285,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                                         id: null
                                     },
                                     style: ButtonStyle.Secondary,
-                                    custom_id: `gasalert_confirmundo_${alertMethod}_${channel}_${role}_${speed}`
+                                    custom_id: `gasalert_confirmundo_${alertMethod}_${role}_${speed}`
                                 },
                                 {
                                     type: ComponentType.Button,
@@ -307,7 +305,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                                         id: null
                                     },
                                     style: ButtonStyle.Success,
-                                    custom_id: `gasalert_confirm_${alertMethod}_${channel}_${role}_${speed}_${when}`
+                                    custom_id: `gasalert_confirm_${alertMethod}_${role}_${speed}_${when}`
                                 }
                             ]
                         }
@@ -320,19 +318,27 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
     }
 
     static override async processSelect(interaction: APIMessageComponentSelectMenuInteraction, http: FastifyReply) {
-        const split = interaction.data.custom_id.split("_");
-        if (interaction.data.component_type == ComponentType.ChannelSelect) {
-            if (interaction.data.custom_id.startsWith("gasalert_channel")) {
-                const data = interaction.data as APIMessageChannelSelectInteractionData;
-                const channel = data.resolved.channels[Object.keys(data.resolved.channels)[0]].id;
-                await http.send(makeRolePingPrompt(channel));
-            }
-        } else if (interaction.data.component_type == ComponentType.RoleSelect) {
+        if (interaction.data.component_type == ComponentType.RoleSelect) {
             if (interaction.data.custom_id.startsWith("gasalert_role")) {
+                // noinspection DuplicatedCode
                 const data = interaction.data as APIMessageRoleSelectInteractionData;
-                const role = data.resolved.roles[Object.keys(data.resolved.roles)[0]].id;
-                const channel = split[2];
-                await http.send(makeSpeedPrompt("guild", channel, role));
+                const role = data.resolved.roles[Object.keys(data.resolved.roles)[0]];
+                try {
+                    checkCanPingRole(role, interaction);
+                } catch (e) {
+                    if (!(e instanceof UserError)) {
+                        throw e;
+                    }
+                    await http.send({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                            content: e.error,
+                            flags: MessageFlags.Ephemeral
+                        }
+                    });
+                    return;
+                }
+                await http.send(makeSpeedPrompt("guild", role.id));
             }
         }
     }

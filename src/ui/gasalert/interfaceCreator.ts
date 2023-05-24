@@ -2,7 +2,6 @@
 import {
     APIInteractionResponse,
     ButtonStyle,
-    ChannelType,
     ComponentType,
     InteractionResponseType,
     MessageFlags
@@ -10,7 +9,7 @@ import {
 import {getEmbedTemplate} from "../templates";
 import {AlertMethod} from "../../utils/alertUtils";
 
-export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role: string) {
+export function makeSpeedPrompt(alertMethod: AlertMethod, role: string) {
     return {
         type: InteractionResponseType.ChannelMessageWithSource,
         data: {
@@ -34,7 +33,7 @@ export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role:
                                 id: null
                             },
                             style: ButtonStyle.Secondary,
-                            custom_id: `gasalert_speedundo_${alertMethod}_${channel}`
+                            custom_id: `gasalert_speedundo_${alertMethod}`
                         },
                         {
                             type: ComponentType.Button,
@@ -44,7 +43,7 @@ export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role:
                                 id: null
                             },
                             style: ButtonStyle.Primary,
-                            custom_id: `gasalert_speedslow_${alertMethod}_${channel}_${role}`
+                            custom_id: `gasalert_speedslow_${alertMethod}_${role}`
                         },
                         {
                             type: ComponentType.Button,
@@ -54,7 +53,7 @@ export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role:
                                 id: null
                             },
                             style: ButtonStyle.Primary,
-                            custom_id: `gasalert_speednormal_${alertMethod}_${channel}_${role}`
+                            custom_id: `gasalert_speednormal_${alertMethod}_${role}`
                         },
                         {
                             type: ComponentType.Button,
@@ -64,7 +63,7 @@ export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role:
                                 id: null
                             },
                             style: ButtonStyle.Primary,
-                            custom_id: `gasalert_speedfast_${alertMethod}_${channel}_${role}`
+                            custom_id: `gasalert_speedfast_${alertMethod}_${role}`
                         }
                     ]
                 }
@@ -73,7 +72,7 @@ export function makeSpeedPrompt(alertMethod: AlertMethod, channel: string, role:
     } as APIInteractionResponse;
 }
 
-export function makeThresholdPrompt(alertMethod: AlertMethod, channel: string, role: string, speed: string) {
+export function makeThresholdPrompt(alertMethod: AlertMethod, role: string, speed: string) {
     return {
         type: InteractionResponseType.UpdateMessage,
         data: {
@@ -97,7 +96,7 @@ export function makeThresholdPrompt(alertMethod: AlertMethod, channel: string, r
                                 id: null
                             },
                             style: ButtonStyle.Secondary,
-                            custom_id: `gasalert_thresholdundo_${alertMethod}_${channel}_${role}`
+                            custom_id: `gasalert_thresholdundo_${alertMethod}_${role}`
                         },
                         {
                             type: ComponentType.Button,
@@ -107,7 +106,7 @@ export function makeThresholdPrompt(alertMethod: AlertMethod, channel: string, r
                                 id: null
                             },
                             style: ButtonStyle.Primary,
-                            custom_id: `gasalert_threshold_${alertMethod}_${channel}_${role}_${speed}`
+                            custom_id: `gasalert_threshold_${alertMethod}_${role}_${speed}`
                         }
                     ]
                 }
@@ -119,7 +118,7 @@ export function makeThresholdPrompt(alertMethod: AlertMethod, channel: string, r
 export function makeGuildDmPrompt() {
     const message = getEmbedTemplate();
     message.title = "Adding alert for Ethereum Gas Prices";
-    message.description = "Would you like to be alerted in a channel (public) or in your DMs (private)?";
+    message.description = "Would you like to be alerted in this channel (public) or in your DMs (private)?";
     return {
         type: InteractionResponseType.ChannelMessageWithSource, data: {
             embeds: [message],
@@ -134,7 +133,7 @@ export function makeGuildDmPrompt() {
                             id: null
                         },
                         style: ButtonStyle.Primary,
-                        label: "Channel",
+                        label: "This channel",
                         custom_id: "gasalert_guild"
                     },
                     {
@@ -154,47 +153,10 @@ export function makeGuildDmPrompt() {
 }
 
 //guild only
-export function makeChannelPrompt() {
+export function makeRolePingPrompt() {
     const message = getEmbedTemplate();
     message.title = "Adding alert for Ethereum Gas Prices";
-    message.description = "Please select a channel to send this alert to.\n\n**Note: Please ensure that Botchain has permissions to send messages in the channel you select, or else the alert might silently fail to trigger.**";
-    return {
-        type: InteractionResponseType.UpdateMessage, data: {
-            embeds: [message],
-            flags: MessageFlags.Ephemeral,
-            components: [
-                {
-                    type: ComponentType.ActionRow,
-                    components: [{
-                        type: ComponentType.ChannelSelect,
-                        placeholder: "Select a channel...",
-                        custom_id: "gasalert_channel",
-                        channel_types: [ChannelType.GuildText]
-                    }]
-                },
-                {
-                    type: ComponentType.ActionRow,
-                    components: [{
-                        type: ComponentType.Button,
-                        emoji: {
-                            name: "⬅️",
-                            id: null
-                        },
-                        style: ButtonStyle.Secondary,
-                        label: "Go back",
-                        custom_id: "gasalert_channelundo"
-                    }]
-                }
-            ]
-        }
-    } as APIInteractionResponse;
-}
-
-//guild only
-export function makeRolePingPrompt(channel: string) {
-    const message = getEmbedTemplate();
-    message.title = "Adding alert for Ethereum Gas Prices";
-    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anynone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
+    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anyone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
     return {
         type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],
@@ -206,7 +168,7 @@ export function makeRolePingPrompt(channel: string) {
                         {
                             type: ComponentType.RoleSelect,
                             placeholder: "Select a role...",
-                            custom_id: `gasalert_role_${channel}`
+                            custom_id: "gasalert_role"
                         }
                     ]
                 },
@@ -231,7 +193,7 @@ export function makeRolePingPrompt(channel: string) {
                             },
                             style: ButtonStyle.Success,
                             label: "Skip",
-                            custom_id: `gasalert_roleskip_${channel}`
+                            custom_id: "gasalert_roleskip"
                         }
                     ]
                 }
