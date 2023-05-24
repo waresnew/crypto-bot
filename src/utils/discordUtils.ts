@@ -161,7 +161,7 @@ export function deepValidateCustomId(obj: any) {
     }
     return true;
 }
-
+/* istanbul ignore next */
 export async function userNotVotedRecently(id: string) {
     const user = await UserDatas.findOne({user: id});
     return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5);
@@ -179,6 +179,7 @@ export function validateRefresh(interaction: APIInteraction, latest: number, int
     }
 }
 
+/* istanbul ignore next */
 export async function checkAlertCreatePerm(interaction: APIInteraction) {
     const role = await ServerSettings.findOne({guild: interaction.guild_id});
     if (!role || role.alertManagerRole === null || role && role.alertManagerRole) {

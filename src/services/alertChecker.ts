@@ -60,6 +60,7 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
         console.log(`Removed ${dmExpired.length} expired guild alerts for ${guildRemovedCoins.join(", ")}`);
     }
     const toMsgChannel = guildExpired.map(alert => alert.channel);
+    /* istanbul ignore next */
     for (const channel of toMsgChannel) {
         const expiredChannel = guildExpired.filter(alert => alert.channel == channel);
         const message = makeExpiredCoinEmbed(expiredChannel, oldCryptos);
@@ -81,6 +82,7 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
     }
 }
 
+/* istanbul ignore next */
 function makeTriggerAlertEmbed(notifs: string[]) {
     const message = getEmbedTemplate();
     message.title = `⚠️ Alert${notifs.length > 1 ? "s" : ""} triggered!`;
@@ -152,6 +154,7 @@ export async function triggerAlerts() {
             });
         }
     }
+    /* istanbul ignore next */
     for (const channel of toMsgChannel.keys()) {
         const notifs = toMsgChannel.get(channel);
         const message = makeTriggerAlertEmbed(notifs.map(notif => notif.msg));

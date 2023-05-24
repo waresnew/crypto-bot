@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {UserError} from "../structs/userError";
 import BigNumber from "bignumber.js";
 

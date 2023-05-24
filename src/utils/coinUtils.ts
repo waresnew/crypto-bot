@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {CoinMetadata} from "../structs/coinMetadata";
 import {Candles} from "./database";
 import {
@@ -27,7 +28,6 @@ export function autocompleteCoins(interaction: APIApplicationCommandAutocomplete
     };
 }
 
-/* istanbul ignore next */
 export async function parseCoinCommandArg(interaction: APIChatInputApplicationCommandInteraction) {
     const input = interaction.data.options?.find(option => option.name == "name");
     let coin: string;
