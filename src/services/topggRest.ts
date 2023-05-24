@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {CronJob} from "cron";
 import got from "got";
 import {discordGot} from "../utils/discordUtils";

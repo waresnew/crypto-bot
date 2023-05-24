@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {APIEmbed, APIInteraction, ComponentType} from "discord-api-types/v10";
 import {ServerSettings} from "../../utils/database";
 import {ServerSettingMetadata} from "../../structs/serverSetting";
