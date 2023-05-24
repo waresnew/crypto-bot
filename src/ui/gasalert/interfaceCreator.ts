@@ -156,7 +156,7 @@ export function makeGuildDmPrompt() {
 export function makeRolePingPrompt() {
     const message = getEmbedTemplate();
     message.title = "Adding alert for Ethereum Gas Prices";
-    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anynone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
+    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anyone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
     return {
         type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],
