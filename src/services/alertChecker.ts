@@ -8,6 +8,7 @@ import {validCryptos} from "../utils/coinUtils";
 import {checkAlert, formatAlert, formatCoinAlert, getAlertDb} from "../utils/alertUtils";
 import {CoinAlert} from "../structs/alert/coinAlert";
 import crypto from "node:crypto";
+import {HTTPError} from "got";
 
 function makeExpiredCoinEmbed(userExpiredAlerts: CoinAlert[], oldCryptos: CoinMetadata[]) {
     const message = getEmbedTemplate();
@@ -50,7 +51,9 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
                 body: JSON.stringify({embeds: [message]})
             });
         } catch (e) {
-
+            if (e instanceof HTTPError) {
+                console.error(`Failed to send expired coin alert to ${user}: ${e.response.statusCode}`);
+            }
         }
     }
     const guildExpired = await GuildCoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
@@ -77,7 +80,9 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
                 body: JSON.stringify({embeds: [message]})
             });
         } catch (e) {
-
+            if (e instanceof HTTPError) {
+                console.error(`Failed to send expired guild alerts to channel ${channel}: ${e.response.statusCode}`);
+            }
         }
     }
 }
@@ -133,7 +138,9 @@ export async function triggerAlerts() {
                 body: JSON.stringify({embeds: [message]})
             });
         } catch (e) {
-
+            if (e instanceof HTTPError) {
+                console.error(`Failed to send triggered alerts to user ${user}: ${e.response.statusCode}`);
+            }
         }
     }
     const guildAlerts = [...await GuildCoinAlerts.find({}).toArray(), ...await GuildGasAlerts.find({}).toArray()];
@@ -174,7 +181,9 @@ export async function triggerAlerts() {
                 })
             });
         } catch (e) {
-
+            if (e instanceof HTTPError) {
+                console.error(`Failed to send triggered guild alerts to channel ${channel}: ${e.response.statusCode}`);
+            }
         }
     }
 }

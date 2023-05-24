@@ -3,7 +3,6 @@ import {
     APIInteraction,
     APIInteractionResponse,
     ButtonStyle,
-    ChannelType,
     ComponentType,
     InteractionResponseType,
     MessageFlags
@@ -15,7 +14,7 @@ import {commandIds} from "../../utils/discordUtils";
 import BigNumber from "bignumber.js";
 import {AlertMethod} from "../../utils/alertUtils";
 
-export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string, what: string) {
+export function makeThresholdPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, role: string, what: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! You're now tracking the ${CryptoStat.shortToLong(what)} of ${coin.name}. What value should the ${CryptoStat.shortToLong(what)} rise/fall to before alerting you?
@@ -36,7 +35,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Secondary,
                         label: "Go back",
-                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${alertMethod}_${channel}_${role}`
+                        custom_id: `coinalert_valueundo_${coin.cmc_id}_${alertMethod}_${role}`
                     },
                     {
                         type: ComponentType.Button,
@@ -46,7 +45,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
                         },
                         style: ButtonStyle.Primary,
                         label: "Set threshold",
-                        custom_id: `coinalert_value_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}`
+                        custom_id: `coinalert_value_${coin.cmc_id}_${alertMethod}_${role}_${what}`
                     }
                 ]
             }]
@@ -54,7 +53,7 @@ eg. Enter \`500\` to be alerted when the ${CryptoStat.shortToLong(what)} reaches
     } as APIInteractionResponse;
 }
 
-export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string, what: string, when: string) {
+export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, role: string, what: string, when: string) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
     message.description = `Great! Now, do you want to be alerted when the ${CryptoStat.shortToLong(what)} of ${coin.name} is above or below ${new BigNumber(when).toString()}?`;
@@ -74,11 +73,11 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                         },
                         style: ButtonStyle.Secondary,
                         label: "Go back",
-                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}`
+                        custom_id: `coinalert_directionundo_${coin.cmc_id}_${alertMethod}_${role}_${what}`
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_greater_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}_${when}`,
+                        custom_id: `coinalert_greater_${coin.cmc_id}_${alertMethod}_${role}_${what}_${when}`,
                         label: `Greater than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Success,
                         emoji: {
@@ -88,7 +87,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
                     },
                     {
                         type: ComponentType.Button,
-                        custom_id: `coinalert_less_${coin.cmc_id}_${alertMethod}_${channel}_${role}_${what}_${when}`,
+                        custom_id: `coinalert_less_${coin.cmc_id}_${alertMethod}_${role}_${what}_${when}`,
                         label: `Less than ${new BigNumber(when).toString()}`,
                         style: ButtonStyle.Danger,
                         emoji: {
@@ -102,7 +101,7 @@ export function makeDirectionPrompt(interaction: APIInteraction, coin: CoinMetad
     } as APIInteractionResponse;
 }
 
-export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, channel: string, role: string) {
+export function makeStatPrompt(interaction: APIInteraction, coin: CoinMetadata, alertMethod: AlertMethod, role: string) {
     const sortedOptions = CryptoStat.listLongs().sort((a, b) => a.length - b.length);
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
@@ -119,7 +118,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                     components: [{
                         type: ComponentType.StringSelect,
                         placeholder: "Select a stat...",
-                        custom_id: `coinalert_stat_${coin.cmc_id}_${alertMethod}_${channel}_${role}`,
+                        custom_id: `coinalert_stat_${coin.cmc_id}_${alertMethod}_${role}`,
                         options: sortedOptions.map(entry => {
                             return {
                                 label: entry[0].toUpperCase() + entry.substring(1),
@@ -139,7 +138,7 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
                             },
                             style: ButtonStyle.Secondary,
                             label: "Go back",
-                            custom_id: `coinalert_statundo_${coin.cmc_id}_${alertMethod}_${channel}`
+                            custom_id: `coinalert_statundo_${coin.cmc_id}_${alertMethod}`
                         }
                     ]
                 }
@@ -149,47 +148,10 @@ eg. Select \`price\` to track the price, or select \`${CryptoStat.shortToLong("1
 }
 
 //guild only
-export function makeChannelPrompt(interaction: APIInteraction, coin: CoinMetadata) {
+export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetadata) {
     const message = getEmbedTemplate();
     message.title = `Adding alert for ${coin.name}`;
-    message.description = "Please select a channel to send this alert to.\n\n**Note: Please ensure that Botchain has permissions to send messages in the channel you select, or else the alert might silently fail to trigger.**";
-    return {
-        type: InteractionResponseType.UpdateMessage, data: {
-            embeds: [message],
-            flags: MessageFlags.Ephemeral,
-            components: [
-                {
-                    type: ComponentType.ActionRow,
-                    components: [{
-                        type: ComponentType.ChannelSelect,
-                        placeholder: "Select a channel...",
-                        custom_id: `coinalert_channel_${coin.cmc_id}`,
-                        channel_types: [ChannelType.GuildText]
-                    }]
-                },
-                {
-                    type: ComponentType.ActionRow,
-                    components: [{
-                        type: ComponentType.Button,
-                        emoji: {
-                            name: "⬅️",
-                            id: null
-                        },
-                        style: ButtonStyle.Secondary,
-                        label: "Go back",
-                        custom_id: `coinalert_channelundo_${coin.cmc_id}`
-                    }]
-                }
-            ]
-        }
-    } as APIInteractionResponse;
-}
-
-//guild only
-export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetadata, channel: string) {
-    const message = getEmbedTemplate();
-    message.title = `Adding alert for ${coin.name}`;
-    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anynone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
+    message.description = "Please select a role to ping when the alert is triggered. **Ensure that you have enabled \"Allow anyone to @mention this role\" for the role you selected, or give Botchain the \"Mention @everyone\" permission.**\n\nIf you do not want to ping a role, please click the \"Skip\" button.";
     return {
         type: InteractionResponseType.UpdateMessage, data: {
             embeds: [message],
@@ -201,7 +163,7 @@ export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetada
                         {
                             type: ComponentType.RoleSelect,
                             placeholder: "Select a role...",
-                            custom_id: `coinalert_role_${coin.cmc_id}_${channel}`
+                            custom_id: `coinalert_role_${coin.cmc_id}`
                         }
                     ]
                 },
@@ -226,7 +188,7 @@ export function makeRolePingPrompt(interaction: APIInteraction, coin: CoinMetada
                             },
                             style: ButtonStyle.Success,
                             label: "Skip",
-                            custom_id: `coinalert_roleskip_${coin.cmc_id}_${channel}`
+                            custom_id: `coinalert_roleskip_${coin.cmc_id}`
                         }
                     ]
                 }
@@ -240,7 +202,7 @@ export function makeGuildDmPrompt(interaction: APIInteraction, coin: CoinMetadat
     message.title = `Adding alert for ${coin.name}`;
     message.description = `You are currently adding an alert for ${coin.name}. If you want to track another coin, please pass a different coin to </coinalert:${commandIds.get("coinalert")}>.
 
-Would you like to be alerted in a channel (public) or in your DMs (private)?`;
+Would you like to be alerted in this channel (public) or in your DMs (private)?`;
     return {
         type: InteractionResponseType.ChannelMessageWithSource, data: {
             embeds: [message],
@@ -255,7 +217,7 @@ Would you like to be alerted in a channel (public) or in your DMs (private)?`;
                             id: null
                         },
                         style: ButtonStyle.Primary,
-                        label: "Channel",
+                        label: "This channel",
                         custom_id: `coinalert_guild_${coin.cmc_id}`
                     },
                     {

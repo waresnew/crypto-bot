@@ -1,6 +1,6 @@
 import got from "got";
 import InteractionProcessor from "../ui/abstractInteractionProcessor";
-import {APIApplicationCommand, APIInteraction, APIUser, PermissionFlagsBits} from "discord-api-types/v10";
+import {APIApplicationCommand, APIInteraction, APIRole, APIUser, PermissionFlagsBits} from "discord-api-types/v10";
 import {Indexable} from "./utils";
 import {analytics} from "./analytics";
 import {UserError} from "../structs/userError";
@@ -72,16 +72,12 @@ export const customIdVersions = {
     coinalert_guild: "0.0.1",
     coinalert_dm: "0.0.1",
     coinalert_statundo: "0.0.1",
-    coinalert_channel: "0.0.1",
-    coinalert_channelundo: "0.0.1",
     coinalert_role: "0.0.1",
     coinalert_roleundo: "0.0.1",
     coinalert_roleskip: "0.0.1",
     coinalert_msg: "0.0.1",
     coinalert_msgmodalvalue: "0.0.1",
     coinalert_msgmodal: "0.0.1",
-    gasalert_channel: "0.0.1",
-    gasalert_channelundo: "0.0.1",
     gasalert_role: "0.0.1",
     gasalert_roleundo: "0.0.1",
     gasalert_roleskip: "0.0.1",
@@ -161,6 +157,7 @@ export function deepValidateCustomId(obj: any) {
     }
     return true;
 }
+
 /* istanbul ignore next */
 export async function userNotVotedRecently(id: string) {
     const user = await UserDatas.findOne({user: id});
@@ -197,5 +194,47 @@ export async function checkAlertCreatePerm(interaction: APIInteraction) {
             });
             throw new UserError(`You must have the required role to do this. Set one up with </serversettings:${commandIds.get("serversettings")}>`);
         }
+    }
+}
+
+/* istanbul ignore next */
+
+/*
+in the context of an interaction (uses app_permissions)
+ */
+export function checkChannelSendMsgPerms(interaction: APIInteraction) {
+    if (!(BigInt(interaction.app_permissions) & PermissionFlagsBits.ViewChannel)) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Tried to create guild alert in a channel without perm",
+            properties: {
+                missingPerm: "ViewChannel"
+            }
+        });
+        throw new UserError("Error: Botchain does not have permission to **view** this channel. This permission is needed to send alerts. Either set a channel override for Botchain to give it the permission, or give Botchain a role with the permission.");
+    }
+    if (!(BigInt(interaction.app_permissions) & PermissionFlagsBits.SendMessages)) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Tried to create guild alert in a channel without perm",
+            properties: {
+                missingPerm: "SendMessages"
+            }
+        });
+        throw new UserError("Error: Botchain does not have permission to **send messages** in this channel. This permission is needed to send alerts. Either set a channel override for Botchain to give it the permission, or give Botchain a role with the permission.");
+    }
+}
+
+/* istanbul ignore next */
+export function checkCanPingRole(role: APIRole, interaction: APIInteraction) {
+    if (!role.mentionable && !(BigInt(interaction.app_permissions) & PermissionFlagsBits.MentionEveryone)) {
+        analytics.track({
+            userId: interaction.user.id,
+            event: "Tried to create guild alert with unmentionable role",
+            properties: {
+                role: role.id
+            }
+        });
+        throw new UserError("Error: The role must be mentionable to be used in alerts. Either give Botchain the permission to mention everyone, or make the role mentionable.");
     }
 }
