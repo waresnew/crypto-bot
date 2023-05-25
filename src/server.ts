@@ -91,7 +91,7 @@ server.route({
         if (message.type == InteractionType.ApplicationCommand) {
             const interaction = message as APIChatInputApplicationCommandInteraction;
             const cmd = commands.get(interaction.data.name);
-            if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
+            if (cmd.voteRequired) {
                 if (await userNotVotedRecently(message.user.id)) {
                     analytics.track({
                         userId: message.user.id,
@@ -167,7 +167,7 @@ server.route({
                 if (message.data.custom_id.split("_")[1] != cmd.name) {
                     continue;
                 }
-                if (cmd.voteRequired && process.env["NODE_ENV"] == "production") {
+                if (cmd.voteRequired) {
                     if (await userNotVotedRecently(message.user.id)) {
                         analytics.track({
                             userId: message.user.id,
