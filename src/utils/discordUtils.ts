@@ -16,6 +16,8 @@ export const emojis = {
     "bullish": "<:bullish:1097137805546758184>",
     "bearish": "<:bearish:1097137994932178985>"
 };
+//for this month
+export let voteCount = 0;
 export const discordGot = got.extend({
     headers: {
         "User-Agent": "DiscordBot (http, 1.0)",
@@ -94,6 +96,10 @@ export function initClient(input: APIUser) {
     startTime = Date.now();
 }
 
+export function initVoteCount(input: number) {
+    voteCount = input;
+}
+
 /**
  * we need to version customids to prevent errors when we change the customid format
  * @param id the customid
@@ -160,6 +166,9 @@ export function deepValidateCustomId(obj: any) {
 
 /* istanbul ignore next */
 export async function userNotVotedRecently(id: string) {
+    if (voteCount > 100) {
+        return false;
+    }
     const user = await UserDatas.findOne({user: id});
     return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5);
 }
