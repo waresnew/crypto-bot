@@ -6,10 +6,11 @@ import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interaction
 import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
-import {commandIds, commands, discordGot, initClient, interactionProcessors} from "./utils/discordUtils";
+import {commandIds, commands, discordGot, initClient, initVoteCount, interactionProcessors} from "./utils/discordUtils";
 import {postServerCountCron} from "./services/topggRest";
 import {spawn} from "node:child_process";
 import {etherscanApiCron} from "./services/etherscanRest";
+import got from "got";
 
 didYouMean.threshold = null;
 initClient(JSON.parse(await discordGot(
@@ -21,6 +22,17 @@ if (getCommands.ok) {
 } else {
     throw "failed to init: fetching commands from api failed";
 }
+if (process.env["NODE_ENV"] === "production") {
+    const curVotes = JSON.parse(await got(`https://top.gg/api/bots/${process.env["APP_ID"]}`, {
+        headers: {
+            "Authorization": process.env["TOPGG_TOKEN"]
+        }
+    }).text()).monthlyPoints;
+    initVoteCount(curVotes);
+} else {
+    initVoteCount(555);
+}
+
 const cwd = path.dirname(fileURLToPath(import.meta.url));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 await importFromDir(path.join(cwd, "services"), (_module: any) => {
