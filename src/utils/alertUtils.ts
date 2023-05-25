@@ -331,13 +331,13 @@ export function formatAlert(alert: Alert) {
         throw new Error("Invalid alert type");
     }
     if ("guild" in alert) {
-        result += `\n⤷ Channel: <#${(alert as GuildAlert).channel}>`;
+        result += `\n  - Channel: <#${(alert as GuildAlert).channel}>`;
         if ((alert as GuildAlert).roleIdPing != "null") {
-            result += `\n⤷ Role Ping: <@&${(alert as GuildAlert).roleIdPing}>`;
+            result += `\n  - Role Ping: <@&${(alert as GuildAlert).roleIdPing}>`;
         }
     }
     if (alert.message) {
-        result += `\n⤷ Message: ${alert.message}`;
+        result += `\n  - Message: ${alert.message}`;
     }
     return result + "\n";
 }
