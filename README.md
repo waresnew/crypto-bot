@@ -6,12 +6,16 @@ Runs on a 512 mb ram, 1 vCore VPS
 [![.github/workflows/ci.yml](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/waresnew/crypto-bot/branch/master/graph/badge.svg?token=0P4VLWTWXL)](https://codecov.io/gh/waresnew/crypto-bot)
 
+https://top.gg/bot/1058388231273590885
 ### Milestones:
 
-- Publicly released bot on March 17 2023
-- Reached 100 users on April 21 2023
-- Reached 150 servers May 11 2023
-- Reached 400 users May 18 2023
+- Publicly released bot on `March 17 2023`
+- Reached 100 users on `April 21 2023`
+- Reached average review score of 5 stars on top.gg `May 5 2023`
+- Reached 150 servers `May 11 2023`
+- Reached 400 users `May 18 2023`
+- Reached 143 monthly votes on top.gg (285 total) `May 26 2023`
+- Reached 200 servers `May 27 2023`
 
 Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
