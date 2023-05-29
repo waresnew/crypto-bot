@@ -28,7 +28,7 @@
     "fastify": "^4.17.0",
     "fastify-raw-body": "^4.2.0",
     "form-data-encoder": "^3.0.0",
-    "got": "^12.6.0",
+    "got": "^13.0.0",
     "mongodb": "^5.1.0",
     "tweetnacl": "^1.0.3",
     "ws": "^8.13.0"
