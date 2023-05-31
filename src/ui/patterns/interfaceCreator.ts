@@ -21,13 +21,14 @@ export async function makeEmbed(coin: CoinMetadata) {
         })
     }).text();
     const patterns = JSON.parse(result.replaceAll(new RegExp("NaN", "g"), "\"Not Enough Data\""));
-    const visiblePatterns: { name: string, time: number, val: number, reliability: number }[] = [];
+    const visiblePatterns: { pattern: string, name: string, time: number, val: number, reliability: number }[] = [];
     for (const pattern of Object.keys(patterns)) {
         for (let i = 0; i < patterns[pattern].result.length; i++) {
             const candle = candles[i];
             if (patterns[pattern].result[i] != 0) {
                 visiblePatterns.push({
-                    name: pattern,
+                    pattern: pattern,
+                    name: patterns[pattern].name,
                     time: candle.open_time,
                     val: patterns[pattern].result[i],
                     reliability: patterns[pattern].reliability
@@ -42,7 +43,7 @@ export async function makeEmbed(coin: CoinMetadata) {
         const date = new Date(pattern.time);
         const month = date.toLocaleString("default", {month: "long"});
         const day = date.getDate();
-        description += `\n- ${pattern.val < 0 ? emojis["bearish"] : emojis["bullish"]} ${pattern.name} (${"⭐".repeat(pattern.reliability)}) on ${month} ${day}`;
+        description += `\n- ${pattern.val < 0 ? emojis["bearish"] : emojis["bullish"]} ${pattern.name} (${"⭐".repeat(Math.max(1, Math.min(3, Math.round((100 - Math.min(100, pattern.reliability)) / 33))))}) on ${month} ${day}${Math.abs(pattern.val) == 200 ? " - **CONFIRMED**" : ""}`;
     }
     const embed = {
         ...getEmbedTemplate(),
