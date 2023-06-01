@@ -96,7 +96,7 @@ export function initClient(input: APIUser) {
     startTime = Date.now();
 }
 
-export function initVoteCount(input: number) {
+export function setVoteCount(input: number) {
     voteCount = input;
 }
 
