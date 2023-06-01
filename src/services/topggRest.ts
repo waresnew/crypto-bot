@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import {CronJob} from "cron";
 import got from "got";
-import {discordGot} from "../utils/discordUtils";
+import {discordGot, setVoteCount} from "../utils/discordUtils";
 
 export const postServerCountCron = new CronJob(
     "0 0 * * *",
@@ -23,4 +23,12 @@ export async function postServerCount() {
             server_count: serverCount
         })
     });
+    if (process.env["NODE_ENV"] === "production") {
+        const curVotes = JSON.parse(await got(`https://top.gg/api/bots/${process.env["APP_ID"]}`, {
+            headers: {
+                "Authorization": process.env["TOPGG_TOKEN"]
+            }
+        }).text()).monthlyPoints;
+        setVoteCount(curVotes);
+    }
 }

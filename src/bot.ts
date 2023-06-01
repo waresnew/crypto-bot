@@ -6,7 +6,7 @@ import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interaction
 import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
-import {commandIds, commands, discordGot, initClient, initVoteCount, interactionProcessors} from "./utils/discordUtils";
+import {commandIds, commands, discordGot, initClient, interactionProcessors, setVoteCount} from "./utils/discordUtils";
 import {postServerCountCron} from "./services/topggRest";
 import {spawn} from "node:child_process";
 import {etherscanApiCron} from "./services/etherscanRest";
@@ -28,9 +28,9 @@ if (process.env["NODE_ENV"] === "production") {
             "Authorization": process.env["TOPGG_TOKEN"]
         }
     }).text()).monthlyPoints;
-    initVoteCount(curVotes);
+    setVoteCount(curVotes);
 } else {
-    initVoteCount(555);
+    setVoteCount(555);
 }
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));
