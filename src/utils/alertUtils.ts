@@ -62,7 +62,7 @@ export async function validateAlert(alert: Alert) {
             }
         });
 
-        throw new UserError(`Error: You can not have more than 10 alerts set. Please delete one before proceeding. ${manageAlertLink}`);
+        throw new UserError(`Error: You can not have more than 10 alerts set. Please delete one before proceeding with ${manageAlertLink}.`);
     }
     if (await getAlertDb(alert).findOne(alert)) {
         if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
@@ -74,7 +74,7 @@ export async function validateAlert(alert: Alert) {
                 }
             });
         }
-        throw new UserError(`Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding. ${manageAlertLink}`);
+        throw new UserError(`Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding with ${manageAlertLink}.`);
     }
 }
 
