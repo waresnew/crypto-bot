@@ -11,7 +11,7 @@ import {UserError} from "../../structs/userError";
 
 export default class PivotsInteractionProcessor extends InteractionProcessor {
     static override async processButton(interaction: APIMessageComponentButtonInteraction, http: FastifyReply): Promise<void> {
-        const coin = idToMeta(Number(interaction.data.custom_id.split("_")[2]));
+        const coin = await idToMeta(Number(interaction.data.custom_id.split("_")[2]));
         if (interaction.data.custom_id.startsWith("pivots_refresh")) {
             try {
                 validateRefresh(interaction, binanceLastUpdated);

@@ -2,7 +2,6 @@ import {getEmbedTemplate} from "../ui/templates";
 import {analytics} from "../utils/analytics";
 import {APIChannel} from "discord-api-types/v10";
 import {DmCoinAlerts, DmGasAlerts, GuildCoinAlerts, GuildGasAlerts} from "../utils/database";
-import {CoinMetadata} from "../structs/coinMetadata";
 import {commandIds, discordGot} from "../utils/discordUtils";
 import {validCryptos} from "../utils/coinUtils";
 import {checkAlert, formatAlert, formatCoinAlert, getAlertDb} from "../utils/alertUtils";
@@ -10,30 +9,29 @@ import {CoinAlert} from "../structs/alert/coinAlert";
 import crypto from "node:crypto";
 import {HTTPError} from "got";
 
-function makeExpiredCoinEmbed(userExpiredAlerts: CoinAlert[], oldCryptos: CoinMetadata[]) {
+async function makeExpiredCoinEmbed(userExpiredAlerts: CoinAlert[]) {
     const message = getEmbedTemplate();
-    message.title = `⚠️ Alert${userExpiredAlerts.length > 1 ? "s" : ""} expired!`;
-    let desc = `The following alert${userExpiredAlerts.length > 1 ? "s have" : " has"} expired:\n`;
+    message.title = `⚠️ Coin${userExpiredAlerts.length > 1 ? "s" : ""} delisted/on downtime!`;
+    let desc = "The following alerts depend on coins that have **either** recently been delisted from major exchanges or simply experiencing some temporary downtime:\n";
 
     for (const line of userExpiredAlerts) {
-        desc += "\n- " + formatCoinAlert(line, oldCryptos);
+        desc += "\n- " + await formatCoinAlert(line);
     }
-    desc += `\n\nThe above coins are no longer in listed in major exchanges. Due to technical limitations, Botchain cannot track such cryptocurrencies. As such, the above alert${userExpiredAlerts.length > 1 ? "s have" : " has"} been **deleted**. Please keep a closer eye on the above cryptocurrencies as you will no longer receive alerts for them.\n\nHappy trading!`;
+    desc += "\n\nIf a coin is experiencing downtime or is delisted, Botchain cannot track the price for you. This alert will remain on your list, but this is just a friendly reminder to double check if the coin(s) listed above are still listed on popular exchanges. If they are, then the coin is probably just experiencing some downtime and will be up again shortly. In the meantime, please keep a closer eye on the above cryptocurrencies as you won't receive alerts for them until the downtime is fixed.\n\nOn the other hand, if the coin has been delisted from popular exchanges, there was likely some sort of controversy that occured and you should be able to find more information about it on the internet. A coin that is delisted will **not be tracked** by Botchain.\n\nHappy trading!";
     message.description = desc;
     return message;
 }
 
-export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
+export async function notifyExpiredCoins() {
     const dmExpired = await DmCoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
-    await DmCoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
     const dmRemovedCoins = dmExpired.map(alert => alert.coin);
     if (dmRemovedCoins.length > 0) {
-        console.log(`Removed ${dmExpired.length} expired DM alerts for ${dmRemovedCoins.join(", ")}`);
+        console.error(`Alerted ${dmExpired.length} expired DM alerts for ${dmRemovedCoins.join(", ")}`);
     }
     const toDm = dmExpired.map(alert => alert.user);
     for (const user of toDm) {
         const userExpiredAlerts = dmExpired.filter(alert => alert.user == user);
-        const message = makeExpiredCoinEmbed(userExpiredAlerts, oldCryptos);
+        const message = await makeExpiredCoinEmbed(userExpiredAlerts);
         analytics.track({
             userId: user,
             event: "Alert(s) expired",
@@ -57,16 +55,15 @@ export async function notifyExpiredCoins(oldCryptos: CoinMetadata[]) {
         }
     }
     const guildExpired = await GuildCoinAlerts.find({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}}).toArray();
-    await GuildCoinAlerts.deleteMany({coin: {$nin: validCryptos.map(meta => meta.cmc_id)}});
     const guildRemovedCoins = dmExpired.map(alert => alert.coin);
     if (guildRemovedCoins.length > 0) {
-        console.log(`Removed ${dmExpired.length} expired guild alerts for ${guildRemovedCoins.join(", ")}`);
+        console.error(`Alerted ${dmExpired.length} expired guild alerts for ${guildRemovedCoins.join(", ")}`);
     }
     const toMsgChannel = guildExpired.map(alert => alert.channel);
     /* istanbul ignore next */
     for (const channel of toMsgChannel) {
         const expiredChannel = guildExpired.filter(alert => alert.channel == channel);
-        const message = makeExpiredCoinEmbed(expiredChannel, oldCryptos);
+        const message = await makeExpiredCoinEmbed(expiredChannel);
         analytics.track({
             anonymousId: crypto.randomUUID(),
             event: "Guild Alert(s) expired",
@@ -108,7 +105,7 @@ export async function triggerAlerts() {
             if (!toDm.has(alert.user)) {
                 toDm.set(alert.user, []);
             }
-            toDm.get(alert.user).push(formatAlert(alert));
+            toDm.get(alert.user).push(await formatAlert(alert));
             await getAlertDb(alert).updateOne(alert, {
                 $set: {
                     disabled: true
@@ -151,7 +148,7 @@ export async function triggerAlerts() {
                 toMsgChannel.set(alert.channel, []);
             }
             toMsgChannel.get(alert.channel).push({
-                msg: formatAlert(alert),
+                msg: await formatAlert(alert),
                 role: alert.roleIdPing == "null" ? null : `<@&${alert.roleIdPing}>`
             });
             await getAlertDb(alert).updateOne(alert, {

@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import {CoinAlert} from "../structs/alert/coinAlert";
-import {getLatestCandle, validCryptos} from "./coinUtils";
+import {getLatestCandle} from "./coinUtils";
 import {DmCoinAlerts, DmGasAlerts, GuildCoinAlerts, GuildGasAlerts, LatestCoins} from "./database";
 import CryptoStat from "../structs/cryptoStat";
 import {idToMeta, nameToMeta} from "../structs/coinMetadata";
@@ -100,9 +100,9 @@ export async function checkCoinAlert(alert: CoinAlert) {
 }
 
 //only to be used by expired coin handler
-export function formatCoinAlert(alert: CoinAlert, cryptoList = validCryptos) {
+export async function formatCoinAlert(alert: CoinAlert) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
-    return `When ${fancyStat} of ${idToMeta(alert.coin, cryptoList).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + new BigNumber(alert.threshold).toString() + (alert.stat.endsWith("%") ? "%" : "")}`;
+    return `When ${fancyStat} of ${(await idToMeta(alert.coin)).name} is ${alert.direction == "<" ? "less than" : "greater than"} ${(alert.stat == "price" ? "$" : "") + new BigNumber(alert.threshold).toString() + (alert.stat.endsWith("%") ? "%" : "")}`;
 }
 
 export function checkGasAlert(alert: GasAlert) {
@@ -200,7 +200,7 @@ async function parsePrettyCoinAlert(pretty: string, interaction: APIInteraction,
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     alert.stat = CryptoStat.longToShort(CryptoStat.listLongs().find(k => k == input[2].toLowerCase()));
-    alert.coin = nameToMeta(input[3]).cmc_id;
+    alert.coin = (await nameToMeta(input[3])).cmc_id;
     alert.threshold = input[5].replace(new RegExp(/[$%]/), "");
     alert.direction = input[4] == "less" ? "<" : ">";
     alert.disabled = input[1] == "❌";
@@ -257,11 +257,11 @@ async function parsePrettyGasAlert(pretty: string, interaction: APIInteraction, 
     return alert;
 }
 
-function makeCoinAlertSelectEntry(alert: CoinAlert) {
+async function makeCoinAlertSelectEntry(alert: CoinAlert) {
     const fancyStat = CryptoStat.shortToLong(alert.stat);
 
     return {
-        label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${idToMeta(alert.coin).name}`,
+        label: `${alert.disabled ? "❌" : "✅"} ${fancyStat.charAt(0).toUpperCase() + fancyStat.substring(1)} of ${(await idToMeta(alert.coin)).name}`,
         description: (alert.direction == "<" ? "Less than " : "Greater than ") + (alert.stat == "price" ? "$" : "") + new BigNumber(alert.threshold).toString() + (alert.stat.endsWith("%") ? "%" : ""),
         value: `coin_${alert.coin}_${alert.stat}_${alert.threshold}_${alert.direction}`
     };
@@ -292,9 +292,9 @@ export function getAlertDb(alert: Alert) {
     throw new Error("Invalid alert type");
 }
 
-export function makeAlertSelectEntry(alert: Alert) {
+export async function makeAlertSelectEntry(alert: Alert) {
     if ("coin" in alert) {
-        return makeCoinAlertSelectEntry(alert);
+        return await makeCoinAlertSelectEntry(alert);
     } else if ("speed" in alert) {
         return makeGasAlertSelectEntry(alert);
     }
@@ -321,10 +321,10 @@ export async function parseAlertId(id: string, interaction: APIInteraction, guil
 }
 
 //duck typing :vomit:
-export function formatAlert(alert: Alert) {
+export async function formatAlert(alert: Alert) {
     let result;
     if ("coin" in alert) {
-        result = formatCoinAlert(alert);
+        result = await formatCoinAlert(alert);
     } else if ("speed" in alert) {
         result = formatGasAlert(alert);
     } else {

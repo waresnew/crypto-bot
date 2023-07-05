@@ -45,7 +45,7 @@ export function initBinanceWs() {
         const toWrite: AnyBulkWriteOperation<LatestCoin>[] = [];
         for (const item of json) {
             if (item.s.endsWith("USDT")) {
-                const coin = symbolToMeta(item.s.substring(0, item.s.lastIndexOf("USDT")));
+                const coin = await symbolToMeta(item.s.substring(0, item.s.lastIndexOf("USDT")));
                 if (coin) {
                     const set = item.e == "1dTicker" ? {
                         dayPriceChangePercent: item.P,
