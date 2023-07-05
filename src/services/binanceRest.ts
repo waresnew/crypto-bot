@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import {CronJob} from "cron";
 import got, {HTTPError} from "got";
-import {Candles, LatestCoins, mongoClient} from "../utils/database";
+import {Candles, CoinMetadatas, LatestCoins, mongoClient} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
@@ -205,11 +205,29 @@ export async function updateBinanceApi() {
         console.error("newValidCryptos is empty?");
         return;
     }
-    const oldCryptos = validCryptos.slice();
     validCryptos.length = 0;
     validCryptos.push(...newValidCryptos);
+    const newCoins: AnyBulkWriteOperation<CoinMetadata>[] = [];
+    for (const c of validCryptos) {
+        newCoins.push({
+            updateOne: {
+                filter: {cmc_id: c.cmc_id},
+                update: {
+                    $set: {
+                        cmc_id: c.cmc_id,
+                        symbol: c.symbol,
+                        name: c.name,
+                        slug: c.slug
+                    }
+                },
+                upsert: true
+            }
+        });
+    }
+
+    await CoinMetadatas.bulkWrite(newCoins);
     const start4 = Date.now();
-    await notifyExpiredCoins(oldCryptos);
+    await notifyExpiredCoins();
     await triggerAlerts();
     binanceLastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:

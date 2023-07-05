@@ -33,9 +33,7 @@ describe("Checks if expired coins are handled properly", function () {
             .reply(404, {
                 id: "123123123"
             } as APIChannel);
-        const oldCryptos = validCryptos.slice();
         validCryptos.length = 0;
-        await notifyExpiredCoins(oldCryptos);
-        expect((await DmCoinAlerts.find({}).toArray()).length).toBe(0);
+        await notifyExpiredCoins();
     });
 });

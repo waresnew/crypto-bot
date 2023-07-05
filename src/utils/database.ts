@@ -9,6 +9,7 @@ import {DmCoinAlert} from "../structs/alert/dmCoinAlert";
 import {GuildCoinAlert} from "../structs/alert/guildCoinAlert";
 import {DmGasAlert} from "../structs/alert/dmGasAlert";
 import {GuildGasAlert} from "../structs/alert/guildGasAlert";
+import {CoinMetadata} from "../structs/coinMetadata";
 
 export let db: Db = null;
 export let mongoClient: MongoClient = null;
@@ -20,10 +21,12 @@ export let LatestCoins: Collection<LatestCoin> = null;
 export let UserDatas: Collection<UserData> = null;
 export let ServerSettings: Collection<ServerSetting> = null;
 export let GuildGasAlerts: Collection<GuildGasAlert> = null;
+export let CoinMetadatas: Collection<CoinMetadata> = null;
 export async function openDb(url: string, dbName: string) {
     mongoClient = await MongoClient.connect(url);
     console.log("Connected to MongoDB");
     db = mongoClient.db(dbName);
+    CoinMetadatas = db.collection("coinmetadatas");
     Candles = db.collection("candles");
     DmCoinAlerts = db.collection("coinalerts");
     DmGasAlerts = db.collection("gasalerts");
@@ -32,6 +35,15 @@ export async function openDb(url: string, dbName: string) {
     ServerSettings = db.collection("serversettings");
     GuildCoinAlerts = db.collection("guildcoinalerts");
     GuildGasAlerts = db.collection("guildgasalerts");
+    await CoinMetadatas.createIndex({
+        symbol: 1
+    });
+    await CoinMetadatas.createIndex({
+        name: 1
+    });
+    await CoinMetadatas.createIndex({
+        cmc_id: 1
+    }, {unique: true});
     await Candles.createIndex({coin: 1, open_time: -1}, {unique: true});
     await DmCoinAlerts.createIndex({
         coin: 1,

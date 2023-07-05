@@ -23,7 +23,7 @@ export async function makeAlertsMenu(interaction: APIInteraction, guild = false)
     } else {
         alerts = [...await GuildCoinAlerts.find({guild: interaction.guild_id}).toArray(), ...await GuildGasAlerts.find({guild: interaction.guild_id}).toArray()];
     }
-    const alertMenuOptions: APISelectMenuOption[] = alerts.map(alert => makeAlertSelectEntry(alert));
+    const alertMenuOptions: APISelectMenuOption[] = await Promise.all(alerts.map(async alert => await makeAlertSelectEntry(alert)));
     alertMenuOptions.sort((a, b) => a.label.localeCompare(b.label));
     return {
         type: ComponentType.ActionRow,
@@ -56,9 +56,9 @@ export async function makeEmbed(values: (CoinAlert | GasAlert)[], interaction: A
         const noExist = await getAlertDb(alert).findOne(alert) == null;
         alert.disabled = disabled;
         if (noExist) {
-            removed += "\n- " + formatAlert(alert);
+            removed += "\n- " + await formatAlert(alert);
         } else {
-            choices.push(`${alert.disabled ? "❌" : "✅"} ${formatAlert(alert)}`);
+            choices.push(`${alert.disabled ? "❌" : "✅"} ${await formatAlert(alert)}`);
         }
 
     }

@@ -69,7 +69,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                     throw e;
                 }
             }
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             const what = split[5];
             const role = split[4];
             const type = split[3] as AlertMethod;
@@ -84,26 +84,26 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
         const split = interaction.data.custom_id.split("_");
         if (split[1].endsWith("undo")) {
             if (split[1] == "valueundo") {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const type = split[3] as AlertMethod;
                 const role = split[4];
                 const res = makeStatPrompt(interaction, coin, type, role);
                 await http.send(res);
             } else if (split[1] == "directionundo") {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const type = split[3] as AlertMethod;
                 const role = split[4];
                 const what = split[5];
                 await http.send(makeThresholdPrompt(interaction, coin, type, role, what));
             } else if (split[1] == "confirmundo") {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const type = split[3] as AlertMethod;
                 const role = split[4];
                 const what = split[5];
                 const when = split[6];
                 await http.send(makeDirectionPrompt(interaction, coin, type, role, what, when));
             } else if (split[1] == "statundo") {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const type = split[3] as AlertMethod;
                 let res;
                 if (type == "guild") {
@@ -114,7 +114,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
             } else if (split[1] == "roleundo") {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const res = makeGuildDmPrompt(interaction, coin);
                 res.type = InteractionResponseType.UpdateMessage;
                 await http.send(res);
@@ -122,7 +122,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             return;
         }
         if (interaction.data.custom_id.startsWith("coinalert_value")) {
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             const type = split[3];
             const role = split[4];
             const what = split[5];
@@ -150,7 +150,7 @@ export default class CoinAlertInteractionProcessor extends InteractionProcessor 
             const type = split[3] as AlertMethod;
             const what = split[5], when = split[6];
             const role = split[4];
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             const message = getEmbedTemplate();
             message.title = `Adding alert for ${coin.name}`;
             message.description = `Great! A message will be sent to ${type == "dm" ? "your **DMs**" : `**this channel** (<#${interaction.channel_id}>)`} when the ${CryptoStat.shortToLong(what)} of ${coin.name} is ${direction == ">" ? "greater than" : "less than"} ${new BigNumber(when).toString()}.
@@ -201,7 +201,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                 }
             });
         } else if (interaction.data.custom_id.startsWith("coinalert_confirm")) {
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             const type = split[3] as AlertMethod;
             const role = split[4];
             const what = split[5];
@@ -297,7 +297,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                     }
                 }
             }
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             let response;
             if (type == "guild") {
                 try {
@@ -321,7 +321,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
             }
             await http.send(response);
         } else if (interaction.data.custom_id.startsWith("coinalert_roleskip")) {
-            const coin = idToMeta(Number(split[2]));
+            const coin = await idToMeta(Number(split[2]));
             await http.send(makeStatPrompt(interaction, coin, "guild", null));
         } else if (interaction.data.custom_id.startsWith("coinalert_msg")) {
             await http.send({
@@ -351,7 +351,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
         const split = interaction.data.custom_id.split("_");
         if (interaction.data.component_type == ComponentType.StringSelect) {
             if (interaction.data.custom_id.startsWith("coinalert_stat")) {
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 const type = split[3] as AlertMethod;
                 const what = interaction.data.values[0];
                 const role = split[4];
@@ -378,7 +378,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
                     });
                     return;
                 }
-                const coin = idToMeta(Number(split[2]));
+                const coin = await idToMeta(Number(split[2]));
                 await http.send(makeStatPrompt(interaction, coin, "guild", role.id));
             }
         }

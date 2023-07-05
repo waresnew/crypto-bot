@@ -7,7 +7,7 @@ import {
     APIChatInputApplicationCommandInteraction
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {jest} from "@jest/globals";
-import {Candles, DmCoinAlerts, LatestCoins, mongoClient, openDb} from "../src/utils/database";
+import {Candles, CoinMetadatas, DmCoinAlerts, LatestCoins, mongoClient, openDb} from "../src/utils/database";
 import {CoinMetadata} from "../src/structs/coinMetadata";
 import {initClient} from "../src/utils/discordUtils";
 import {validCryptos} from "../src/utils/coinUtils";
@@ -64,6 +64,35 @@ beforeEach(async () => {
     eth.name = "Ethereum";
     eth.symbol = "ETH";
     validCryptos.length = 0;
+    await CoinMetadatas.bulkWrite([
+        {
+            updateOne: {
+                filter: {cmc_id: btc.cmc_id},
+                update: {
+                    $set: {
+                        cmc_id: btc.cmc_id,
+                        symbol: btc.symbol,
+                        name: btc.name,
+                        slug: btc.slug
+                    }
+                },
+                upsert: true
+            }
+        },
+        {
+            updateOne: {
+                filter: {cmc_id: eth.cmc_id},
+                update: {
+                    $set: {
+                        cmc_id: eth.cmc_id,
+                        symbol: eth.symbol,
+                        name: eth.name,
+                        slug: eth.slug
+                    }
+                }
+            }
+        }
+    ]);
     validCryptos.push(btc, eth);
     nock.cleanAll();
 });

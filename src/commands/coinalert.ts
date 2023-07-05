@@ -44,7 +44,7 @@ export default {
         if (interaction.guild_id) {
             await http.send(await makeGuildDmPrompt(interaction, coin));
         } else {
-            await http.send(makeStatPrompt(interaction, coin, "dm", null, null));
+            await http.send(makeStatPrompt(interaction, coin, "dm", null));
         }
     },
     async autocomplete(interaction: APIApplicationCommandAutocompleteInteraction, http: FastifyReply) {
