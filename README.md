@@ -19,6 +19,7 @@ https://top.gg/bot/1058388231273590885
 - Reached 500 users `May 31 2023`
 - Reached 600 users `June 15 2023`
 - Reached 700 users `June 25 2023`
+- Reached 250 servers `July 5 2023`
 
 Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
