@@ -6,7 +6,6 @@ import {commandIds, discordGot} from "../utils/discordUtils";
 import {validCryptos} from "../utils/coinUtils";
 import {checkAlert, formatAlert, formatCoinAlert, getAlertDb} from "../utils/alertUtils";
 import {CoinAlert} from "../structs/alert/coinAlert";
-import crypto from "node:crypto";
 import {HTTPError} from "got";
 
 async function makeExpiredCoinEmbed(userExpiredAlerts: CoinAlert[]) {
@@ -65,7 +64,7 @@ export async function notifyExpiredCoins() {
         const expiredChannel = guildExpired.filter(alert => alert.channel == channel);
         const message = await makeExpiredCoinEmbed(expiredChannel);
         analytics.track({
-            anonymousId: crypto.randomUUID(),
+            anonymousId: 1,
             event: "Guild Alert(s) expired",
             properties: {
                 alerts: expiredChannel.length
@@ -163,7 +162,7 @@ export async function triggerAlerts() {
         const notifs = toMsgChannel.get(channel);
         const message = makeTriggerAlertEmbed(notifs.map(notif => notif.msg));
         analytics.track({
-            anonymousId: crypto.randomUUID(),
+            anonymousId: 1,
             event: "Guild Alert(s) Triggered",
             properties: {
                 alerts: notifs.length
