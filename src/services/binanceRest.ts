@@ -6,7 +6,7 @@ import {CoinMetadata} from "../structs/coinMetadata";
 import {Candle} from "../structs/candle";
 import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
-import {notifyExpiredCoins, triggerAlerts} from "./alertChecker";
+import {triggerAlerts} from "./alertChecker";
 import {getBinanceRestUrl, validCryptos} from "../utils/coinUtils";
 
 export const binanceApiCron = new CronJob(
@@ -227,7 +227,6 @@ export async function updateBinanceApi() {
 
     await CoinMetadatas.bulkWrite(newCoins);
     const start4 = Date.now();
-    await notifyExpiredCoins();
     await triggerAlerts();
     binanceLastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:
