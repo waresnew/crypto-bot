@@ -17,7 +17,7 @@
   "keywords": [],
   "author": "newwares",
   "dependencies": {
-    "@sentry/node": "^7.47.0",
+    "@sentry/node": "^7.60.1",
     "@sentry/tracing": "^7.47.0",
     "analytics-node": "^6.2.0",
     "bignumber.js": "^9.1.1",
