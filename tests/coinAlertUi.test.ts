@@ -35,9 +35,9 @@ describe("test alert wizard", () => {
             await validateAlert(a);
             fail();
         } catch (e) {
-            expect((e as UserError).error).toMatch("Error: You already have an alert exactly like the one you are trying to add");
+            expect((e as UserError).error).toMatch("Error: You have an existing alert");
         }
-        for (let i = 1; i < 10; i++) {
+        for (let i = 1; i < 25; i++) {
             await DmCoinAlerts.insertOne({
                 coin: i,
                 stat: "price",
@@ -60,7 +60,7 @@ describe("test alert wizard", () => {
             await validateAlert(a);
             fail();
         } catch (e) {
-            expect((e as UserError).error).toMatch("Error: You can not have more than 10 alerts set");
+            expect((e as UserError).error).toMatch("Error: You can not have more than 25 alerts set");
         }
     });
 });

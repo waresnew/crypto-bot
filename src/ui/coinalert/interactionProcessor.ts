@@ -388,7 +388,7 @@ Otherwise, if you are satisfied, please click \`Confirm\` to activate this alert
 
 export async function sendMsgModalReply(interaction: APIModalSubmitInteraction, http: FastifyReply) {
     const msg = interaction.data.components[0].components[0].value;
-    if (msg.length > 250) {
+    if (msg.length > 100) {
         analytics.track({
             userId: interaction.user.id,
             event: "Invalid alert message input",
@@ -398,7 +398,7 @@ export async function sendMsgModalReply(interaction: APIModalSubmitInteraction, 
         });
         await http.send({
             type: InteractionResponseType.ChannelMessageWithSource, data: {
-                content: "Error: Message is too long (max 250 characters)",
+                content: "Error: Message is too long (max 100 characters)",
                 flags: MessageFlags.Ephemeral
             }
         });
