@@ -11,7 +11,7 @@ import {AlertMethod} from "../../utils/alertUtils";
 
 export function makeSpeedPrompt(alertMethod: AlertMethod, role: string) {
     return {
-        type: InteractionResponseType.ChannelMessageWithSource,
+        type: InteractionResponseType.UpdateMessage,
         data: {
             flags: MessageFlags.Ephemeral,
             embeds: [

@@ -1,7 +1,17 @@
 /* istanbul ignore file */
 import {CoinAlert} from "../structs/alert/coinAlert";
 import {getLatestCandle} from "./coinUtils";
-import {DmCoinAlerts, DmGasAlerts, GuildCoinAlerts, GuildGasAlerts, LatestCoins} from "./database";
+import {
+    DmCoinAlerts,
+    dmCoinUnique,
+    DmGasAlerts,
+    dmGasUnique,
+    GuildCoinAlerts,
+    guildCoinUnique,
+    GuildGasAlerts,
+    guildGasUnique,
+    LatestCoins
+} from "./database";
 import CryptoStat from "../structs/cryptoStat";
 import {idToMeta, nameToMeta} from "../structs/coinMetadata";
 import {GasAlert} from "../structs/alert/gasAlert";
@@ -53,7 +63,7 @@ export async function validateAlert(alert: Alert) {
     }
     const isDm = alert instanceof DmCoinAlert || alert instanceof DmGasAlert;
     const isGuild = alert instanceof GuildCoinAlert || alert instanceof GuildGasAlert;
-    if (alerts.length >= 10) {
+    if (alerts.length >= 25) {
         analytics.track({
             userId: isDm ? alert.user : isGuild ? alert.guild : null,
             event: "Alert Creation Failed",
@@ -62,9 +72,16 @@ export async function validateAlert(alert: Alert) {
             }
         });
 
-        throw new UserError(`Error: You can not have more than 10 alerts set. Please delete one before proceeding with ${manageAlertLink}.`);
+        throw new UserError(`Error: You can not have more than 25 alerts set (Discord limitation). Please delete one before proceeding with ${manageAlertLink}.`);
     }
-    if (await getAlertDb(alert).findOne(alert)) {
+    const uniqueSpec = alert instanceof GuildCoinAlert ? guildCoinUnique : alert instanceof GuildGasAlert ? guildGasUnique : alert instanceof DmCoinAlert ? dmCoinUnique : dmGasUnique;
+    const filter = {};
+    for (const key of Object.keys(alert)) {
+        if (Object.keys(uniqueSpec).includes(key)) {
+            (filter as any)[key] = (alert as any)[key];
+        }
+    }
+    if (await getAlertDb(alert).findOne(filter)) {
         if (alert instanceof DmCoinAlert || alert instanceof DmGasAlert) {
             analytics.track({
                 userId: alert.user,
@@ -74,7 +91,7 @@ export async function validateAlert(alert: Alert) {
                 }
             });
         }
-        throw new UserError(`Error: You already have an alert exactly like the one you are trying to add. Please delete it before proceeding with ${manageAlertLink}.`);
+        throw new UserError(`Error: You have an existing alert that already tracks what this new alert is trying to track. Please delete the old one before proceeding with ${manageAlertLink}.`);
     }
 }
 
