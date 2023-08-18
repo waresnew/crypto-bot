@@ -23,7 +23,7 @@
     "bignumber.js": "^9.1.1",
     "cron": "^2.3.1",
     "didyoumean": "^1.2.2",
-    "discord-api-types": "^0.37.42",
+    "discord-api-types": "^0.37.54",
     "dotenv": "^16.0.3",
     "fastify": "^4.17.0",
     "fastify-raw-body": "^4.2.0",
