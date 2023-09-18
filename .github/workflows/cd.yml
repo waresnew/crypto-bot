@@ -8,6 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
       - name: Write README
         run: mkdir output && cp README.md output/README.md
       - name: Pushes to another repository
