@@ -8,6 +8,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Write README
+        run: mkdir output && cp README.md output/README.md
+      - name: Pushes to another repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+        with:
+          source-directory: 'output'
+          destination-github-username: 'waresnew'
+          destination-repository-name: 'botchain'
+          user-email: newwares123@gmail.com
+          target-branch: master
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to GitHub Container Registry
