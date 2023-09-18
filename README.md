@@ -2,7 +2,7 @@
 
 Runs on a 512 mb ram, 1 vCore VPS
 
-**Tech used:** SQLite, MongoDB, Jest, Github Actions, Docker, Amplitude, Segment, Typescript, Python
+### Tech used: SQLite, MongoDB, Jest, Github Actions, Docker, Amplitude, Segment, Typescript, Python
 
 [![Node.js CD](https://github.com/waresnew/crypto-bot/actions/workflows/cd.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/cd.yml)
 [![.github/workflows/ci.yml](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml)
@@ -14,9 +14,9 @@ Runs on a 512 mb ram, 1 vCore VPS
 
 - Publicly released bot on `March 17 2023`
 - Reached 100 users on `April 21 2023`
-- Someone offered to **_pay me monthly_** 🤑 for premium features (I turned them down) `April 19 2023`
+- Someone offered to **_pay me monthly_** for premium features (I turned them down) `April 19 2023`
 - Reached average review score of 5 stars on top.gg `May 5 2023`
-- Someone offered to buy my bot for <h3>$250!!! 🤑</h3> (I turned them down) `May 6 2023`
+- Someone offered to buy my bot for <h3>$250!!!</h3> (I turned them down) `May 6 2023`
 - Someone offered to buy my bot (I turned them down before they could offer a price) `May 9 2023`
 - Reached 150 servers `May 11 2023`
 - Reached 400 users `May 18 2023`
