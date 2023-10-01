@@ -170,7 +170,7 @@ export async function userNotVotedRecently(id: string) {
         return false;
     }
     const user = await UserDatas.findOne({user: id});
-    return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 12 + 1000 * 60 * 5);
+    return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 24 + 1000 * 60 * 5);
 }
 
 export function validateRefresh(interaction: APIInteraction, latest: number, interval = 65) {
