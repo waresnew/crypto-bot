@@ -74,7 +74,7 @@ export async function updateBinanceApi() {
         });
     } catch (e) {
         const error = JSON.parse((e as HTTPError).response.body as string);
-        if (error.status.error_code == 400 && error.status.error_message.startsWith("Invalid values for \"symbol\": ")) {
+        if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
             (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
             const array: any[] = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
                 symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
