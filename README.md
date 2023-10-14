@@ -27,6 +27,7 @@ Runs on a 512 mb ram, 1 vCore VPS
 - Reached 250 servers `July 5 2023`
 - Reached 800 users `August 15 2023`
 - Reached 270 servers `September 18 2023`
+- Reached 900 users `October 9 2023`
 
 Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
