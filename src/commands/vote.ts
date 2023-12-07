@@ -24,9 +24,9 @@ export default {
                 embeds: [{
                     ...getEmbedTemplate(),
                     title: "Vote for Botchain",
-                    description: (voteCount > 100 ?
-                        "We're thrilled to announce that Botchain has already received over 100 votes this month, **making voting unnecessary for the remainder of the month.** Thank you all for your incredible support! You will not need to vote to access our exclusive commands for the rest of the month." :
-                        "**🎉 Exciting Update: Reduced Voting Requirements for Botchain! 🎉**\nGreat news! Once Botchain surpasses 100 monthly votes, you will no longer need to vote on top.gg to access our exclusive commands. Additionally, each vote during the weekend will count as **2 votes** instead of 1! Spread the word and encourage your friends to vote, to benefit the entire Botchain community!\n\nGain access to our technical analysis suite by voting! Click the button below to vote.") + "\n\n**Current Votes this Month: " + voteCount + "**"
+                    description:
+                        "We're thrilled to announce that Botchain will no longer require votes to access any of our commands, **making voting unnecessary for the forseeable future.** Thank you all for your incredible support! Please still vote if you have time though, as it greatly helps with the bot's growth."
+                        + "\n\n**Current Votes this Month: " + voteCount + "**"
                 }],
                 components: [{
                     type: ComponentType.ActionRow,

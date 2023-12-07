@@ -166,7 +166,7 @@ export function deepValidateCustomId(obj: any) {
 
 /* istanbul ignore next */
 export async function userNotVotedRecently(id: string) {
-    if (voteCount > 100) {
+    if (voteCount > -1) { //originalyl 100 but i wanna disable vote reqs
         return false;
     }
     const user = await UserDatas.findOne({user: id});
