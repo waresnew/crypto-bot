@@ -25,7 +25,7 @@ export default {
                     ...getEmbedTemplate(),
                     title: "Vote for Botchain",
                     description:
-                        "We're thrilled to announce that Botchain will no longer require votes to access any of our commands, **making voting unnecessary for the forseeable future.** Thank you all for your incredible support! Please still vote if you have time though, as it greatly helps with the bot's growth."
+                        "Voting doesn't give you access to anything special, but it does help the bot grow and reach more people. Thank you!"
                         + "\n\n**Current Votes this Month: " + voteCount + "**"
                 }],
                 components: [{

@@ -15,7 +15,7 @@ function makeTriggerAlertEmbed(notifs: string[]) {
     notifs.forEach(line => {
         desc += "\n- " + line;
     });
-    desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again. If you want to re-enable these alert(s), please do so with </myalerts:${commandIds.get("myalerts")}> or </serveralerts:${commandIds.get("serveralerts")}>.\n\n**❤️ If Botchain has helped you, please upvote the bot with </vote:${commandIds.get("vote")}>.\nIf you want to add Botchain to your server, just click [here](https://discord.com/api/oauth2/authorize?client_id=1058388231273590885&permissions=134144&scope=bot%20applications.commands).**\nHappy trading!`;
+    desc += `\n\nThe above alert${notifs.length > 1 ? "s have" : " has"} been **disabled** and won't trigger again. If you want to re-enable these alert(s), please do so with </myalerts:${commandIds.get("myalerts")}> or </serveralerts:${commandIds.get("serveralerts")}>.\n\nIf you want to add Botchain to your server, just click [here](https://discord.com/api/oauth2/authorize?client_id=1058388231273590885&permissions=134144&scope=bot%20applications.commands).**\nHappy trading!`;
     message.description = desc;
     return message;
 }
