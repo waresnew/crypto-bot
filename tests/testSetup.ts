@@ -1,5 +1,5 @@
 import {analytics, setAnalytics} from "../src/utils/analytics";
-import Analytics from "analytics-node";
+import {Analytics} from "@segment/analytics-node";
 import nock from "nock";
 import {APIUser, InteractionType} from "discord-api-types/v10";
 import {FastifyReply} from "fastify";
@@ -47,7 +47,12 @@ export const mockCommandInteraction: APIChatInputApplicationCommandInteraction =
         id: "123",
         username: "test",
         discriminator: "1234",
-        avatar: "123"
+        avatar: "123",
+        global_name: "123"
+    },
+    channel: {
+        id: "123",
+        type: 1
     }
 };
 export const mockReply = {send: jest.fn().mockImplementation(() => Promise.resolve())} as unknown as FastifyReply;
@@ -104,7 +109,7 @@ afterEach(() => {
 
 beforeAll(async () => {
     nock.disableNetConnect();
-    setAnalytics(new Analytics("ok"));
+    setAnalytics(new Analytics({writeKey: "ok"}));
     initClient({id: "123", avatar: "avatar"} as APIUser);
     globalMocks.push(jest.spyOn(analytics, "track").mockReturnValue(undefined));
     globalMocks.push(jest.spyOn(analytics, "page").mockReturnValue(undefined));
