@@ -49,7 +49,7 @@ async function closeGracefully(signal: string | number) {
     console.log(`Received signal to terminate: ${signal}`);
     await server.close();
     await mongoClient.close();
-    await analytics.flush();
+    await analytics.closeAndFlush();
     await got("http://127.0.0.1:3001/shutdown");
     setRetry(false);
     ws.close();
