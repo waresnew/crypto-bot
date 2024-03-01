@@ -24,7 +24,7 @@
     "cron": "^2.3.1",
     "didyoumean": "^1.2.2",
     "discord-api-types": "^0.37.56",
-    "dotenv": "^16.0.3",
+    "dotenv": "^16.4.5",
     "fastify": "^4.17.0",
     "fastify-raw-body": "^4.2.0",
     "form-data-encoder": "^3.0.0",
