@@ -20,7 +20,7 @@
     "@sentry/node": "^7.47.0",
     "@sentry/tracing": "^7.47.0",
     "analytics-node": "^6.2.0",
-    "bignumber.js": "^9.1.1",
+    "bignumber.js": "^9.1.2",
     "cron": "^2.3.1",
     "didyoumean": "^1.2.2",
     "discord-api-types": "^0.37.42",
