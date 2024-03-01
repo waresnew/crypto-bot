@@ -27,7 +27,7 @@
     "dotenv": "^16.4.5",
     "fastify": "^4.26.1",
     "fastify-raw-body": "^4.2.0",
-    "form-data-encoder": "^3.0.0",
+    "form-data-encoder": "^4.0.2",
     "got": "^14.2.0",
     "mongodb": "^6.4.0",
     "tweetnacl": "^1.0.3",
