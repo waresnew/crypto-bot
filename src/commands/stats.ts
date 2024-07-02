@@ -5,6 +5,7 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
 import {discordGot, startTime} from "../utils/discordUtils";
+import {UserDatas} from "../utils/database";
 
 export default {
     name: "stats",
@@ -13,10 +14,15 @@ export default {
     async execute(interaction: APIChatInputApplicationCommandInteraction, http: FastifyReply) {
         const embed = getEmbedTemplate();
         embed.title = "Global statistics";
-        embed.fields = [{
+        embed.fields = [
+            {
             name: "Server Count",
             value: await JSON.parse(await discordGot("applications/@me").text()).approximate_guild_count
-        },
+            },
+            {
+                name: "User Count",
+                value: await UserDatas.estimatedDocumentCount()
+            },
             {
                 name: "Uptime",
                 value: formatTime(Date.now() - startTime)

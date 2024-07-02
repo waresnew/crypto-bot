@@ -14,9 +14,9 @@ Runs on a 512 mb ram, 1 vCore VPS
 
 - Publicly released bot on `March 17 2023`
 - Reached 100 users on `April 21 2023`
-- Someone offered to **_pay me monthly_** for premium features (I turned them down) `April 19 2023`
+- Someone offered to _pay me monthly_ for premium features (I turned them down) `April 19 2023`
 - Reached average review score of 5 stars on top.gg `May 5 2023`
-- Someone offered to buy my bot for _**$250!!!**_ (I turned them down) `May 6 2023`
+- Someone offered to buy my bot for _$250_ (I turned them down) `May 6 2023`
 - Someone offered to buy my bot (I turned them down before they could offer a price) `May 9 2023`
 - Reached 150 servers `May 11 2023`
 - Reached 400 users `May 18 2023`
@@ -32,6 +32,7 @@ Runs on a 512 mb ram, 1 vCore VPS
 - Reached 300 servers `December 31 2023`
 - Reached 1200 users `February 13 2024`
 - Reached 400 servers `March 10 2024`
+- Reached 1700 users `July 2 2024`
 
 Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
