@@ -1,8 +1,6 @@
-# Botchain
-
-Runs on a 512 mb ram, 1 vCore VPS
-
-### Tech used: SQLite, MongoDB, Jest, Github Actions, Docker, Amplitude, Segment, Typescript, Python
+<p align="center">
+  <img src="https://i.imgur.com/LNBqldp.gif">
+</p>
 
 [![Node.js CD](https://github.com/waresnew/crypto-bot/actions/workflows/cd.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/cd.yml)
 [![.github/workflows/ci.yml](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/waresnew/crypto-bot/actions/workflows/ci.yml)
@@ -10,34 +8,8 @@ Runs on a 512 mb ram, 1 vCore VPS
 
 #### Add it to your server: https://top.gg/bot/1058388231273590885
 
-### Milestones:
-
-- Publicly released bot on `March 17 2023`
-- Reached 100 users on `April 21 2023`
-- Someone offered to _pay me monthly_ for premium features (I turned them down) `April 19 2023`
-- Reached average review score of 5 stars on top.gg `May 5 2023`
-- Someone offered to buy my bot for _$250_ (I turned them down) `May 6 2023`
-- Someone offered to buy my bot (I turned them down before they could offer a price) `May 9 2023`
-- Reached 150 servers `May 11 2023`
-- Reached 400 users `May 18 2023`
-- Reached 143 monthly votes on top.gg (285 total) `May 26 2023`
-- Reached 200 servers `May 27 2023`
-- Reached 500 users `May 31 2023`
-- Reached 600 users `June 15 2023`
-- Reached 250 servers `July 5 2023`
-- Reached 800 users `August 15 2023`
-- Reached 270 servers `September 18 2023`
-- Reached 900 users `October 9 2023`
-- Reached 1000 users `December 8 2023`
-- Reached 300 servers `December 31 2023`
-- Reached 1200 users `February 13 2024`
-- Reached 400 servers `March 10 2024`
-- Reached 1800 users `July 2 2024`
-
 Botchain keeps you informed about the price of your favourite cryptocurrencies! This is
 particularly useful for traders and investors who need to keep a close eye on the markets.
-
-Here are some of our features:
 
 ### Coin Info Panels `/coin`
 
@@ -70,6 +42,28 @@ pivot point calculators.
 ![indicators](https://i.imgur.com/Eg0ekw5.png)
 ![patterns](https://i.imgur.com/tQGM2Sk.png)
 
-We hope you enjoy using Botchain!
+### Milestones:
+
+- Publicly released bot on `March 17 2023`
+- Reached 100 users on `April 21 2023`
+- Someone offered to _pay me monthly_ for premium features (I turned them down) `April 19 2023`
+- Reached average review score of 5 stars on top.gg `May 5 2023`
+- Someone offered to buy my bot for _$250_ (I turned them down) `May 6 2023`
+- Someone offered to buy my bot (I turned them down before they could offer a price) `May 9 2023`
+- Reached 150 servers `May 11 2023`
+- Reached 400 users `May 18 2023`
+- Reached 143 monthly votes on top.gg (285 total) `May 26 2023`
+- Reached 200 servers `May 27 2023`
+- Reached 500 users `May 31 2023`
+- Reached 600 users `June 15 2023`
+- Reached 250 servers `July 5 2023`
+- Reached 800 users `August 15 2023`
+- Reached 270 servers `September 18 2023`
+- Reached 900 users `October 9 2023`
+- Reached 1000 users `December 8 2023`
+- Reached 300 servers `December 31 2023`
+- Reached 1200 users `February 13 2024`
+- Reached 400 servers `March 10 2024`
+- Reached 1800 users `July 2 2024`
 
 ![fullbody](https://i.imgur.com/w33cucZ.png)
