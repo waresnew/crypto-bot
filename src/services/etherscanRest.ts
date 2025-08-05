@@ -20,7 +20,7 @@ export let etherscanLastUpdated = 0;
 
 export async function fetchGas() {
     const start = Date.now();
-    const response = JSON.parse(await got(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env["ETHERSCAN_KEY"]}`).text());
+    const response = JSON.parse(await got(`https://api.etherscan.io/v2/api?chainid=1&module=gastracker&action=gasoracle&apikey=${process.env["ETHERSCAN_KEY"]}`).text());
     gasPrices["slow"] = response.result.SafeGasPrice;
     gasPrices["normal"] = response.result.ProposeGasPrice;
     gasPrices["fast"] = response.result.FastGasPrice;

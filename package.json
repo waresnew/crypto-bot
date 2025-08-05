@@ -52,5 +52,8 @@
     "leaked-handles": "^5.2.0",
     "nock": "^13.3.0",
     "typescript": "^4.9.5"
+  },
+  "volta": {
+    "node": "18.13.0"
   }
 }
