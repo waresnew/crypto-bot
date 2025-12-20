@@ -6,7 +6,7 @@ import {APIApplicationCommand} from "discord-api-types/payloads/v10/_interaction
 import didYouMean from "didyoumean";
 import {binanceApiCron, cleanBinanceCacheCron} from "./services/binanceRest";
 import {initBinanceWs} from "./services/binanceWs";
-import {commandIds, commands, discordGot, initClient, interactionProcessors, setVoteCount} from "./utils/discordUtils";
+import {commandIds, commands, discordGot, initClient, interactionProcessors } from "./utils/discordUtils";
 import {postServerCountCron} from "./services/topggRest";
 import {spawn} from "node:child_process";
 import {etherscanApiCron} from "./services/etherscanRest";
@@ -21,16 +21,6 @@ if (getCommands.ok) {
     JSON.parse(getCommands.body).forEach((command: APIApplicationCommand) => commandIds.set(command.name, command.id));
 } else {
     throw "failed to init: fetching commands from api failed";
-}
-if (process.env["NODE_ENV"] === "production") {
-    const curVotes = JSON.parse(await got(`https://top.gg/api/bots/${process.env["APP_ID"]}`, {
-        headers: {
-            "Authorization": process.env["TOPGG_TOKEN"]
-        }
-    }).text()).monthlyPoints;
-    setVoteCount(curVotes);
-} else {
-    setVoteCount(555);
 }
 
 const cwd = path.dirname(fileURLToPath(import.meta.url));

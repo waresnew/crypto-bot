@@ -17,8 +17,23 @@ export const emojis = {
     "bearish": "<:bearish:1097137994932178985>"
 };
 //for this month
-export let voteCount = 0;
 export const discordGot = got.extend({
+    handlers: [
+		(options, next) => {
+			Error.captureStackTrace(options.context);
+			return next(options);
+		}
+	],
+	hooks: {
+		beforeError: [
+			error => {
+                //we add a source prop for logging
+                //@ts-ignore
+				error.source = error.options.context.stack.split('\n');
+				return error;
+			}
+		]
+	},
     headers: {
         "User-Agent": "DiscordBot (http, 1.0)",
         "Authorization": "Bot " + process.env["BOT_TOKEN"],
@@ -96,9 +111,6 @@ export function initClient(input: APIUser) {
     startTime = Date.now();
 }
 
-export function setVoteCount(input: number) {
-    voteCount = input;
-}
 
 /**
  * we need to version customids to prevent errors when we change the customid format
@@ -166,9 +178,8 @@ export function deepValidateCustomId(obj: any) {
 
 /* istanbul ignore next */
 export async function userNotVotedRecently(id: string) {
-    if (voteCount > -1) { //originalyl 100 but i wanna disable vote reqs
-        return false;
-    }
+    //disable vote reqs
+    return false;
     const user = await UserDatas.findOne({user: id});
     return !user || !user.lastVoted || user.lastVoted < Date.now() - (1000 * 60 * 60 * 24 + 1000 * 60 * 5);
 }
