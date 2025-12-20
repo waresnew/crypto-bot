@@ -11,7 +11,6 @@ import {
 } from "discord-api-types/payloads/v10/_interactions/_applicationCommands/chatInput";
 import {FastifyReply} from "fastify";
 import {getEmbedTemplate} from "../ui/templates";
-import {voteCount} from "../utils/discordUtils";
 
 export default {
     name: "vote",
@@ -26,7 +25,6 @@ export default {
                     title: "Vote for Botchain",
                     description:
                         "Voting doesn't give you access to anything special, but it does help the bot grow and reach more people. Thank you!"
-                        + "\n\n**Current Votes this Month: " + voteCount + "**"
                 }],
                 components: [{
                     type: ComponentType.ActionRow,
