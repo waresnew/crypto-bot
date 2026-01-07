@@ -59,7 +59,8 @@ export async function updateBinanceApi() {
             "Accept-Encoding": "deflate, gzip"
         }
     });
-    let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT");
+    let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT")
+    .filter((symbol:any)=>/^[A-Za-z0-9]+$/.test(symbol.baseAsset));
     const exclude: string[] = [];
     let metadata: any[] = [];
     try {
