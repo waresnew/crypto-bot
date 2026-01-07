@@ -13,12 +13,7 @@ import { URL } from "url";
 async function get(url: string | URL,options: OptionsOfTextResponseBody) {
     const res=await got(url,{...options, responseType: "text", throwHttpErrors:false});
     if (res.statusCode>=400) {
-        const err={
-            body:res.body,
-            statusCode:res.statusCode,
-            url:url
-        };
-        throw err;
+        throw new Error(res.body);
     }
     return res.body;
 }
@@ -90,7 +85,7 @@ export async function updateBinanceApi() {
     try {
         metadata=await getCmcMetadata(symbols,exclude);
     } catch (e) {
-        const error = JSON.parse((e as any).body as string);
+        const error = JSON.parse((e as Error).message as string);
         if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
             (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
             metadata=await getCmcMetadata(symbols,exclude);
