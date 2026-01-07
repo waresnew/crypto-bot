@@ -13,7 +13,12 @@ import { URL } from "url";
 async function get(url: string | URL,options: OptionsOfTextResponseBody) {
     const res=await got(url,{...options, responseType: "text", throwHttpErrors:false});
     if (res.statusCode>=400) {
-        throw new Error(`Got erorred ${res.statusCode}, ${url}, ${res.body}`);
+        const err={
+            body:res.body,
+            statusCode:res.statusCode,
+            url:url
+        };
+        throw err;
     }
     return res.body;
 }
@@ -50,6 +55,25 @@ export async function cleanCoinDb() {
     console.log(`Deleted ${result.deletedCount} old candles in ${Date.now() - start} ms`);
 }
 
+async function getCmcMetadata(symbols:any[],exclude:string[]) {
+    const array: any[] = JSON.parse(await get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
+        symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
+    }), {
+        headers: {
+            "X-CMC_PRO_API_KEY": getCmcKey(),
+            Accept: "application/json",
+            "Accept-Encoding": "deflate, gzip"
+        }
+    })).data;
+    return array.map(meta => {
+        return {
+            cmc_id: meta.id,
+            symbol: meta.symbol,
+            name: meta.name,
+            slug: meta.slug
+        } as CoinMetadata;
+    });
+}
 export async function updateBinanceApi() {
     const start1 = Date.now();
     const newValidCryptos: CoinMetadata[] = [];
@@ -64,49 +88,16 @@ export async function updateBinanceApi() {
     const exclude: string[] = [];
     let metadata: any[] = [];
     try {
-        const array: any[] = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
-            symbol: symbols.map(symbol => symbol.baseAsset).join(",")
-        }), {
-            headers: {
-                "X-CMC_PRO_API_KEY": getCmcKey(),
-                Accept: "application/json",
-                "Accept-Encoding": "deflate, gzip"
-            }
-        }).text()).data;
-        metadata = array.map(meta => {
-            return {
-                cmc_id: meta.id,
-                symbol: meta.symbol,
-                name: meta.name,
-                slug: meta.slug
-            } as CoinMetadata;
-        });
+        metadata=await getCmcMetadata(symbols,exclude);
     } catch (e) {
-        const error = JSON.parse((e as HTTPError).response.body as string);
+        const error = JSON.parse((e as any).body as string);
         if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
             (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
-            const array: any[] = JSON.parse(await get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
-                symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
-            }), {
-                headers: {
-                    "X-CMC_PRO_API_KEY": getCmcKey(),
-                    Accept: "application/json",
-                    "Accept-Encoding": "deflate, gzip"
-                }
-            })).data;
-            metadata = array.map(meta => {
-                return {
-                    cmc_id: meta.id,
-                    symbol: meta.symbol,
-                    name: meta.name,
-                    slug: meta.slug
-                } as CoinMetadata;
-            });
+            metadata=await getCmcMetadata(symbols,exclude);
             console.log(`Excluded ${exclude.length} coins`);
         } else {
-            console.log("symbol", symbols.map(symbol => symbol.baseAsset).join(",")
-)
-            throw new Error(JSON.stringify((e as HTTPError).response.body));
+            console.log("symbol", symbols.map(symbol => symbol.baseAsset).join(","));
+            throw e;
         }
     }
     symbols = symbols.filter(symbol => !exclude.includes(symbol.baseAsset));
