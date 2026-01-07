@@ -88,8 +88,8 @@ export async function updateBinanceApi() {
         const error = JSON.parse((e as Error).message as string);
         if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
             (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
+            console.log(`Excluded ${exclude.length} coins: ${exclude.join(",")}`);
             metadata=await getCmcMetadata(symbols,exclude);
-            console.log(`Excluded ${exclude.length} coins`);
         } else {
             console.log("symbol", symbols.map(symbol => symbol.baseAsset).join(","));
             throw e;
