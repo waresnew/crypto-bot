@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import {CronJob} from "cron";
-import got, {HTTPError} from "got";
+import got, {HTTPError, OptionsOfTextResponseBody} from "got";
 import {Candles, CoinMetadatas, LatestCoins, mongoClient} from "../utils/database";
 import {CoinMetadata} from "../structs/coinMetadata";
 import {Candle} from "../structs/candle";
@@ -8,7 +8,15 @@ import {AnyBulkWriteOperation} from "mongodb";
 import {LatestCoin} from "../structs/latestCoin";
 import {triggerAlerts} from "./alertChecker";
 import {getBinanceRestUrl, validCryptos} from "../utils/coinUtils";
+import { URL } from "url";
 
+async function get(url: string | URL,options: OptionsOfTextResponseBody) {
+    const res=await got(url,{...options, responseType: "text", throwHttpErrors:false});
+    if (res.statusCode>=400) {
+        throw new Error(`Got erorred ${res.statusCode}, ${url}, ${res.body}`);
+    }
+    return res.body;
+}
 export const binanceApiCron = new CronJob(
     "* * * * *",
     updateBinanceApi,
@@ -45,12 +53,12 @@ export async function cleanCoinDb() {
 export async function updateBinanceApi() {
     const start1 = Date.now();
     const newValidCryptos: CoinMetadata[] = [];
-    const coinResponse = await got(`${getBinanceRestUrl()}/api/v3/exchangeInfo?permissions=SPOT`, {
+    const coinResponse = await get(`${getBinanceRestUrl()}/api/v3/exchangeInfo?permissions=SPOT`, {
         headers: {
             "Accept": "application/json",
             "Accept-Encoding": "deflate, gzip"
         }
-    }).text();
+    });
     let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT");
     const exclude: string[] = [];
     let metadata: any[] = [];
@@ -76,7 +84,7 @@ export async function updateBinanceApi() {
         const error = JSON.parse((e as HTTPError).response.body as string);
         if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
             (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
-            const array: any[] = JSON.parse(await got("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
+            const array: any[] = JSON.parse(await get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
                 symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
             }), {
                 headers: {
@@ -84,7 +92,7 @@ export async function updateBinanceApi() {
                     Accept: "application/json",
                     "Accept-Encoding": "deflate, gzip"
                 }
-            }).text()).data;
+            })).data;
             metadata = array.map(meta => {
                 return {
                     cmc_id: meta.id,
@@ -95,6 +103,8 @@ export async function updateBinanceApi() {
             });
             console.log(`Excluded ${exclude.length} coins`);
         } else {
+            console.log("symbol", symbols.map(symbol => symbol.baseAsset).join(",")
+)
             throw new Error(JSON.stringify((e as HTTPError).response.body));
         }
     }
@@ -110,12 +120,12 @@ export async function updateBinanceApi() {
         weightUsed++;
         const limit = await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id);
         maxLimit = Math.max(maxLimit, limit);
-        return got(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${limit}`, {
+        return get(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${limit}`, {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
             }
-        }).text().then(response => {
+        }).then(response => {
             return {
                 type: "candles",
                 coin: symbol.baseAsset,
@@ -125,12 +135,12 @@ export async function updateBinanceApi() {
     }));
     for (let i = 0; i < symbols.length; i += 100) {
         weightUsed += symbols.slice(i, i + 100).length >= 50 ? 100 : symbols.slice(i, i + 100).length * 2;
-        binancePromises.push(got(`${getBinanceRestUrl()}/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
+        binancePromises.push(get(`${getBinanceRestUrl()}/api/v3/ticker?symbols=["${symbols.slice(i, i + 100).map(symbol => symbol.symbol).join("\",\"")}"]&windowSize=7d`, {
             headers: {
                 "Accept": "application/json",
                 "Accept-Encoding": "deflate, gzip"
             }
-        }).text().then(response => {
+        }).then(response => {
             return {
                 type: "7d%",
                 response: response
