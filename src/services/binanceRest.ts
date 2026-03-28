@@ -10,12 +10,23 @@ import {triggerAlerts} from "./alertChecker";
 import {getBinanceRestUrl, validCryptos} from "../utils/coinUtils";
 import { URL } from "url";
 
-async function get(url: string | URL,options: OptionsOfTextResponseBody) {
-    const res=await got(url,{...options, responseType: "text", throwHttpErrors:false});
-    if (res.statusCode>=400) {
-        throw new Error(res.body);
-    }
-    return res.body;
+
+async function get(url: string | URL, options: OptionsOfTextResponseBody) {
+	const res = await got(url, {
+		...options,
+		hooks: {
+			beforeError: [
+				(error) => {
+					if (error.response) {
+						console.error(`API error when querying ${url}:`, error.response.body);
+					}
+					return error;
+				},
+			],
+		},
+		responseType: "text",
+	});
+	return res.body;
 }
 export const binanceApiCron = new CronJob(
     "* * * * *",
@@ -50,9 +61,10 @@ export async function cleanCoinDb() {
     console.log(`Deleted ${result.deletedCount} old candles in ${Date.now() - start} ms`);
 }
 
-async function getCmcMetadata(symbols:any[],exclude:string[]) {
+async function getCmcMetadata(symbols:any[]) {
     const array: any[] = JSON.parse(await get("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map?" + new URLSearchParams({
-        symbol: symbols.map(symbol => symbol.baseAsset).filter(symbol => !exclude.includes(symbol)).join(",")
+        sort: "cmc_rank",
+        limit: "500" // without a limit, will give me like ~10k entries and be slow
     }), {
         headers: {
             "X-CMC_PRO_API_KEY": getCmcKey(),
@@ -78,34 +90,26 @@ export async function updateBinanceApi() {
             "Accept-Encoding": "deflate, gzip"
         }
     });
-    let symbols: any[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT")
+    type ApiCoin={symbol:string; baseAsset:string; quoteAsset:string, status:string;meta?:CoinMetadata};
+    let symbols: ApiCoin[] = JSON.parse(coinResponse).symbols.filter((symbol: any) => symbol.status === "TRADING" && symbol.quoteAsset == "USDT")
     .filter((symbol:any)=>/^[A-Za-z0-9]+$/.test(symbol.baseAsset));
-    const exclude: string[] = [];
-    let metadata: any[] = [];
-    try {
-        metadata=await getCmcMetadata(symbols,exclude);
-    } catch (e) {
-        const error = JSON.parse((e as Error).message as string);
-        if (error.status.error_code == 400 && (error.status.error_message.startsWith("Invalid values for \"symbol\": ") || error.status.error_message.startsWith("Invalid value for \"symbol\": "))) {
-            (error.status.error_message as string).substring(29).replaceAll("\"", "").split(",").forEach(symbol => exclude.push(symbol));
-            console.log(`Excluded ${exclude.length} coins: ${exclude.join(",")}`);
-            metadata=await getCmcMetadata(symbols,exclude);
-        } else {
-            console.log("symbol", symbols.map(symbol => symbol.baseAsset).join(","));
-            throw e;
-        }
-    }
-    symbols = symbols.filter(symbol => !exclude.includes(symbol.baseAsset));
+    let metadata: Record<string, CoinMetadata> = Object.fromEntries((await getCmcMetadata(symbols)).map(m=>[m.symbol, m]));
+    symbols=symbols.flatMap(symbol=> {
+        const meta=metadata[symbol.baseAsset];
+        if (!meta) return [];
+        symbol.meta=meta;
+        return symbol;
+    });
     if (symbols.length >= 500) {
         //500 reqs for candles and 600 (rounds up) for 7d rolling price change
         throw new Error(`Too many coins to insert (${symbols.length})`);
     }
-    const binancePromises = [];
+    const binancePromises: {type:string,coin:string,response:any}[] = [];
     let weightUsed = 0;
     let maxLimit = 0;
-    binancePromises.push(...symbols.map(async symbol => {
+    binancePromises.push(...symbols.flatMap(async symbol => {
         weightUsed++;
-        const limit = await getLimit(metadata.find(meta => meta.symbol == symbol.baseAsset).cmc_id);
+        const limit = await getLimit(symbol.meta.cmc_id);
         maxLimit = Math.max(maxLimit, limit);
         return get(`${getBinanceRestUrl()}/api/v3/klines?symbol=${symbol.symbol}&interval=1d&limit=${limit}`, {
             headers: {
@@ -116,7 +120,7 @@ export async function updateBinanceApi() {
             return {
                 type: "candles",
                 coin: symbol.baseAsset,
-                response: response
+                response: JSON.parse(response)
             };
         });
     }));
@@ -130,7 +134,7 @@ export async function updateBinanceApi() {
         }).then(response => {
             return {
                 type: "7d%",
-                response: response
+                response: JSON.parse(response)
             };
         }));
     }
@@ -143,9 +147,9 @@ export async function updateBinanceApi() {
         const promises = [];
         for (const response of responses) {
             const toWrite: AnyBulkWriteOperation<Candle>[] = [];
-            const json = JSON.parse(response.response);
+            const json = response.response;
             if (response.type == "candles") {
-                const coin = metadata.find(meta => meta.symbol == (response as any).coin);
+                const coin = metadata[response.coin];
                 newValidCryptos.push(coin);
                 for (let i = 0; i < json.length; i++) {
                     const item = json[i];
@@ -176,7 +180,7 @@ export async function updateBinanceApi() {
             } else if (response.type == "7d%") {
                 const toWrite: AnyBulkWriteOperation<LatestCoin>[] = [];
                 for (const item of json) {
-                    const coin = metadata.find(meta => meta.symbol == item.symbol.replace("USDT", ""));
+                    const coin = metadata[item.symbol.replace("USDT", "")];
                     toWrite.push({
                         updateOne: {
                             filter: {coin: coin.cmc_id},
@@ -228,7 +232,7 @@ export async function updateBinanceApi() {
     binanceLastUpdated = Date.now();
     console.log(`Binance REST @ ${new Date().toISOString()}:
         ${start2 - start1} ms to get data
-        ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${metadata.length - validCryptos.length} invalid)
+        ${start3 - start2} ms to write to db (${validCryptos.length} valid, ${Object.keys(metadata).length - validCryptos.length} invalid)
         ${start4 - start3} ms to update valid cryptos
         ${Date.now() - start4} ms to trigger alerts`);
 }
