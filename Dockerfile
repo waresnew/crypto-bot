@@ -2,12 +2,12 @@ FROM node:18.13.0-bullseye-slim as base
 LABEL org.opencontainers.image.source=https://github.com/waresnew/crypto-bot
 WORKDIR /app
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends dumb-init python3.9-dev python3-pip wget build-essential
+    && apt-get install -y --no-install-recommends dumb-init python3.9-dev python3-pip wget build-essential autoconf automake
 RUN wget https://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
   tar -xvzf ta-lib-0.4.0-src.tar.gz && \
   cd ta-lib/ && \
-  wget -O config.guess 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess' && \
-  wget -O config.sub 'https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub' && \
+  cp /usr/share/misc/config.guess ./ && \
+  cp /usr/share/misc/config.sub ./ && \
   ./configure --prefix=/usr && \
   make && \
   make install
